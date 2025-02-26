@@ -163,8 +163,10 @@ class Generator(Configurable):
                 )
                 multi_generator_bar.set_description(self.fullname[:55])
 
+                pool_size = min(generations_this_call, _config.system.parallel_requests)
+
                 try:
-                    with Pool(_config.system.parallel_requests) as pool:
+                    with Pool(pool_size) as pool:
                         for result in pool.imap_unordered(
                             self._call_model, [prompt] * generations_this_call
                         ):

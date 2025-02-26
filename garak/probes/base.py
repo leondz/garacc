@@ -178,8 +178,10 @@ class Probe(Configurable):
             attempt_bar = tqdm.tqdm(total=len(attempts), leave=False)
             attempt_bar.set_description(self.probename.replace("garak.", ""))
 
+            pool_size = min(_config.system.parallel_attempts, len(attempts))
+
             try:
-                with Pool(_config.system.parallel_attempts) as attempt_pool:
+                with Pool(pool_size) as attempt_pool:
                     for result in attempt_pool.imap_unordered(
                         self._execute_attempt, attempts
                     ):

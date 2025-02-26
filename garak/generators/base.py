@@ -163,7 +163,11 @@ class Generator(Configurable):
                 )
                 multi_generator_bar.set_description(self.fullname[:55])
 
-                pool_size = min(generations_this_call, _config.system.parallel_requests)
+                pool_size = min(
+                    generations_this_call,
+                    _config.system.parallel_requests,
+                    _config.system.max_workers,
+                )
 
                 try:
                     with Pool(pool_size) as pool:

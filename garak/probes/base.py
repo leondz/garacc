@@ -178,7 +178,11 @@ class Probe(Configurable):
             attempt_bar = tqdm.tqdm(total=len(attempts), leave=False)
             attempt_bar.set_description(self.probename.replace("garak.", ""))
 
-            pool_size = min(_config.system.parallel_attempts, len(attempts))
+            pool_size = min(
+                len(attempts),
+                _config.system.parallel_attempts,
+                _config.system.max_workers,
+            )
 
             try:
                 with Pool(pool_size) as attempt_pool:

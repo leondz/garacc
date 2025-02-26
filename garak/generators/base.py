@@ -175,7 +175,7 @@ class Generator(Configurable):
                             multi_generator_bar.update(1)
                 except OSError as o:
                     if o.errno == 24:
-                        msg = "Parallelisation limit hit. Try reducing parallel_attempts or raising limit (e.g. ulimit -n 4096)"
+                        msg = "Parallelisation limit hit. Try reducing parallel_requests or raising limit (e.g. ulimit -n 4096)"
                         logging.critical(msg)
                         raise GarakException(msg) from o
                     else:

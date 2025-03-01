@@ -64,16 +64,6 @@ def main(arguments=None) -> None:
 
     import argparse
 
-    def worker_count_validation(workers):
-        iworkers = int(workers)
-        if iworkers <= 0:
-            raise argparse.ArgumentTypeError("Need >0 workers (int)" % workers)
-        if iworkers > _config.system.max_workers:
-            raise argparse.ArgumentTypeError(
-                "Parallel worker count capped at %s (config.system.max_workers)" % _config.system.max_workers
-            )
-        return iworkers
-
     parser = argparse.ArgumentParser(
         prog="python -m garak",
         description="LLM safety & security scanning tool",
@@ -102,13 +92,13 @@ def main(arguments=None) -> None:
     )
     parser.add_argument(
         "--parallel_requests",
-        type=worker_count_validation,
+        type=int,
         default=_config.system.parallel_requests,
         help="How many generator requests to launch in parallel for a given prompt. Ignored for models that support multiple generations per call.",
     )
     parser.add_argument(
         "--parallel_attempts",
-        type=worker_count_validation,
+        type=int,
         default=_config.system.parallel_attempts,
         help="How many probe attempts to launch in parallel. Raise this for faster runs when using non-local models.",
     )
@@ -378,6 +368,28 @@ def main(arguments=None) -> None:
         _config.plugins.buff_spec = args.buffs
 
     # base config complete
+
+    # post-config validation
+    def worker_count_validation(workers):
+        iworkers = int(workers)
+        if iworkers <= 0:
+            raise ValueError("Need >0 workers (int)" % workers)
+        if iworkers > _config.system.max_workers:
+            raise ValueError(
+                "Parallel worker count capped at %s (config.system.max_workers)"
+                % _config.system.max_workers
+            )
+        return iworkers
+
+    if _config.system.parallel_attempts is not False:
+        _config.system.parallel_attempts = worker_count_validation(
+            _config.system.parallel_attempts
+        )
+
+    if _config.system.parallel_requests is not False:
+        _config.system.parallel_requests = worker_count_validation(
+            _config.system.parallel_requests
+        )
 
     if hasattr(_config.run, "seed") and isinstance(_config.run.seed, int):
         import random

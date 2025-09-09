@@ -11,7 +11,7 @@ import json
 import logging
 from collections.abc import Iterable
 import random
-from typing import Iterable, Union
+from typing import Iterable, List, Union
 
 from colorama import Fore, Style
 import tqdm
@@ -195,9 +195,7 @@ class Probe(Configurable):
             turns.append(
                 garak.attempt.Turn(
                     role="system",
-                    content=garak.attempt.Message(
-                        text=self.system_prompt, lang=lang
-                    ),
+                    content=garak.attempt.Message(text=self.system_prompt, lang=lang),
                 )
             )
         if isinstance(prompt, str):
@@ -420,6 +418,30 @@ class Probe(Configurable):
             del self.prompts[id]
             if prune_triggers:
                 del self.triggers[id]
+
+
+class TechniqueProbe(Probe):
+    """Probe that works by applying a technique to an intent"""
+
+    DEFAULT_PARAMS = Probe.DEFAULT_PARAMS | {
+        "intents": [],
+    }
+
+    def __init__(self, config_root=_config):
+        super().__init__(config_root)
+        if not hasattr(self, "prompts"):
+            self.prompts = []
+        self.intent_ids = []
+        self._build_prompts()
+
+    def apply_technique(
+        self, intent: str
+    ) -> List[garak.attempt.Message | garak.attempt.Conversation]:
+        raise NotImplementedError
+
+    def _build_prompts(self):
+        for intent in self.intents:
+            self.prompts += self.apply_technique(intent)
 
 
 class TreeSearchProbe(Probe):

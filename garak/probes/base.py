@@ -420,7 +420,7 @@ class Probe(Configurable):
                 del self.triggers[id]
 
 
-class TechniqueProbe(Probe):
+class TIProbe(Probe):
     """Probe that works by applying a technique to an intent"""
 
     DEFAULT_PARAMS = Probe.DEFAULT_PARAMS | {

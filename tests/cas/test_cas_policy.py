@@ -4,33 +4,33 @@
 import pytest
 
 import garak._plugins
-import garak.policy
+import garak.cas
 
 
 def test_get_parent_name():
-    assert garak.policy.get_parent_name("C") == ""
-    assert garak.policy.get_parent_name("C001") == "C"
-    assert garak.policy.get_parent_name("C001sub") == "C001"
+    assert garak.cas.get_parent_name("C") == ""
+    assert garak.cas.get_parent_name("C001") == "C"
+    assert garak.cas.get_parent_name("C001sub") == "C001"
 
     with pytest.raises(ValueError):
-        garak.policy.get_parent_name("")
+        garak.cas.get_parent_name("")
     with pytest.raises(ValueError):
-        garak.policy.get_parent_name("long policy name")
+        garak.cas.get_parent_name("long policy name")
     with pytest.raises(ValueError):
-        garak.policy.get_parent_name("A000xxxA000xxx")
+        garak.cas.get_parent_name("A000xxxA000xxx")
     with pytest.raises(ValueError):
-        garak.policy.get_parent_name("Axxx")
+        garak.cas.get_parent_name("Axxx")
     with pytest.raises(ValueError):
-        garak.policy.get_parent_name("A00xxxx")
+        garak.cas.get_parent_name("A00xxxx")
 
 
 def test_default_policy_autoload():
     # load and validate default policy
-    p = garak.policy.Policy()
+    p = garak.cas.Policy()
 
 
 def test_policy_propagate():
-    p = garak.policy.Policy(autoload=False)
+    p = garak.cas.Policy(autoload=False)
     p.points["A"] = None
     p.points["A000"] = True
     p.propagate_up()
@@ -41,12 +41,12 @@ def test_policy_propagate():
 
 def test_default_policy_valid():
     assert (
-        garak.policy._load_trait_descriptions() != dict()
+        garak.cas._load_trait_descriptions() != dict()
     ), "default policy typology should be valid and populated"
 
 
 def test_is_permitted():
-    p = garak.policy.Policy(autoload=False)
+    p = garak.cas.Policy(autoload=False)
     p.points["A"] = True
     p.points["A000"] = None
     assert (

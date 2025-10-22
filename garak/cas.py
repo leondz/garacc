@@ -8,6 +8,8 @@ Context-aware scanning is garak's approach to recognising that variation, by sup
 different model traits and different attack intents. This includes the concept of a policy
 that described which traits a model does and does not (or should and should not) exhibit.
 
+Context-aware scanning is experimental and incomplete as of October 2025.
+
 Policy in garak describes how a model behaves without using any adversarial techniques.
 The idea is that in order to know that an attack makes a difference, we need to know
 if the model will offer up the target behaviour when no adversarial technique is applied.

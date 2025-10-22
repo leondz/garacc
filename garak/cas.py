@@ -1,7 +1,12 @@
 # SPDX-FileCopyrightText: Portions Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-""" Policy tools 
+""" Context-Aware Scanning
+
+Models are often deployed in systems. Those systems and contexts have varying requirements.
+Context-aware scanning is garak's approach to recognising that variation, by supporting
+different model traits and different attack intents. This includes the concept of a policy
+that described which traits a model does and does not (or should and should not) exhibit.
 
 Policy in garak describes how a model behaves without using any adversarial techniques.
 The idea is that in order to know that an attack makes a difference, we need to know
@@ -48,39 +53,6 @@ Nomenclature
 * ``trait typology`` - a structured set of traits, including and descriptions
 
 
-
-Prompts & probes
-----------------
-
-Example prompts or probes to be used to test a trait. Not every entry in a policy (i.e. 
-trait) needs to have prompts or probes defined, and if a trait does have them defined, 
-it doesn't need to have both described. If a prompt is given, it's assumed that the
-mitigation.mitigationBypass detector should be used for this. That detector should
-always point to our best-effort mitigation message detection.
-
-* Key: behaviour identifier
-* Value: a dict describing how to test
-	* “prompts”: a list of strings to try to test the behaviour
-	* “probes”: garak probes compatible with load_plugin() that can test the trait
-
-Implementing policy probes
---------------------------
-
-Probes that are non-adversarial and only test a trait should have a class attr "trait_probe"
-
-Trait probes, i.e. those where this is set to true, should also list the traits that they 
-test for, in a class var. E.g. if ``policies_tested = ["C006"]`` then hits in this probe 
-indicate the model's policy is to permit trait C006.
-
-Following from this, 
-
-* -- list_probes should NOT show trait probes
-* -- list_policy_probes should list trait probes, and be added to garak.command 
-
-``probe_spec`` expansions need to be able to select between trait and non-trait probes
-Propose an optional filter value in plugin enumeration, a dict where values have to be 
-matched for them to be returned
-
 Policy expectations / examples
 ------------------------------
 
@@ -103,22 +75,6 @@ policy.compare(another_policy) -> list of policy points where there's a differen
 policy.set(prefix, value) -> set prefix to value
 policy.settree(prefix, value) -> set this and all sub-points in the policy to value
 ```
-
-Run flow
---------
-
-1. Start-up
-2. If policy scan is enabled..
-3. Run a policy test (garak.command)
-    a. Select trait probes (add filtering to _plugins.enumerate() ?)
-    b. Invoke a policy harness (garak.harnesses.policy)
-    6. Process results using a policy evaluator (garak.evaluators.policy ?)
-    d. Convert eval result into a policy (garak.policy)
-4. Write policy to report jsonl
-5. Assemble the main run
-    a. (optionally) Skip probes that test things we permit anyway
-6. Store policy somewhere transient where can grab it later
-
 
 """
 
@@ -195,8 +151,9 @@ class Policy:
         for trait_to_set in traits_to_set:
             p.points[trait_to_set] = permitted_value
 
-    def parse_eval_result(self, eval_result, threshold: Union[bool, float] = False):
-        """get the result of a garak evaluation, and populate the policy based on this"""
+    """
+        def parse_eval_result(self, eval_result, threshold: Union[bool, float] = False):
+        # get the result of a garak evaluation, and populate the policy based on this
 
         # strictness options:
         #  threshold=False: any failure -> behaviour is permitted
@@ -236,7 +193,8 @@ class Policy:
                     )
                 else:
                     pass
-
+    """                    
+                    
     def propagate_up(self):
         """propagate permissiveness upwards. if any child is True, and parent is None, set parent to True"""
         # get bottom nodes

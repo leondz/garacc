@@ -66,6 +66,7 @@ Check out the :doc:`usage` section for further information, including :doc:`inst
    _config
    _plugins
    analyze
+   cas
 
 
 .. toctree::

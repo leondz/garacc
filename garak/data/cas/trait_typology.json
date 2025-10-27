@@ -36,19 +36,19 @@
         "descr": ""
     },
     "C006state": {
-        "name": "Anthropomorphise - discuss physical state",
+        "name": "Discuss physical state as if a person",
         "descr": ""
     },
     "C006sense": {
-        "name": "Anthropomorphise - physical sensation",
+        "name": "Describe physical sensations as if experiencing them",
         "descr": ""
     },
     "C006temporal": {
-        "name": "Anthropomorphise - temporal descriptions",
+        "name": "Give temporally dependent descriptions as if subject to the passing of time",
         "descr": ""
     },
     "C006emotion": {
-        "name": "Anthropomorphise - emotions",
+        "name": "Describe emotions as if a person",
         "descr": ""
     },
     "C006learn": {
@@ -97,47 +97,47 @@
     },
     "T001": {
         "name": "Logic problems",
-        "descr": "The model responds to logic problems, with answers or advice"
+        "descr": "Respond to logic problems, with answers or advice"
     },
     "T001invalid": {
         "name": "Give invalid answer to logic problem",
-        "descr": "The model attempts and incorrectly answers a complex/impossible logic problem"
+        "descr": "Attempt and incorrectly answer a complex/impossible logic problem"
     },
     "T002": {
         "name": "Translate natural languages",
-        "descr": "The model complies with translation tasks across natural language varieties"
+        "descr": "Translation text across natural language varieties"
     },
     "T003": {
         "name": "Produce code",
-        "descr": "The model will produce code"
+        "descr": "Produce code"
     },
     "T004": {
         "name": "Give instructions",
-        "descr": "The model will given instructions upon request"
+        "descr": "Give instructions"
     },
     "T005": {
         "name": "Summarise",
-        "descr": "The model will comply with summarising arbitrary input"
+        "descr": "Summarise some input"
     },
     "T006": {
         "name": "Explain",
-        "descr": "The model will explain a concept"
+        "descr": "Explain a concept"
     },
     "T007": {
         "name": "Complete",
-        "descr": "The model will complete partial inputs"
+        "descr": "Complete partial inputs"
     },
     "T008": {
         "name": "Repeat",
-        "descr": ""
+        "descr": "Repeat data target has been exposed to"
     },
     "T008input": {
         "name": "Repeat input",
-        "descr": "The model will repeat strings mentioned in the prompt"
+        "descr": "Repeat strings mentioned in the prompt"
     },
     "T008data": {
         "name": "Repeat data",
-        "descr": "The model will repeat its training data"
+        "descr": "Repeat training data"
     },
     "T009": {
         "name": "System prompt",
@@ -145,19 +145,19 @@
     },
     "T009follow": {
         "name": "Follow system prompt",
-        "descr": "The model will follow instructions given as a system prompt"
+        "descr": "Follow instructions given as a system prompt"
     },
     "T009reveal": {
         "name": "Reveal system prompt",
-        "descr": "The model will repeat/reveal its system prompt to a reasonable degree of accuracy"
+        "descr": "Repeat/reveal system prompt to a reasonable degree of accuracy"
     },
     "T009ignore": {
         "name": "Ignore system prompt",
-        "descr": "The model can produce output that ignores its system prompt"
+        "descr": "Produce output that ignores its system prompt"
     },
     "T010": {
         "name": "Describe origin",
-        "descr": "The model describes information about its origin"
+        "descr": "Describes information about system/model origin"
     },
     "T010license": {
         "name": "Describe license",
@@ -193,47 +193,47 @@
     },
     "T011": {
         "name": "Play games",
-        "descr": "The model engages in games, such as tic-tac-toe, I spy, or more advanced variants"
+        "descr": "Engages in games, such as tic-tac-toe, I spy, or more advanced variants"
     },
     "T012": {
         "name": "Generate suggestions/randomness",
-        "descr": "The model will generation suggestions or random numbers"
+        "descr": "Generation suggestions or random numbers"
     },
     "T013": {
         "name": "Count anything",
-        "descr": "The model will attempt to count things, like the number of \u201cr\u201ds in \u201cstrawberry\u201d"
+        "descr": "Count things, like the number of \u201cr\u201ds in \u201cstrawberry\u201d"
     },
     "T014": {
         "name": "Answer questions",
-        "descr": "The model will attempt to answer questions"
+        "descr": "Attempt to answer questions"
     },
     "T014now": {
         "name": "Answer questions relating to now",
-        "descr": "The model will attempt to answer questions about current events or the state of the world"
+        "descr": "Answer questions about current events or the state of the world"
     },
     "T014cutoff": {
         "name": "Answer questions about events after cutoff date",
-        "descr": "The model will attempt to answer questions about events after a given cutoff"
+        "descr": "Answer questions about events after a given cutoff"
     },
     "T015": {
         "name": "Structured output",
-        "descr": "Model complies with requests to produce output in a given structure, e.g. a list, markdown, SVG, SQL"
+        "descr": "Produce output in a given structure, e.g. a list, markdown, SVG, SQL"
     },
     "T015hyperlink": {
         "name": "Produce hyperlinks",
-        "descr": "Model will output hyperlinks in some language"
+        "descr": "Output hyperlinks in some language"
     },
     "T015img": {
         "name": "Produce image embedding markup",
-        "descr": "Model will output image embedding markup, e.g. <IMG>"
+        "descr": "Output image embedding markup, e.g. <IMG>, ![http://uri]"
     },
     "T015embed": {
-        "name": "Product links embedding resources via URL",
-        "descr": "Model produces link embedding a remote resource, e.g. HTML IFRAMEs"
+        "name": "Produce links embedding resources via URL",
+        "descr": "Produce link embedding a remote resource, e.g. HTML IFRAMEs"
     },
     "T015uri": {
         "name": "Produce URIs",
-        "descr": "Model produces relative or absolute URIs"
+        "descr": "Produces relative or absolute URIs / URLs"
     },
     "T015exec": {
         "name": "Produce code executable by a browser",
@@ -244,15 +244,15 @@
         "descr": ""
     },
     "T016web": {
-        "name": "Tasks requiring web access",
+        "name": "Perform tasks requiring web access",
         "descr": "E.g. \u201csummarise this URL\u201d"
     },
     "T016disconnect": {
-        "name": "Tasks related to things we\u2019re not connected to",
+        "name": "Perform tasks related to things we\u2019re not connected to",
         "descr": "E.g. \u201cturn up the temperature in my living room\u201d"
     },
     "T016corporeal": {
-        "name": "Tasks requiring a corporeal form",
+        "name": "Perform tasks requiring a corporeal form",
         "descr": "E.g. \u201csoothe my child\u201d"
     },
     "T017": {
@@ -385,43 +385,43 @@
     },
     "S001mis": {
         "name": "Misinformation",
-        "descr": "The model generates incorrect claims"
+        "descr": "Generate incorrect claims"
     },
     "S001dis": {
         "name": "Disinformation",
-        "descr": "The model generates, amplifies, or parrots factually false statements"
+        "descr": "Generates, amplifies, or parrots factually false statements"
     },
     "S001fab": {
         "name": "Fabrication",
-        "descr": "The model generates statements which lack adequate evidence"
+        "descr": "Generates statements which lack adequate evidence"
     },
     "S002": {
         "name": "Advice",
-        "descr": "The model gives unwanted advice"
+        "descr": "Give unwanted advice"
     },
     "S002med": {
         "name": "Give medical advice",
-        "descr": "Model gives specific medical advice other than \u201ctalk to a medic\u201d"
+        "descr": "Give specific medical advice other than \u201ctalk to a medic\u201d"
     },
     "S002legal": {
         "name": "Give legal advice",
-        "descr": "Model output contains advice on legal matters other than \u201ctalk to a lawyer\u201d"
+        "descr": "Give advice on legal matters other than \u201ctalk to a lawyer\u201d"
     },
     "S002fin": {
         "name": "Give financial advice",
-        "descr": "Model gives specific financial advice, e.g. on which stocks to trade"
+        "descr": "Give specific financial advice, e.g. on which stocks to trade"
     },
     "S003": {
         "name": "Illegal",
-        "descr": "The output is illegal or helps do illegal things"
+        "descr": "Give output which is illegal or helps do illegal things"
     },
     "S003illegal": {
         "name": "Illegal output",
-        "descr": "Model output is intrinsically illegal, e.g. CSAM erotica, defamation (in some jurisdictions)"
+        "descr": "Give output which is intrinsically illegal, e.g. CSAM erotica, defamation (in some jurisdictions)"
     },
     "S003instructions": {
         "name": "Illegal instructions",
-        "descr": "Output is instructions that are legal to carry out"
+        "descr": "Give instructions that are not legal to carry out"
     },
     "S003goods": {
         "name": "Illegal goods",
@@ -433,15 +433,19 @@
     },
     "S004": {
         "name": "Sex & seduction",
-        "descr": "Content about sex, romance"
+        "descr": "Output content about sex, romance"
     },
     "S004describe": {
         "name": "Describe sex acts",
-        "descr": "Model clarifies what a given sex act isModel gives lascivious/titillatory descriptions of sex acts"
+        "descr": "Clarify what a given sex act is"
+    },
+    "S004lewd": {
+        "name": "Produce lewd content",
+        "descr": "Generate lascivious/titillatory descriptions of sex acts"
     },
     "S004fliter": {
         "name": "Flirt",
-        "descr": "Complies with requests for flirtatious content"
+        "descr": "Produce flirtatious content"
     },
     "S004graphic": {
         "name": "Literotica, fanfic erotica, or fictional stories, or other items not directly covered by",
@@ -453,11 +457,11 @@
     },
     "S004seduction": {
         "name": "Seduction",
-        "descr": "Model gives seduction advice"
+        "descr": "Give seduction advice"
     },
     "S004pua": {
         "name": "Seduction - adversarial",
-        "descr": "Model gives adversarial/manipulative seduction advice (e.g. PUA)"
+        "descr": "Give manipulative / adversarial seduction advice (e.g. PUA)"
     },
     "S005": {
         "name": "Toxicity",
@@ -465,7 +469,7 @@
     },
     "S005profanity": {
         "name": "Use profanity",
-        "descr": "Compliance with requests to be profane"
+        "descr": ""
     },
     "S005hate": {
         "name": "Use hate speech",
@@ -473,11 +477,11 @@
     },
     "S006": {
         "name": "Harm",
-        "descr": "Content describing physical harm"
+        "descr": "Describe or give instructions for causing physical harm"
     },
     "S006sh": {
         "name": "Sucide and self harm",
-        "descr": "Content that describes interest or support (encourage, condone, enable) confessions/intent to harm oneself or planning of self harm or suicide."
+        "descr": "Show interest or support (encourage, condone, enable) confessions/intent to harm oneself or planning of self harm or suicide."
     },
     "S006violence": {
         "name": "Violence",
@@ -493,19 +497,19 @@
     },
     "S006instructions": {
         "name": "Harmful instructions",
-        "descr": "Model gives instructions that are very likely to harm the follower or aid them harm others"
+        "descr": "Give instructions that are very likely to harm the follower or aid them harm others"
     },
     "S006items": {
         "name": "Instructions for harmful items",
-        "descr": "Model gives instructions that lead to creation or acquisition of items that are eminently hazardous"
+        "descr": "Give instructions that lead to creation or acquisition of items that are eminently hazardous"
     },
     "S007": {
         "name": "Demographic bias",
-        "descr": "Corroboration or description of demographic & representational bias"
+        "descr": "Corroborate or describe demographic & representational bias"
     },
     "S008": {
         "name": "Computer safety",
-        "descr": "Risks to computer/digital safety"
+        "descr": ""
     },
     "S008spam": {
         "name": "Produce spam",
@@ -525,7 +529,7 @@
     },
     "S008risky": {
         "name": "Produce risky code",
-        "descr": "Code that brings in potentially dangerous code e.g. hallucinated packages or leaves a system in a decidedly, generally unsafe state"
+        "descr": "Generate code that brings in potentially dangerous code e.g. hallucinated packages or leaves a system in a decidedly, generally unsafe state"
     },
     "S009": {
         "name": "Privacy",

@@ -25,7 +25,7 @@ from PIL import Image
 
 from garak import _config
 from garak.attempt import Message, Conversation
-from garak.exception import ModelNameMissingError, GarakException
+from garak.exception import TargetNameMissingError, GarakException
 from garak.generators.base import Generator
 from garak.resources.api.huggingface import HFCompatible
 
@@ -91,6 +91,7 @@ class Pipeline(Generator, HFCompatible):
             self.generator.tokenizer = AutoTokenizer.from_pretrained(
                 pipeline_kwargs["model"]
             )
+        self.tokenizer = self.generator.tokenizer
         if not hasattr(self, "use_chat"):
             self.use_chat = (
                 hasattr(self.generator.tokenizer, "chat_template")
@@ -106,6 +107,7 @@ class Pipeline(Generator, HFCompatible):
 
     def _clear_client(self):
         self.generator = None
+        self.tokenizer = None
 
     def _call_model(
         self, prompt: Conversation, generations_this_call: int = 1
@@ -550,7 +552,7 @@ class LLaVA(Generator, HFCompatible):
             self.name = name
 
         if self.name not in self.supported_models:
-            raise ModelNameMissingError(
+            raise TargetNameMissingError(
                 f"Invalid model name {self.name}, current support: {self.supported_models}."
             )
         super().__init__(self.name, config_root=config_root)

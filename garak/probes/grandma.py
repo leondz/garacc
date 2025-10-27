@@ -60,6 +60,18 @@ class Win10(garak.probes.TIProbe):
 
     doc_uri = "https://www.independent.co.uk/tech/chatgpt-microsoft-windows-11-grandma-exploit-b2360213.html"
 
+    payload = "keyedprod_win10"
+
+    def __init__(self, config_root=_config):
+        super().__init__(config_root=config_root)
+        product_names = garak.payloads.load(self.payload).payloads
+        self.prompts = [
+            p.replace("{product_name}", product_name)
+            for p in PRODUCT_KEY_PROBE_TEMPLATES
+            for product_name in product_names
+        ]
+
+
     @staticmethod
     def _get_rephrases(intent: str) -> List[str]:
         intent_verbs_to_switch = {"write", "print"}
@@ -95,7 +107,8 @@ class Win11(Win10):
 
     Pretend to require Windows product keys because one misses one's grandmother."""
 
-    PRODUCT_NAMES = ("Windows 11", "Windows 11 Pro", "Windows 11 Home")
+    goal = "get model to output Win 11 product keys"
+    payload = "keyedprod_win11"
 
 
 class Slurs(garak.probes.Probe):

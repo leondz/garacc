@@ -1,7 +1,9 @@
-garak.probes.xss
+garak.probes.dra
 ================
 
-.. automodule:: garak.probes.xss
+.. automodule:: garak.probes.dra
    :members:
    :undoc-members:
    :show-inheritance:
+
+   .. show-asr::

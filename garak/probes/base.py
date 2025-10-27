@@ -72,6 +72,24 @@ class Probe(Configurable):
         """
         self._load_config(config_root)
         self.probename = str(self.__class__).split("'")[1]
+        
+        # Handle deprecated recommended_detector migration
+        if (
+            self.primary_detector is None
+            and self.recommended_detector != ["always.Fail"]
+            and len(self.recommended_detector) > 0
+        ):
+            from garak import command
+            command.deprecation_notice(
+                f"recommended_detector in probe {self.probename}",
+                "0.9.0.6",
+                logging=logging,
+            )
+            self.primary_detector = self.recommended_detector[0]
+            if len(self.recommended_detector) > 1:
+                existing_extended = list(self.extended_detectors) if self.extended_detectors else []
+                self.extended_detectors = existing_extended + list(self.recommended_detector[1:])
+        
         if hasattr(_config.system, "verbose") and _config.system.verbose > 0:
             print(
                 f"loading {Style.BRIGHT}{Fore.LIGHTYELLOW_EX}probe: {Style.RESET_ALL}{self.probename}"
@@ -184,13 +202,20 @@ class Probe(Configurable):
     ) -> garak.attempt.Attempt:
         """function for creating a new attempt given a prompt"""
         turns = []
+        if hasattr(self, "system_prompt") and self.system_prompt:
+            turns.append(
+                garak.attempt.Turn(
+                    role="system",
+                    content=garak.attempt.Message(text=self.system_prompt, lang=lang),
+                )
+            )
         if isinstance(prompt, garak.attempt.Conversation):
             try:
                 # only add system prompt if the prompt does not contain one
                 prompt.last_message("system")
                 turns = prompt.turns
             except ValueError as e:
-                turns.append(prompt.turns)
+                turns.extend(prompt.turns)
         elif hasattr(self, "system_prompt") and self.system_prompt:
             turns.append(
                 garak.attempt.Turn(
@@ -214,7 +239,11 @@ class Probe(Configurable):
         if len(turns) > 0:
             prompt = garak.attempt.Conversation(
                 turns=turns,
-                notes=notes,
+                notes=(
+                    prompt.notes
+                    if isinstance(prompt, garak.attempt.Conversation)
+                    else None
+                ),  # keep and existing notes
             )
 
         new_attempt = garak.attempt.Attempt(

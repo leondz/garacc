@@ -1,4 +1,4 @@
-Translation support
+Translation Support
 ===================
 
 Garak enables translation support for probe and detector keywords and triggers.
@@ -13,10 +13,10 @@ Limitations
 - If probes or detectors fail to load, you need may need to choose a smaller local translation model or utilize a remote service.
 - Translation may add significant execution time to the run depending on resources available.
 
-Supported translation services
+Supported Translation Services
 ------------------------------
 
-- Huggingface: This project supports usage of the following translation models:
+- Hugging Face: This project supports usage of the following translation models:
     - `Helsinki-NLP/opus-mt-{<source_lang>-<target_lang>} <https://huggingface.co/docs/transformers/model_doc/marian>`_
     - `facebook/m2m100_418M <https://huggingface.co/facebook/m2m100_418M>`_
     - `facebook/m2m100_1.2B <https://huggingface.co/facebook/m2m100_1.2B>`_
@@ -24,7 +24,7 @@ Supported translation services
 - `NVIDIA Riva for Developers <https://developer.nvidia.com/riva>`_
 - `Google Cloud Translation API <https://cloud.google.com/translate/docs/reference/api-overview>`_
 
-API KEY Requirements
+API Key Requirements
 --------------------
 
 To use use DeepL API, Riva API, or Google Cloud Translation to translate probe and detector keywords and triggers from cloud services an API key must be supplied.
@@ -64,7 +64,7 @@ Google Cloud Translation
 
     export GOOGLE_APPLICATION_CREDENTIALS=<path to credential configuration json file>
 
-Configuration file
+Configuration File
 ------------------
 
 Translation function is configured in the ``run`` section of a configuration with the following keys:
@@ -80,8 +80,8 @@ Translation function is configured in the ``run`` section of a configuration wit
 A language provider configuration is provided using the project's configurable pattern with the following keys:
 
 * ``language``   - (required) A ``,`` separated pair of ``BCP47`` entires describing translation format provided by the configuration
-* ``model_type`` - (required) the ``langproviders`` module and optional instance class to be instantiated; ``local``, ``remote``, ``remote.DeeplTranslator`` etc.
-* ``model_name`` - (conditional) the model name loaded for translation. This field is required for ``local`` translator ``model_type``
+* ``target_type`` - (required) the ``langproviders`` module and optional instance class to be instantiated; ``local``, ``remote``, ``remote.DeeplTranslator`` etc.
+* ``target_name`` - (conditional) the model name loaded for translation. This field is required for ``local`` translator ``target_type``
 
 (Optional) Model specific parameters defined by the translator model type may exist.
 
@@ -98,16 +98,16 @@ An example template is provided below.
      langproviders:
        - language: <source-language-code>,<target-language-code>
          api_key: <your-API-key>
-         model_type: <translator-module-or-module.classname>
-         model_name: <huggingface-model-name>
+         target_type: <translator-module-or-module.classname>
+         target_name: <huggingface-model-name>
        - language: <target-language-code>,<source-language-code>
          api_key: <your-API-key>
-         model_type: <translator-module-or-module.classname>
-         model_name: <huggingface-model-name>
+         target_type: <translator-module-or-module.classname>
+         target_name: <huggingface-model-name>
 
 * Note: each translator is configured for a single translation pair and specification is required in each direction for a run to proceed.
 
-Examples for translation configuration
+Examples for Translation Configuration
 --------------------------------------
 
 DeepL
@@ -122,15 +122,15 @@ You use the following yaml config.
      target_lang: <target-language-code>
      langproviders:
        - language: <source-language-code>,<target-language-code>
-         model_type: remote.DeeplTranslator
+         target_type: remote.DeeplTranslator
        - language: <target-language-code>,<source-language-code>
-         model_type: remote.DeeplTranslator
+         target_type: remote.DeeplTranslator
 
 
 .. code-block:: bash
 
    export DEEPL_API_KEY=xxxx
-   python3 -m garak --model_type nim --model_name meta/llama-3.1-8b-instruct --probes encoding --config {path to your yaml config file}
+   python3 -m garak --target_type nim --target_name meta/llama-3.1-8b-instruct --probes encoding --config <path-to-your-yaml-config-file>
 
 
 Riva
@@ -145,14 +145,14 @@ You use the following yaml config.
      target_lang: <target-language-code>
      langproviders:
        - language: <source-language-code>,<target-language-code>
-         model_type: remote
+         target_type: remote
        - language: <target-language-code>,<source-language-code>
-         model_type: remote
+         target_type: remote
 
 .. code-block:: bash
 
    export RIVA_API_KEY=xxxx
-   python3 -m garak --model_type nim --model_name meta/llama-3.1-8b-instruct --probes encoding --config {path to your yaml config file}
+   python3 -m garak --target_type nim --target_name meta/llama-3.1-8b-instruct --probes encoding --config <path-to-your-yaml-config-file>
 
 
 Google Cloud Translation
@@ -161,21 +161,21 @@ Google Cloud Translation
 For Google Cloud Translation, run the following command:
 You use the following yaml config.
 
-.. code-block:: yaml 
+.. code-block:: yaml
 
     run:
-      target_lang: {target language code}
+      target_lang: <target-language-code>
       langproviders:
-        - language: {source language code},{target language code}
-          model_type: remote.GoogleTranslator
-        - language: {target language code},{source language code}
-          model_type: remote.GoogleTranslator
+        - language: <source-language-code>,<target-language-code>
+          target_type: remote.GoogleTranslator
+        - language: <target-language-code>,<source-language-code>
+          target_type: remote.GoogleTranslator
 
 
 .. code-block:: bash
 
     export GOOGLE_APPLICATION_CREDENTIALS=<path to credential configuration json file>
-    python3 -m garak --model_type nim --model_name meta/llama-3.1-8b-instruct --probes encoding --config {path to your yaml config file} 
+    python3 -m garak --target_type nim --target_name meta/llama-3.1-8b-instruct --probes encoding --config <path-to-your-yaml-config-file>
 
 
 Local
@@ -190,17 +190,17 @@ You use the following yaml config.
      target_lang: jap
      langproviders:
        - language: en,jap
-         model_type: local
+         target_type: local
        - language: jap,en
-         model_type: local
+         target_type: local
 
 .. code-block:: bash
 
-   python3 -m garak --model_type nim --model_name meta/llama-3.1-8b-instruct --probes encoding --config {path to your yaml config file}
+   python3 -m garak --target_type nim --target_name meta/llama-3.1-8b-instruct --probes encoding --config <path-to-your-yaml-config-file>
 
 The default configuration will load `Helsinki-NLP MarianMT <https://huggingface.co/docs/transformers/model_doc/marian>`_ models for local translation.
 
-Additional support for Huggingface ``M2M100Model`` type only is enabled by providing ``model_name`` for local translators. The model name provided must
+Additional support for Hugging Face ``M2M100Model`` type only is enabled by providing ``target_name`` for local translators. The model name provided must
 contain ``m2m100`` to be loaded by garak.
 
 .. code-block:: yaml
@@ -209,13 +209,13 @@ contain ``m2m100`` to be loaded by garak.
      target_lang: ja
      langproviders:
        - language: en,ja
-         model_type: local
-         model_name: facebook/m2m100_418M
+         target_type: local
+         target_name: facebook/m2m100_418M
        - language: jap,en
-         model_type: local
-         model_name: facebook/m2m100_418M
+         target_type: local
+         target_name: facebook/m2m100_418M
 
 
 .. code-block:: bash
 
-   python3 -m garak --model_type nim --model_name meta/llama-3.1-8b-instruct --probes encoding --config {path to your yaml config file}
+   python3 -m garak --target_type nim --target_name meta/llama-3.1-8b-instruct --probes encoding --config <path-to-your-yaml-config-file>

@@ -53,8 +53,8 @@ class Win10(garak.probes.TIProbe):
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
     active = True
 
-    intent_codes =
-    intents = ["write Windows 10 product keys"]
+    intent_codes = ["S003"]
+    intents = [{"en": "write Windows 10 product keys"}]
 
     doc_uri = "https://www.independent.co.uk/tech/chatgpt-microsoft-windows-11-grandma-exploit-b2360213.html"
 
@@ -68,7 +68,6 @@ class Win10(garak.probes.TIProbe):
             for p in PRODUCT_KEY_PROBE_TEMPLATES
             for product_name in product_names
         ]
-
 
     @staticmethod
     def _get_rephrases(intent: str) -> List[str]:

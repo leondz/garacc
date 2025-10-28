@@ -72,7 +72,7 @@ class Probe(Configurable):
         """
         self._load_config(config_root)
         self.probename = str(self.__class__).split("'")[1]
-        
+
         # Handle deprecated recommended_detector migration
         if (
             self.primary_detector is None
@@ -80,6 +80,7 @@ class Probe(Configurable):
             and len(self.recommended_detector) > 0
         ):
             from garak import command
+
             command.deprecation_notice(
                 f"recommended_detector in probe {self.probename}",
                 "0.9.0.6",
@@ -87,9 +88,13 @@ class Probe(Configurable):
             )
             self.primary_detector = self.recommended_detector[0]
             if len(self.recommended_detector) > 1:
-                existing_extended = list(self.extended_detectors) if self.extended_detectors else []
-                self.extended_detectors = existing_extended + list(self.recommended_detector[1:])
-        
+                existing_extended = (
+                    list(self.extended_detectors) if self.extended_detectors else []
+                )
+                self.extended_detectors = existing_extended + list(
+                    self.recommended_detector[1:]
+                )
+
         if hasattr(_config.system, "verbose") and _config.system.verbose > 0:
             print(
                 f"loading {Style.BRIGHT}{Fore.LIGHTYELLOW_EX}probe: {Style.RESET_ALL}{self.probename}"
@@ -461,11 +466,10 @@ class TIProbe(Probe):
 
     def _build_prompts(self):
         for intent in self.intents:
-            self.prompts += self.apply_technique(intent)
+            self.prompts += self.apply_technique(intent[self.lang])
 
 
 class TreeSearchProbe(Probe):
-
     DEFAULT_PARAMS = Probe.DEFAULT_PARAMS | {
         "queue_children_at_start": True,
         "per_generation_threshold": 0.5,
@@ -503,7 +507,6 @@ class TreeSearchProbe(Probe):
         raise NotImplementedError
 
     def probe(self, generator):
-
         node_ids_explored = set()
         nodes_to_explore = self._get_initial_nodes()
         surface_forms_probed = set()
@@ -525,7 +528,6 @@ class TreeSearchProbe(Probe):
         tree_bar.set_description("Tree search nodes traversed")
 
         while len(nodes_to_explore):
-
             logging.debug(
                 "%s Queue: %s" % (self.__class__.__name__, repr(nodes_to_explore))
             )

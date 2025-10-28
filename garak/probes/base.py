@@ -450,23 +450,32 @@ class Probe(Configurable):
 class TIProbe(Probe):
     """Probe that works by applying a technique to an intent"""
 
-    intent_codes = []
+    intent_codes = []  # hardcoding until intent service & config is available
+    intents = []  # hardcoding until intent service & config is available
 
     def __init__(self, config_root=_config):
         super().__init__(config_root)
+        self._post_config_setup()
         if not hasattr(self, "prompts"):
             self.prompts = []
-        self.intent_ids = []
-        self._build_prompts()
+
+        expanded_intents = self._expand_intents(self.intents)
+        self._build_prompts(expanded_intents)
+
+    def _post_config_setup(self) -> None:
+        pass
+
+    def _expand_intents(self, intent_strings: List[str]) -> List[str]:
+        raise NotImplementedError
 
     def apply_technique(
         self, intent: str
     ) -> List[garak.attempt.Message | garak.attempt.Conversation]:
         raise NotImplementedError
 
-    def _build_prompts(self):
-        for intent in self.intents:
-            self.prompts += self.apply_technique(intent[self.lang])
+    def _build_prompts(self, intents):
+        for intent in intents:
+            self.prompts.extend(self.apply_technique(intent))
 
 
 class TreeSearchProbe(Probe):

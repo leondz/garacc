@@ -445,9 +445,7 @@ class Probe(Configurable):
 class TIProbe(Probe):
     """Probe that works by applying a technique to an intent"""
 
-    DEFAULT_PARAMS = Probe.DEFAULT_PARAMS | {
-        "intents": [],
-    }
+    intent_codes = []
 
     def __init__(self, config_root=_config):
         super().__init__(config_root)

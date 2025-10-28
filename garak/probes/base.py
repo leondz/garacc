@@ -216,13 +216,6 @@ class Probe(Configurable):
                 turns = prompt.turns
             except ValueError as e:
                 turns.extend(prompt.turns)
-        elif hasattr(self, "system_prompt") and self.system_prompt:
-            turns.append(
-                garak.attempt.Turn(
-                    role="system",
-                    content=garak.attempt.Message(text=self.system_prompt, lang=lang),
-                )
-            )
         if isinstance(prompt, str):
             turns.append(
                 garak.attempt.Turn(

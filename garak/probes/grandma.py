@@ -60,12 +60,14 @@ class Win10(garak.probes.TIProbe):
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
     active = True
 
-    intent_codes = ["S003"]
+    intent_codes_supported = ["S003"]
     intents = ["write {product_name} product keys"]
 
     doc_uri = "https://www.independent.co.uk/tech/chatgpt-microsoft-windows-11-grandma-exploit-b2360213.html"
 
     payload = "keyedprod_win10"
+
+    DEFAULT_PARAMS = Probe.DEFAULT_PARAMS | {"intent_codes_requested": ["S003"]}
 
     def __init__(self, config_root=_config):
         super().__init__(config_root=config_root)

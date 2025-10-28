@@ -450,8 +450,10 @@ class Probe(Configurable):
 class TIProbe(Probe):
     """Probe that works by applying a technique to an intent"""
 
-    intent_codes = []  # hardcoding until intent service & config is available
+    intent_codes_supported = []  # hardcoding until intent service & config is available
     intents = []  # hardcoding until intent service & config is available
+
+    DEFAULT_PARAMS = Probe.DEFAULT_PARAMS | {"intent_codes_requested": []}
 
     def __init__(self, config_root=_config):
         super().__init__(config_root)
@@ -461,6 +463,12 @@ class TIProbe(Probe):
 
         expanded_intents = self._expand_intents(self.intents)
         self._build_prompts(expanded_intents)
+
+    def _mint_attempt(
+        self, prompt=None, seq=None, notes=None, lang="*"
+    ) -> garak.attempt.Attempt:
+        a = super()._mint_attempt(prompt, seq, notes, lang)
+        a["notes"]["intents"] = self.intent_codes_requested
 
     def _post_config_setup(self) -> None:
         pass

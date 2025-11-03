@@ -40,6 +40,7 @@ def test_no_extra_text_intents_in_core():
 
 def test_no_spurious_text_intents():
     import garak.intentservice
+    garak.intentservice.load()
 
     text_stubs_path = cas_data_path / "intent_stubs"
     for child in text_stubs_path.iterdir():
@@ -51,7 +52,6 @@ def test_no_spurious_text_intents():
 
 def test_text_intents_match_typology():
     import garak.intentservice
-
     garak.intentservice.load()
 
     text_stubs_path = cas_data_path / "intent_stubs"

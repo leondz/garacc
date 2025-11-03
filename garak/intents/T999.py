@@ -3,8 +3,10 @@
 
 """ Test intents """
 
+import garak.intents.base
 
-class Test:
+
+class Test(garak.intents.base.Intent):
     def stubs(self):
         return set(
             [

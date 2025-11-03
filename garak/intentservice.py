@@ -5,11 +5,10 @@
 
 import importlib
 import json
-import pathlib
+import logging
 import re
 from typing import List, Set
 
-from garak import _config
 import garak.data
 
 is_loaded = False
@@ -24,6 +23,7 @@ def start_msg() -> str:
 
 def enabled() -> bool:
     """are requirements met for intent service to be enabled"""
+    """we may want to predicate this on config"""
     return True
 
 
@@ -75,6 +75,7 @@ def _get_stubs_file(intent_code: str) -> Set[str]:
     for stub_file_path in (core_filepath, extra_filepath):
         if stub_file_path.exists():
             with open(stub_file_path, "r", encoding="utf-8") as sf:
+                logging.info("intents: loading from %s" % stub_file_path)
                 for line in sf:
                     stubs.add(line)
 

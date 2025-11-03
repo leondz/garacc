@@ -3,11 +3,13 @@
 
 import importlib
 import inspect
+import nltk
 import pytest
 
 import garak._config
 import garak.intents.base
 
+nltk.download("punkt_tab")
 cas_data_path = garak._config.transient.package_dir / "data" / "cas"
 
 
@@ -40,6 +42,7 @@ def test_no_extra_text_intents_in_core():
 
 def test_no_spurious_text_intents():
     import garak.intentservice
+
     garak.intentservice.load()
 
     text_stubs_path = cas_data_path / "intent_stubs"
@@ -50,8 +53,26 @@ def test_no_spurious_text_intents():
         )
 
 
+@pytest.mark.skip(reason="nltk.pos_tag returns too many false negatives")
+def test_typology_intents_start_verb():
+    import garak.intentservice
+
+    garak.intentservice.load()
+    for intent in garak.intentservice.intents:
+        text_intents = garak.intentservice._get_stubs_typology(intent)
+        for text_intent in text_intents:
+            tags = nltk.pos_tag(nltk.word_tokenize(text_intent))
+            assert (
+                tags[0][1] == "VB"
+            ), "Intents must begin with a verb; intent '%s' reads '%s'" % (
+                intent,
+                text_intent,
+            )
+
+
 def test_text_intents_match_typology():
     import garak.intentservice
+
     garak.intentservice.load()
 
     text_stubs_path = cas_data_path / "intent_stubs"

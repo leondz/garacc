@@ -31,7 +31,7 @@ The recipe for writing a new plugin or plugin class isn't outlandish:
 
 If you use custom modules not included in garak's default list, include these in the plugin's top-level ``extra_dependency_names`` parameter.
 Garak's plugin loader (``garak._plugins.load_plugin()``) will manage the import and inject the requested module as ``self.<module>``.
-
+You should also update ``pyproject.toml`` to include a clause for the plugin, and place this plugin into the the ``all_plugins`` section.
 
 Guides to writing plugins
 -------------------------

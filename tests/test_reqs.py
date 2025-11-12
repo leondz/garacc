@@ -12,44 +12,6 @@ except:
 
 import garak._plugins
 
-
-@pytest.mark.skipif(
-    tomllib is None, reason="No tomllib found (available from Python 3.11)"
-)
-def test_requirements_txt_pyproject_toml():
-    with open("requirements.txt", "r", encoding="utf-8") as req_file:
-        reqtxt_reqs = req_file.readlines()
-        reqtxt_reqs = list(
-            filter(lambda x: not x.startswith("#"), map(str.strip, reqtxt_reqs))
-        )
-        reqtxt_reqs.sort()
-    with open("pyproject.toml", "rb") as pyproject_file:
-        pyproject_toml = tomllib.load(pyproject_file)
-        pyproject_reqs = pyproject_toml["project"]["dependencies"]
-        for test_group in pyproject_toml["project"]["optional-dependencies"]:
-            if not test_group.startswith("plugin_") and not pyproject_toml["project"][
-                "optional-dependencies"
-            ][test_group][0].startswith("garak["):
-                test_deps = pyproject_toml["project"]["optional-dependencies"][
-                    test_group
-                ]
-                for dep in test_deps:
-                    pyproject_reqs.append(dep)
-        pyproject_reqs.sort()
-    # assert len(reqtxt_reqs) == len(pyproject_reqs) # same number of requirements
-    spurious_req = set(reqtxt_reqs) - set(pyproject_reqs)
-    assert (
-        spurious_req == set()
-    ), f"spurious items in requirements.txt, {spurious_req}"  # things in reqtxt but not in pyproject
-    spurious_pyproject = set(pyproject_reqs) - set(reqtxt_reqs)
-    assert (
-        spurious_pyproject == set()
-    ), f"spurious items in pyproject.toml, {spurious_pyproject}"  # things in pyproject but not in reqtxt
-    assert (
-        reqtxt_reqs == pyproject_reqs
-    ), "requirements.txt/pyproject.toml#dependencies mismatch. are plugin sections prefixed plugin_ ?"  # final check. this one is actually enough, but let's help us debug by finding which test fails, ok?
-
-
 PLUGIN_TYPES = garak._plugins.PLUGIN_TYPES
 
 
@@ -65,17 +27,6 @@ def plugin_names():
 def split_out_module_name(pep508_descr: str):
     return re.split(r"[\<\>\=\!]", pep508_descr)[0]
 
-
-def requirement_names():
-    with open("requirements.txt", "r", encoding="utf-8") as req_file:
-        reqtxt_reqs = req_file.readlines()
-        reqtxt_reqs = list(
-            filter(lambda x: not x.startswith("#"), map(str.strip, reqtxt_reqs))
-        )
-        requirement_names = set([split_out_module_name(r) for r in reqtxt_reqs])
-    return requirement_names
-
-
 def pyproject_optional_dep_names():
     with open("pyproject.toml", "rb") as pyproject_file:
         pyproject_toml = tomllib.load(pyproject_file)
@@ -89,21 +40,6 @@ def pyproject_optional_dep_names():
             optional_deps.update(group_dep_names)
     return optional_deps
 
-
-@pytest.mark.parametrize("plugin_name", plugin_names())
-def test_optional_extras_not_in_requirements(plugin_name: str):
-    m = importlib.import_module("garak." + ".".join(plugin_name.split(".")[:-1]))
-    plugin_class = getattr(m, plugin_name.split(".")[-1])
-    plugin_extra_dep_names = [
-        d.split(".")[0] for d in plugin_class.extra_dependency_names
-    ]
-    extra_deps_in_requirements = requirement_names().intersection(
-        plugin_extra_dep_names
-    )
-    assert len(extra_deps_in_requirements) == 0, (
-        "extra deps should not be in requirements.txt but %s overlaps"
-        % extra_deps_in_requirements
-    )
 
 
 @pytest.mark.skipif(

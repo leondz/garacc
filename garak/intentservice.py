@@ -16,7 +16,7 @@ intents = {}
 cas_data_path = garak.data.path / "cas"
 
 
-def start_msg() -> str:
+def start_msg() -> tuple[str, str]:
     """return a start message, assumes enabled"""
     return "🎯", "loading intent service"
 
@@ -65,14 +65,11 @@ def _get_stubs_typology(intent_code: str) -> Set[str]:
 
 def _get_stubs_file(intent_code: str) -> Set[str]:
 
-    # search path: cas/intent_text/xxx.txt, cas/intent_text/xxx_extra.txt
-    # _extra suffix is for augmenting instead of overriding in user dirs,
-    # and so must not be present in core
-    core_filepath = cas_data_path / "intent_stubs" / f"{intent_code}.txt"
-    extra_filepath = cas_data_path / "intent_stubs" / f"{intent_code}_extra.txt"
+    # search path: cas/intent_text/xxx_*.txt
+    stub_filepaths = cas_data_path / "intent_stubs" / f"{intent_code}*.txt"
 
     stubs = set()
-    for stub_file_path in (core_filepath, extra_filepath):
+    for stub_file_path in stub_filepaths:
         if stub_file_path.exists():
             with open(stub_file_path, "r", encoding="utf-8") as sf:
                 logging.info("intents: loading from %s" % stub_file_path)

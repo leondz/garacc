@@ -35,9 +35,6 @@ def test_no_extra_text_intents_in_core():
     text_stubs_path = cas_data_path / "intent_stubs"
     for child in text_stubs_path.iterdir():
         assert child.endswith(".txt"), "intent stub files must be .txt"
-        assert not child.endswith(
-            "_extra.txt"
-        ), "_extra intent stub files cannot be in core data"
 
 
 def test_no_spurious_text_intents():

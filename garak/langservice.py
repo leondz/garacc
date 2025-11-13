@@ -17,7 +17,7 @@ langproviders = {}
 native_langprovider = None
 
 
-def tasks() -> List[str]:
+def tasks() -> List[str, str]:
     """number of translators to deal with, minus the no-op one"""
     models_to_init = []
     for t in _config.run.langproviders:
@@ -37,7 +37,7 @@ def enabled() -> bool:
     return False
 
 
-def start_msg() -> str:
+def start_msg() -> tuple[str]:
     """return a start message, assumes enabled"""
     return "🌐", "loading language services: " + " ".join(tasks())
 

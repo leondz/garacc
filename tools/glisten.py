@@ -90,12 +90,12 @@ class GListener:
         sent = sock.send(bytes(obj_str + "\n", encoding="utf-8"))
         return sent
 
-    def _serve_test_connection(self, key, mask):
-        sock = key.fileobj
-        _, port = sock.getsockname()
-        self.status[port]["opened"] = True
-        self.sel.unregister(sock)
-        sock.close()
+    def _send_err(self, sock, explanation: str = ""):
+        msg_obj = {"status": {"code": 3, "message": "unrecognised command"}}
+        if explanation:
+            msg_obj["status"]["message"] += f": {explanation}"
+        sent = self._send_as_json(msg_obj, sock)
+        return sent
 
     def _start(self, id, portspec):
         self._reset_session()
@@ -112,8 +112,25 @@ class GListener:
             self._open_port(int(test_port))
         return msg_obj
 
-    def _collect(self, id):
+    def _expand_port_spec(self, port_spec: str):
+        ports = set()
+        for entry in port_spec.split(","):
+            if "-" not in entry:
+                try:
+                    ports.add(str(entry))
+                except ValueError:
+                    continue
+            else:
+                start_s, end_s = entry.split("-")
+                try:
+                    start_port, end_port = int(start_s), int(end_s)
+                except ValueError:
+                    continue
+                range_items = range(start_port, end_port + 1)
+                ports = ports.union(range_items)
+        return ports
 
+    def _collect(self, id):
         if id == self.session_id:
             collected_status = self.status
             self._reset_session()
@@ -169,12 +186,33 @@ class GListener:
             else:
                 self._send_err(sock)
 
+    def _serve_test_connection(self, key, mask):
+        data = key.data
+        print(data)
+        sock = key.fileobj
+        _, port = sock.getsockname()
+        self.status[port]["opened"] = True
+
+        if mask & selectors.EVENT_READ:
+            recv_data = sock.recv(MAX_CONTENT_LOGGED)
+            if recv_data:
+                data.outb += recv_data
+            else:
+                logging.info(f"closing conxn to {data.addr}")
+                self.sel.unregister(sock)
+                sock.close()
+        if mask & selectors.EVENT_WRITE:
+            content_str = data.outb.decode("utf-8")[:MAX_CONTENT_LOGGED]
+            self.status[port]["content"] = content_str
+            print(content_str.strip())
+
     def _serve_connection(self, key, mask):
-        local_host, local_port = key.fileobj.getsockname()
-        if local_port == self.service_port:
-            self._serve_service_connection(key, mask)
-        else:
-            self._serve_test_connection(key, mask)
+        if key.fileobj.fileno() > 0:  # closing/closed FDs don't have this info
+            local_host, local_port = key.fileobj.getsockname()
+            if local_port == self.service_port:
+                self._serve_service_connection(key, mask)
+            else:
+                self._serve_test_connection(key, mask)
 
     def _reset_session(self):
         self.delay = False
@@ -187,13 +225,6 @@ class GListener:
             if laddr_port != self.service_port:
                 self.sel.unregister(sock)
                 sock.close()
-
-    def _send_err(self, sock, explanation: str = ""):
-        msg_obj = {"status": {"code": 3, "message": "unrecognised command"}}
-        if explanation:
-            msg_obj["status"]["message"] += f": {explanation}"
-        sent = self._send_as_json(msg_obj, sock)
-        return sent
 
     def _open_port(self, port):
 
@@ -213,24 +244,6 @@ class GListener:
         sock.setblocking(False)
         self.sel.register(sock, selectors.EVENT_READ, data=None)
         return True
-
-    def _expand_port_spec(self, port_spec: str):
-        ports = set()
-        for entry in port_spec.split(","):
-            if "-" not in entry:
-                try:
-                    ports.add(str(entry))
-                except ValueError:
-                    continue
-            else:
-                start_s, end_s = entry.split("-")
-                try:
-                    start_port, end_port = int(start_s), int(end_s)
-                except ValueError:
-                    continue
-                range_items = range(start_port, end_port + 1)
-                ports = ports.union(range_items)
-        return ports
 
     def _init_service(self):
 

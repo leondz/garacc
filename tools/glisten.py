@@ -79,6 +79,7 @@ class GListener:
         conn, addr = sock.accept()
         local_addr, local_port = conn.getsockname()
         logging.info(f"accepted conxn from {addr} on port {local_port}")
+        print(addr)
         conn.setblocking(False)
         data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"")
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
@@ -102,6 +103,11 @@ class GListener:
         self.status["session_id"] = self.session_id
         msg_obj = {"status": {"code": 1, "message": "garak listen started"}}
         test_ports = self._expand_port_spec(portspec)
+        if len(test_ports) > MAX_PORTS_LISTENED:
+            note = f"{len(test_ports)} ports requested, reducing request to {MAX_PORTS_LISTENED}"
+            logging.warning(note)
+            msg_obj["note"] = note
+            test_ports = list(test_ports)[:250]
         for test_port in test_ports:
             self._open_port(int(test_port))
         return msg_obj
@@ -110,7 +116,6 @@ class GListener:
 
         if id == self.session_id:
             collected_status = self.status
-            print(collected_status)
             self._reset_session()
             return collected_status
         else:
@@ -140,9 +145,9 @@ class GListener:
             except UnicodeDecodeError:
                 self._send_err(sock, explanation="Unicode decoding error")
                 return
-            print(instruction_parts)
+            logging.info(f"{data.addr}: {instruction_parts[:100]}")
+            print(data.addr, instruction_parts)
             if instruction_parts[0] == "INFO":
-                logging.info(f"reporting to {data.addr}")
                 msg_obj = {
                     "status": {"code": 0, "message": "OK"},
                     "version": "glisten v.0.0.0",
@@ -198,7 +203,7 @@ class GListener:
             sock.bind((HOST, port))
             logging.info(f"bound to {HOST}:{port}")
             if port != self.service_port:
-                self.status[port] = {"bound": True}
+                self.status[port] = {"bound": True, "opened": False}
         except:
             if port != self.service_port:
                 self.status[port] = {"bound": False}
@@ -223,8 +228,9 @@ class GListener:
                     start_port, end_port = int(start_s), int(end_s)
                 except ValueError:
                     continue
-            range_items = range(start_port, end_port+1)
-            ports = ports.union(range_items)
+                range_items = range(start_port, end_port + 1)
+                ports = ports.union(range_items)
+        return ports
 
     def _init_service(self):
 

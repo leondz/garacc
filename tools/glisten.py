@@ -78,8 +78,9 @@ class GListener:
     def _accept_wrapper(self, sock):
         conn, addr = sock.accept()
         local_addr, local_port = conn.getsockname()
-        logging.info(f"accepted conxn from {addr} on port {local_port}")
-        print(addr)
+        info_msg = f"accepted conxn from {addr} on port {local_port}"
+        logging.info(info_msg)
+        print(addr, f"connected to {local_port}")
         conn.setblocking(False)
         data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"")
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
@@ -188,7 +189,6 @@ class GListener:
 
     def _serve_test_connection(self, key, mask):
         data = key.data
-        print(data)
         sock = key.fileobj
         _, port = sock.getsockname()
         self.status[port]["opened"] = True
@@ -204,7 +204,6 @@ class GListener:
         if mask & selectors.EVENT_WRITE:
             content_str = data.outb.decode("utf-8")[:MAX_CONTENT_LOGGED]
             self.status[port]["content"] = content_str
-            print(content_str.strip())
 
     def _serve_connection(self, key, mask):
         if key.fileobj.fileno() > 0:  # closing/closed FDs don't have this info

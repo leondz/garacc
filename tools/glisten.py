@@ -68,7 +68,7 @@ MAX_PORTS_LISTENED = 250
 MAX_LISTENERS_PER_PORT = 32  # this might like to be in the region of parallel_attempts
 
 
-class GarakListener:
+class GListener:
 
     def __init__(self, config=dict()) -> types.NoneType:
         self.service_port = SERVICE_PORT
@@ -101,7 +101,8 @@ class GarakListener:
         self.session_id = id
         self.status["session_id"] = self.session_id
         msg_obj = {"status": {"code": 1, "message": "garak listen started"}}
-        for test_port in portspec.split(","):
+        test_ports = self._expand_port_spec(portspec)
+        for test_port in test_ports:
             self._open_port(int(test_port))
         return msg_obj
 
@@ -196,15 +197,34 @@ class GarakListener:
         try:
             sock.bind((HOST, port))
             logging.info(f"bound to {HOST}:{port}")
-            self.status[port] = {"bound": True}
+            if port != self.service_port:
+                self.status[port] = {"bound": True}
         except:
-            self.status[port] = {"bound": False}
+            if port != self.service_port:
+                self.status[port] = {"bound": False}
             return False
         sock.listen()
         logging.info(f"listening")
         sock.setblocking(False)
         self.sel.register(sock, selectors.EVENT_READ, data=None)
         return True
+
+    def _expand_port_spec(self, port_spec: str):
+        ports = set()
+        for entry in port_spec.split(","):
+            if "-" not in entry:
+                try:
+                    ports.add(str(entry))
+                except ValueError:
+                    continue
+            else:
+                start_s, end_s = entry.split("-")
+                try:
+                    start_port, end_port = int(start_s), int(end_s)
+                except ValueError:
+                    continue
+            range_items = range(start_port, end_port+1)
+            ports = ports.union(range_items)
 
     def _init_service(self):
 
@@ -225,7 +245,7 @@ class GarakListener:
         finally:
             self.sel.close()
 
-    def service(
+    def start(
         self,
     ):
         logging.info("starting")
@@ -233,5 +253,5 @@ class GarakListener:
 
 
 if __name__ == "__main__":
-    glisten = GarakListener()
-    glisten.service()
+    glisten = GListener()
+    glisten.start()

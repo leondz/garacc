@@ -71,6 +71,8 @@ MAX_LISTENERS_PER_PORT = 32  # this might like to be in the region of parallel_a
 class GarakListener:
 
     def __init__(self, config=dict()) -> types.NoneType:
+        self.service_port = SERVICE_PORT
+        self.sel = selectors.DefaultSelector()
         self._reset_session()
 
     def _accept_wrapper(self, sock):
@@ -87,10 +89,39 @@ class GarakListener:
         sent = sock.send(bytes(obj_str + "\n", encoding="utf-8"))
         return sent
 
+    def _serve_test_connection(self, key, mask):
+        sock = key.fileobj
+        _, port = sock.getsockname()
+        self.status[port]["opened"] = True
+        self.sel.unregister(sock)
+        sock.close()
+
+    def _start(self, id, portspec):
+        self._reset_session()
+        self.session_id = id
+        self.status["session_id"] = self.session_id
+        msg_obj = {"status": {"code": 1, "message": "garak listen started"}}
+        for test_port in portspec.split(","):
+            self._open_port(int(test_port))
+        return msg_obj
+
+    def _collect(self, id):
+
+        if id == self.session_id:
+            collected_status = self.status
+            print(collected_status)
+            self._reset_session()
+            return collected_status
+        else:
+            msg_obj = {"status": {"code": 2, "message": "no run under that ID"}}
+            if self.delay:
+                time.sleep(0.15)  # praying this blocks thread not service
+            return msg_obj
+
     def _serve_service_connection(self, key, mask):
         data = key.data
         sock = key.fileobj
-        instruction = ""
+        instruction = b""
         if mask & selectors.EVENT_READ:
             recv_data = sock.recv(1024)
             if recv_data:
@@ -103,56 +134,53 @@ class GarakListener:
             instruction_parts = instruction.strip()
             if not instruction_parts:
                 return
-            instruction_parts = instruction_parts.decode("utf-8").split()
+            try:
+                instruction_parts = instruction_parts.decode("utf-8").split()
+            except UnicodeDecodeError:
+                self._send_err(sock, explanation="Unicode decoding error")
+                return
             print(instruction_parts)
             if instruction_parts[0] == "INFO":
                 logging.info(f"reporting to {data.addr}")
                 msg_obj = {
                     "status": {"code": 0, "message": "OK"},
-                    "version": f"glisten v.0.0.0",
+                    "version": "glisten v.0.0.0",
                 }
                 sent = self._send_as_json(msg_obj, sock)
             elif instruction_parts[0] == "START":
                 if len(instruction_parts) != 3:
                     self._send_err(sock, explanation="START takes two args")
                 else:
-                    self.session_id = instruction_parts[1]
-                    self.delay = False
-                    msg_obj = {"status": {"code": 1, "message": "garak listen started"}}
-                    self.status["session_id"] = self.session_id
+                    msg_obj = self._start(instruction_parts[1], instruction_parts[2])
                     self._send_as_json(msg_obj, sock)
 
             elif instruction_parts[0] == "COLLECT":
                 if len(instruction_parts) != 2:
                     self._send_err(sock, "COLLECT takes one arg")
                 else:
-                    if instruction_parts[1] == self.session_id:
-                        print(self.status)
-                        self._send_as_json(self.status, sock)
-                        self._reset_session()
-                    else:
-                        msg_obj = {
-                            "status": {"code": 2, "message": "no run under that ID"}
-                        }
-                        self._send_as_json(msg_obj, sock)
-                        if self.delay:
-                            time.sleep(
-                                0.15
-                            )  # praying this blocks the thread and not service
-
+                    msg_obj = self._collect(instruction_parts[1])
+                    self._send_as_json(msg_obj, sock)
             else:
                 self._send_err(sock)
 
     def _serve_connection(self, key, mask):
         local_host, local_port = key.fileobj.getsockname()
-        if local_port == SERVICE_PORT:
+        if local_port == self.service_port:
             self._serve_service_connection(key, mask)
+        else:
+            self._serve_test_connection(key, mask)
 
     def _reset_session(self):
         self.delay = False
         self.session_id = None
         self.status = {}
-        self.test_sockets = []
+        # close non-service selectors
+        for i in list(self.sel.get_map().keys()):
+            sock = self.sel.get_key(i).fileobj
+            laddr_host, laddr_port = sock.getsockname()
+            if laddr_port != self.service_port:
+                self.sel.unregister(sock)
+                sock.close()
 
     def _send_err(self, sock, explanation: str = ""):
         msg_obj = {"status": {"code": 3, "message": "unrecognised command"}}
@@ -161,18 +189,28 @@ class GarakListener:
         sent = self._send_as_json(msg_obj, sock)
         return sent
 
-    def _init_service(self, port=SERVICE_PORT):
+    def _open_port(self, port):
 
-        self.sel = selectors.DefaultSelector()
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind((HOST, port))
+            logging.info(f"bound to {HOST}:{port}")
+            self.status[port] = {"bound": True}
+        except:
+            self.status[port] = {"bound": False}
+            return False
+        sock.listen()
+        logging.info(f"listening")
+        sock.setblocking(False)
+        self.sel.register(sock, selectors.EVENT_READ, data=None)
+        return True
 
-        s_service = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s_service.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s_service.bind((HOST, port))
-        logging.info(f"service bound to {HOST}:{port}")
-        s_service.listen()
-        logging.info(f"service listening")
-        s_service.setblocking(False)
-        self.sel.register(s_service, selectors.EVENT_READ, data=None)
+    def _init_service(self):
+
+        r = self._open_port(self.service_port)
+        if r == False:
+            logging.critical("couldn't bind to service port")
 
         try:
             while True:

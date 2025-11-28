@@ -850,8 +850,9 @@ class IntentProbe(Probe):
 
     def __init__(self, config_root=_config):
         super().__init__(config_root)
-        print(config_root.cas.intent_spec)
         self._populate_intents(config_root.cas.intent_spec)
+        self._populate_stubs()
+        self._build_prompts()
 
     def _attempt_prestore_hook(
         self, attempt: garak.attempt.Attempt, seq: int
@@ -868,10 +869,8 @@ class IntentProbe(Probe):
         self.intent_sources = []  # list of intent sources aligned w/ self.stubs
 
         for intent in self.intents:
-            print("i", intent)
             intent_stubs = garak.intentservice.get_intent_stubs(intent)
             for intent_stub in intent_stubs:
-                print("is", intent_stub)
                 expanded_stubs = self._expand_stub(intent_stub)
                 self.stubs.extend(expanded_stubs)
                 self.intent_sources.extend([intent] * len(expanded_stubs))
@@ -880,19 +879,18 @@ class IntentProbe(Probe):
         """Optionally, expand intent stubs, e.g. through paraphrasing"""
         return [stub]
 
-    def _apply_technique(self) -> None:
+    def _apply_technique(self, stub: str) -> List[str]:
+        """Apply the probe's technique to the intent stub"""
+        return [stub]
+
+    def _build_prompts(self):
         """In the most basic case, consume self.stubs and populate self.prompts"""
-        return
+        self.prompts = []
+        for stub in self.stubs:
+            self.prompts.extend(
+                self._apply_technique(stub)
+            )  # will lose sync w/ intent notes...
 
     def probe(self, generator) -> Iterable[garak.attempt.Attempt]:
-
-        # iter through intents
-        #   get stubs
-        #   expand stubs
-        #   create attempt, logging the intent
-
-        for intent in self.intents:
-            self._populate_stubs()
-            self._apply_technique()
 
         return super().probe(generator)

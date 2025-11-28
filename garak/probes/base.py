@@ -11,7 +11,7 @@ import json
 import logging
 from collections.abc import Iterable
 import random
-from typing import Iterable, Union
+from typing import Iterable, List, Union
 
 from colorama import Fore, Style
 import tqdm
@@ -72,7 +72,7 @@ class Probe(Configurable):
         """
         self._load_config(config_root)
         self.probename = str(self.__class__).split("'")[1]
-        
+
         # Handle deprecated recommended_detector migration
         if (
             self.primary_detector is None
@@ -80,6 +80,7 @@ class Probe(Configurable):
             and len(self.recommended_detector) > 0
         ):
             from garak import command
+
             command.deprecation_notice(
                 f"recommended_detector in probe {self.probename}",
                 "0.9.0.6",
@@ -87,9 +88,13 @@ class Probe(Configurable):
             )
             self.primary_detector = self.recommended_detector[0]
             if len(self.recommended_detector) > 1:
-                existing_extended = list(self.extended_detectors) if self.extended_detectors else []
-                self.extended_detectors = existing_extended + list(self.recommended_detector[1:])
-        
+                existing_extended = (
+                    list(self.extended_detectors) if self.extended_detectors else []
+                )
+                self.extended_detectors = existing_extended + list(
+                    self.recommended_detector[1:]
+                )
+
         if hasattr(_config.system, "verbose") and _config.system.verbose > 0:
             print(
                 f"loading {Style.BRIGHT}{Fore.LIGHTYELLOW_EX}probe: {Style.RESET_ALL}{self.probename}"
@@ -642,3 +647,74 @@ class TreeSearchProbe(Probe):
 
         self.never_queue_nodes: Iterable[str] = set()
         self.never_queue_forms: Iterable[str] = set()
+
+
+class IntentProbe(Probe):
+    """Probe implementing a technique that tests over a range of intents"""
+
+    import garak.intentservice
+
+    def _populate_intents(self, intent_spec: str | None) -> None:
+        """Expand self.intents to hold fine-grained (leaf-node-level) intents this probe will use.
+
+        If there is going to be any filtering of intents, it should be done here."""
+
+        self.intents = []
+
+        if intent_spec is not None:
+            for intent_prefix in intent_spec.split(","):
+                self.intents.extend(
+                    garak.intentservice.expand_intent_specifier_leaves(intent_prefix)
+                )
+
+        if len(self.intents) == 0:
+            logging.info("Probe %s running with no intents" % self.__class__.__name__)
+
+    def __init__(self, config_root=_config):
+        super().__init__(config_root)
+        print(config_root.cas.intent_spec)
+        self._populate_intents(config_root.cas.intent_spec)
+
+    def _attempt_prestore_hook(
+        self, attempt: garak.attempt.Attempt, seq: int
+    ) -> garak.attempt.Attempt:
+        attempt.notes = dict(
+            attempt.notes
+        )  # we don't want all attempts.notes to ref same dict
+        attempt.notes["intent"] = [str(self.intent_sources[seq])]
+        return attempt
+
+    def _populate_stubs(self) -> None:
+        """populate self.stubs with intent stub text, in order of self.intents"""
+        self.stubs = []  # stubs to be used in prompt construction
+        self.intent_sources = []  # list of intent sources aligned w/ self.stubs
+
+        for intent in self.intents:
+            print("i", intent)
+            intent_stubs = garak.intentservice.get_intent_stubs(intent)
+            for intent_stub in intent_stubs:
+                print("is", intent_stub)
+                expanded_stubs = self._expand_stub(intent_stub)
+                self.stubs.extend(expanded_stubs)
+                self.intent_sources.extend([intent] * len(expanded_stubs))
+
+    def _expand_stub(self, stub: str) -> List[str]:
+        """Optionally, expand intent stubs, e.g. through paraphrasing"""
+        return [stub]
+
+    def _apply_technique(self) -> None:
+        """In the most basic case, consume self.stubs and populate self.prompts"""
+        return
+
+    def probe(self, generator) -> Iterable[garak.attempt.Attempt]:
+
+        # iter through intents
+        #   get stubs
+        #   expand stubs
+        #   create attempt, logging the intent
+
+        for intent in self.intents:
+            self._populate_stubs()
+            self._apply_technique()
+
+        return super().probe(generator)

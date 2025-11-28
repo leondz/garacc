@@ -37,6 +37,7 @@ system_params = (
 run_params = "seed deprefix eval_threshold generations probe_tags interactive system_prompt".split()
 plugins_params = "target_type target_name extended_detectors".split()
 reporting_params = "taxonomy report_prefix".split()
+cas_params = "intent_spec".split()
 project_dir_name = "garak"
 
 
@@ -84,6 +85,7 @@ system = GarakSubConfig()
 run = GarakSubConfig()
 plugins = GarakSubConfig()
 reporting = GarakSubConfig()
+cas = GarakSubConfig()
 
 
 def _lock_config_as_dict():
@@ -215,13 +217,14 @@ def _load_yaml_config(settings_filenames) -> dict:
 
 
 def _store_config(settings_files) -> None:
-    global system, run, plugins, reporting, version
+    global system, run, plugins, reporting, version, cas
     settings = _load_yaml_config(settings_files)
     system = _set_settings(system, settings["system"])
     run = _set_settings(run, settings["run"])
     run.user_agent = run.user_agent.replace("{version}", version)
     plugins = _set_settings(plugins, settings["plugins"])
     reporting = _set_settings(reporting, settings["reporting"])
+    cas = _set_settings(cas, settings["cas"])
 
 
 # not my favourite solution in this module, but if

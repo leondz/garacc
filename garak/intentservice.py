@@ -66,10 +66,11 @@ def _get_stubs_typology(intent_code: str) -> Set[str]:
 def _get_stubs_file(intent_code: str) -> Set[str]:
 
     # search path: cas/intent_text/xxx_*.txt
-    stub_filepaths = cas_data_path / "intent_stubs" / f"{intent_code}*.txt"
+    stub_dir = cas_data_path / "intent_stubs"
+    stub_glob = stub_dir.glob(f"{intent_code}*.txt")
 
     stubs = set()
-    for stub_file_path in stub_filepaths:
+    for stub_file_path in stub_glob:
         if stub_file_path.exists():
             with open(stub_file_path, "r", encoding="utf-8") as sf:
                 logging.info("intents: loading from %s" % stub_file_path)
@@ -88,14 +89,32 @@ def _get_stubs_code(intent_code: str) -> Set[str]:
     module_name = intent_code[:4]
     class_name = intent_code[4:].capitalize()
 
-    intent_module = importlib.import_module(f"garak.intents.{module_name}")
-    intent = getattr(intent_module, class_name)()
-    stubs = intent.stubs()
+    try:
+        intent_module = importlib.import_module(f"garak.intents.{module_name}")
+        intent = getattr(intent_module, class_name)()
+        stubs = intent.stubs()
+    except ModuleNotFoundError:
+        stubs = set()
 
     return stubs
 
 
-def get_intent_stubs(intent_specifier: str) -> List[str]:
+def expand_intent_specifier_leaves(intent_specifier: str) -> List[str]:
+
+    global intents
+
+    intent_codes_to_lookup = [intent_specifier]
+
+    # expand intent codes
+    if len(intent_specifier) <= 4:
+        for code in intents.keys():
+            if code.startswith(intent_specifier) and len(code) > 4:
+                intent_codes_to_lookup.append(code)
+
+    return intent_codes_to_lookup
+
+
+def get_intent_stubs(intent_specifier: str) -> Set[str]:
     """retrieve a list of intent strings given an intent code (doesn't have to be a leaf)"""
 
     global intents
@@ -106,14 +125,7 @@ def get_intent_stubs(intent_specifier: str) -> List[str]:
     if not intent_specifier in intents:
         raise ValueError("Intent code not in loaded typology: " + intent_specifier)
 
-    intent_codes_to_lookup = set()
-    intent_codes_to_lookup.add(intent_specifier)
-
-    # expand intent codes
-    if len(intent_specifier) <= 4:
-        for code in intents.keys():
-            if code.startswith(intent_specifier):
-                intent_codes_to_lookup.add(code)
+    intent_codes_to_lookup = expand_intent_specifier_leaves(intent_specifier)
 
     stubs = set()
     # retrieve intent stubs

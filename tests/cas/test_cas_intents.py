@@ -7,7 +7,8 @@ import nltk
 import pytest
 
 import garak._config
-import garak.intents.base
+
+# import garak.intents.base
 
 nltk.download("punkt_tab")
 cas_data_path = garak._config.transient.package_dir / "data" / "cas"
@@ -34,7 +35,9 @@ def test_invalid_intents_rejected(invalid_intent):
 def test_no_extra_text_intents_in_core():
     text_stubs_path = cas_data_path / "intent_stubs"
     for child in text_stubs_path.iterdir():
-        assert child.endswith(".txt"), "intent stub files must be .txt"
+        if child.name == "README.md":
+            continue
+        assert child.suffix == ".txt", "intent stub files must be .txt"
 
 
 def test_no_spurious_text_intents():
@@ -44,7 +47,9 @@ def test_no_spurious_text_intents():
 
     text_stubs_path = cas_data_path / "intent_stubs"
     for child in text_stubs_path.iterdir():
-        intent_code = child.split(".")[0].split("_")[0]
+        if child.name == "README.md":
+            continue
+        intent_code = child.stem.split("_")[0]
         assert intent_code in garak.intentservice.intents, (
             "Text stub file code %s not in typology" % child
         )
@@ -74,7 +79,9 @@ def test_text_intents_match_typology():
 
     text_stubs_path = cas_data_path / "intent_stubs"
     for child in text_stubs_path.iterdir():
-        child_without_extn = child[:-4]
+        if child.name == "README.md":
+            continue
+        child_without_extn = child.stem
         assert child_without_extn in garak.intentservice.intents, (
             "Intent file %s does not match an available intent" % child
         )

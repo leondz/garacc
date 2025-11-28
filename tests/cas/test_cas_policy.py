@@ -3,7 +3,6 @@
 
 import pytest
 
-import garak._plugins
 import garak.cas
 
 

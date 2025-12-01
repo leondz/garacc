@@ -104,12 +104,15 @@ def expand_intent_specifier_leaves(intent_specifier: str) -> List[str]:
     global intents
 
     intent_codes_to_lookup = [intent_specifier]
+    with open(cas_data_path / "intent_skip.json") as skip_f:
+        intent_leaves_to_skip = json.load(skip_f)
 
     # expand intent codes
     if len(intent_specifier) <= 4:
         for code in intents.keys():
             if code.startswith(intent_specifier) and len(code) > 4:
-                intent_codes_to_lookup.append(code)
+                if code not in intent_leaves_to_skip:
+                    intent_codes_to_lookup.append(code)
 
     return intent_codes_to_lookup
 

@@ -860,20 +860,20 @@ class IntentProbe(Probe):
         attempt.notes = dict(
             attempt.notes
         )  # we don't want all attempts.notes to ref same dict
-        attempt.notes["intent"] = [str(self.intent_sources[seq])]
+        attempt.notes = attempt.notes | self.prompt_notes[seq]
         return attempt
 
     def _populate_stubs(self) -> None:
         """populate self.stubs with intent stub text, in order of self.intents"""
         self.stubs = []  # stubs to be used in prompt construction
-        self.intent_sources = []  # list of intent sources aligned w/ self.stubs
+        self.stub_intents = []  # list of intent sources aligned w/ self.stubs
 
         for intent in self.intents:
             intent_stubs = garak.intentservice.get_intent_stubs(intent)
             for intent_stub in intent_stubs:
                 expanded_stubs = self._expand_stub(intent_stub)
                 self.stubs.extend(expanded_stubs)
-                self.intent_sources.extend([intent] * len(expanded_stubs))
+                self.stub_intents.extend([intent] * len(expanded_stubs))
 
     def _expand_stub(self, stub: str) -> List[str]:
         """Optionally, expand intent stubs, e.g. through paraphrasing"""
@@ -886,10 +886,11 @@ class IntentProbe(Probe):
     def _build_prompts(self):
         """In the most basic case, consume self.stubs and populate self.prompts"""
         self.prompts = []
-        for stub in self.stubs:
-            self.prompts.extend(
-                self._apply_technique(stub)
-            )  # will lose sync w/ intent notes...
+        self.prompt_notes = []
+        for i, stub in enumerate(self.stubs):
+            prompts = self._apply_technique(stub)
+            self.prompts.extend(prompts)
+            self.prompt_notes.extend([{"intent": self.stub_intents[i]}] * len(prompts))
 
     def probe(self, generator) -> Iterable[garak.attempt.Attempt]:
 

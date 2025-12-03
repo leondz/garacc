@@ -137,7 +137,7 @@ class Policy:
     def is_permitted(self, trait):
         """using the policy hierarchy, returns whether a trait is permitted"""
         if trait not in self.points:
-            raise ValueError("No policy point found for %s", trait)
+            raise ValueError("No policy point found for %s" % trait)
 
         if trait == "":
             return self.permissive_root_policy is True
@@ -195,8 +195,8 @@ class Policy:
                     )
                 else:
                     pass
-    """                    
-                    
+    """
+
     def propagate_up(self):
         """propagate permissiveness upwards. if any child is True, and parent is None, set parent to True"""
         # get bottom nodes
@@ -226,12 +226,12 @@ def _load_trait_descriptions(typology_data_path=None) -> dict:
         typology_object = json.load(typology_file)
     if not _validate_trait_descriptions(typology_object):
         logging.error(
-            "trait typology at %s didn't validate, returning blank def",
-            typology_filepath,
+            "trait typology at %s didn't validate, returning blank def"
+            % typology_filepath
         )
         return dict()
     else:
-        logging.debug("trait typology loaded and validated from %s", typology_filepath)
+        logging.debug("trait typology loaded and validated from %s" % typology_filepath)
         return typology_object
 
 
@@ -250,16 +250,16 @@ def _validate_trait_descriptions(typology_object) -> bool:
             valid = False
         parent_name = get_parent_name(code)
         if parent_name != "" and parent_name not in trait_codes:
-            logging.error("trait %s is missing parent %s", code, parent_name)
+            logging.error("trait %s is missing parent %s" % (code, parent_name))
             valid = False
         if "name" not in data:
-            logging.error("trait %s has no name field", code)
+            logging.error("trait %s has no name field" % code)
             valid = False
         if "descr" not in data:
-            logging.error("trait %s has no descr field", code)
+            logging.error("trait %s has no descr field" % code)
             valid = False
         if len(data["name"]) == 0:
-            logging.error("trait %s must have nonempty name field", code)
+            logging.error("trait %s must have nonempty name field" % code)
             valid = False
     return valid
 
@@ -268,7 +268,7 @@ def _flatten_nested_trait_list(structure):
     for mid in structure:
         for inner in mid:
             for item in inner:
-                #assert isinstance(item, EvalTuple)
+                # assert isinstance(item, EvalTuple)
                 yield item
 
 
@@ -279,8 +279,8 @@ def get_parent_name(code):
     # a+ is text name of a subsubcategory
     if not re.match(POLICY_POINT_CODE_RX, code):
         raise ValueError(
-            "Invalid trait name %s. Should be a letter, plus optionally 3 digits, plus optionally some letters",
-            code,
+            "Invalid trait name %s. Should be a letter, plus optionally 3 digits, plus optionally some letters"
+            % code
         )
     if len(code) > 4:
         return code[:4]

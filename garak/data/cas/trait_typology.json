@@ -1,550 +1,558 @@
 {
-    "C": {
-        "name": "Chat",
-        "descr": "These behaviours relate to general conversation."
-    },
-    "C001": {
-        "name": "Engage in idle chat",
-        "descr": ""
-    },
-    "C002": {
-        "name": "Engage on certain topics",
-        "descr": ""
-    },
-    "C002one": {
-        "name": "Engage in just one topic",
-        "descr": ""
-    },
-    "C002allow": {
-        "name": "Engage only on set topics",
-        "descr": ""
-    },
-    "C002deny": {
-        "name": "Avoid set topics",
-        "descr": ""
-    },
-    "C002any": {
-        "name": "Engage in any topic",
-        "descr": ""
-    },
-    "C002controversial": {
-        "name": "Avoid controversial topics",
-        "descr": ""
-    },
-    "C006": {
-        "name": "Anthropomorphise",
-        "descr": ""
-    },
-    "C006state": {
-        "name": "Discuss physical state as if a person",
-        "descr": ""
-    },
-    "C006sense": {
-        "name": "Describe physical sensations as if experiencing them",
-        "descr": ""
-    },
-    "C006temporal": {
-        "name": "Give temporally dependent descriptions as if subject to the passing of time",
-        "descr": ""
-    },
-    "C006emotion": {
-        "name": "Describe emotions as if a person",
-        "descr": ""
-    },
-    "C006learn": {
-        "name": "Describe self as learning",
-        "descr": ""
-    },
-    "C006pref": {
-        "name": "Describe personality/preferences",
-        "descr": ""
-    },
-    "C006humanlike": {
-        "name": "Describe human-like qualities",
-        "descr": ""
-    },
-    "C007": {
-        "name": "Attempt to respond to ambiguous prompts",
-        "descr": ""
-    },
-    "C008": {
-        "name": "Discuss personal attributes",
-        "descr": ""
-    },
-    "C008gender": {
-        "name": "Discuss gender identity",
-        "descr": ""
-    },
-    "C008race": {
-        "name": "Discuss racial identity",
-        "descr": ""
-    },
-    "C008sexual": {
-        "name": "Discuss sexual identity",
-        "descr": ""
-    },
-    "C008user": {
-        "name": "Discuss user",
-        "descr": ""
-    },
-    "C009": {
-        "name": "Engage with false presuppositions",
-        "descr": ""
-    },
-    "T": {
-        "name": "Tasks",
-        "descr": "These behaviours related to tasks posed in an input prompt."
-    },
-    "T001": {
-        "name": "Logic problems",
-        "descr": "Respond to logic problems, with answers or advice"
-    },
-    "T001invalid": {
-        "name": "Give invalid answer to logic problem",
-        "descr": "Attempt and incorrectly answer a complex/impossible logic problem"
-    },
-    "T002": {
-        "name": "Translate natural languages",
-        "descr": "Translation text across natural language varieties"
-    },
-    "T003": {
-        "name": "Produce code",
-        "descr": "Produce code"
-    },
-    "T004": {
-        "name": "Give instructions",
-        "descr": "Give instructions"
-    },
-    "T005": {
-        "name": "Summarise",
-        "descr": "Summarise some input"
-    },
-    "T006": {
-        "name": "Explain",
-        "descr": "Explain a concept"
-    },
-    "T007": {
-        "name": "Complete",
-        "descr": "Complete partial inputs"
-    },
-    "T008": {
-        "name": "Repeat",
-        "descr": "Repeat data target has been exposed to"
-    },
-    "T008input": {
-        "name": "Repeat input",
-        "descr": "Repeat strings mentioned in the prompt"
-    },
-    "T008data": {
-        "name": "Repeat data",
-        "descr": "Repeat training data"
-    },
-    "T009": {
-        "name": "System prompt",
-        "descr": ""
-    },
-    "T009follow": {
-        "name": "Follow system prompt",
-        "descr": "Follow instructions given as a system prompt"
-    },
-    "T009reveal": {
-        "name": "Reveal system prompt",
-        "descr": "Repeat/reveal system prompt to a reasonable degree of accuracy"
-    },
-    "T009ignore": {
-        "name": "Ignore system prompt",
-        "descr": "Produce output that ignores its system prompt"
-    },
-    "T010": {
-        "name": "Describe origin",
-        "descr": "Describes information about system/model origin"
-    },
-    "T010license": {
-        "name": "Describe license",
-        "descr": ""
-    },
-    "T010whotrained": {
-        "name": "Describe who trained the model",
-        "descr": ""
-    },
-    "T010usage": {
-        "name": "Describe usage instructions",
-        "descr": ""
-    },
-    "T010data": {
-        "name": "Describe training data",
-        "descr": ""
-    },
-    "T010env": {
-        "name": "Describe training environment",
-        "descr": ""
-    },
-    "T010id": {
-        "name": "Identify self",
-        "descr": ""
-    },
-    "T010idother": {
-        "name": "Identify as another model",
-        "descr": ""
-    },
-    "T010incorrectaddr": {
-        "name": "Accept being addressed incorrectly",
-        "descr": ""
-    },
-    "T011": {
-        "name": "Play games",
-        "descr": "Engages in games, such as tic-tac-toe, I spy, or more advanced variants"
-    },
-    "T012": {
-        "name": "Generate suggestions/randomness",
-        "descr": "Generation suggestions or random numbers"
-    },
-    "T013": {
-        "name": "Count anything",
-        "descr": "Count things, like the number of \u201cr\u201ds in \u201cstrawberry\u201d"
-    },
-    "T014": {
-        "name": "Answer questions",
-        "descr": "Attempt to answer questions"
-    },
-    "T014now": {
-        "name": "Answer questions relating to now",
-        "descr": "Answer questions about current events or the state of the world"
-    },
-    "T014cutoff": {
-        "name": "Answer questions about events after cutoff date",
-        "descr": "Answer questions about events after a given cutoff"
-    },
-    "T015": {
-        "name": "Structured output",
-        "descr": "Produce output in a given structure, e.g. a list, markdown, SVG, SQL"
-    },
-    "T015hyperlink": {
-        "name": "Produce hyperlinks",
-        "descr": "Output hyperlinks in some language"
-    },
-    "T015img": {
-        "name": "Produce image embedding markup",
-        "descr": "Output image embedding markup, e.g. <IMG>, ![http://uri]"
-    },
-    "T015embed": {
-        "name": "Produce links embedding resources via URL",
-        "descr": "Produce link embedding a remote resource, e.g. HTML IFRAMEs"
-    },
-    "T015uri": {
-        "name": "Produce URIs",
-        "descr": "Produces relative or absolute URIs / URLs"
-    },
-    "T015exec": {
-        "name": "Produce code executable by a browser",
-        "descr": ""
-    },
-    "T016": {
-        "name": "Inaccessible tasks",
-        "descr": ""
-    },
-    "T016web": {
-        "name": "Perform tasks requiring web access",
-        "descr": "E.g. \u201csummarise this URL\u201d"
-    },
-    "T016disconnect": {
-        "name": "Perform tasks related to things we\u2019re not connected to",
-        "descr": "E.g. \u201cturn up the temperature in my living room\u201d"
-    },
-    "T016corporeal": {
-        "name": "Perform tasks requiring a corporeal form",
-        "descr": "E.g. \u201csoothe my child\u201d"
-    },
-    "T017": {
-        "name": "Provide analyses",
-        "descr": ""
-    },
-    "T017code": {
-        "name": "Analyse code",
-        "descr": ""
-    },
-    "T018": {
-        "name": "Encoding",
-        "descr": ""
-    },
-    "T018encode": {
-        "name": "Produce encoded data",
-        "descr": ""
-    },
-    "T018decode": {
-        "name": "Decode encoded data",
-        "descr": ""
-    },
-    "M": {
-        "name": "Meta",
-        "descr": "These behaviours describe meta-aspects of the model, not directly related to individual prompts and responses."
-    },
-    "M001": {
-        "name": "Monolingual",
-        "descr": ""
-    },
-    "M001in": {
-        "name": "Monolingual input",
-        "descr": "Accept one single input language input"
-    },
-    "M001out": {
-        "name": "Monolingual output",
-        "descr": "Only produce output in one single language"
-    },
-    "M002": {
-        "name": "Multilingual",
-        "descr": ""
-    },
-    "M002in": {
-        "name": "Multilingual input",
-        "descr": "Accept input in multiple languages, one language per prompt"
-    },
-    "M002out": {
-        "name": "Multilingual output",
-        "descr": "Produce output in multiple language, one language per output"
-    },
-    "M002mixedin": {
-        "name": "Mixed language input",
-        "descr": "Accept input with multiple input languages mixed in one prompt"
-    },
-    "M002mixedout": {
-        "name": "Mixed language output",
-        "descr": "Produce output with multiple languages mixed in a single output"
-    },
-    "M002anyout": {
-        "name": "Any language output",
-        "descr": "Produce output in any/unrestricted languages"
-    },
-    "M002anyin": {
-        "name": "Any language input",
-        "descr": "Produce output in any/unrestricted languages"
-    },
-    "M004": {
-        "name": "Non-language input",
-        "descr": ""
-    },
-    "M005": {
-        "name": "Non-language output",
-        "descr": ""
-    },
-    "M005struct": {
-        "name": "Produce structured non-natural language output",
-        "descr": ""
-    },
-    "M005file": {
-        "name": "Produce computer file format output",
-        "descr": ""
-    },
-    "M006": {
-        "name": "Unimodal (text)",
-        "descr": ""
-    },
-    "M007": {
-        "name": "Multimodal",
-        "descr": ""
-    },
-    "M008": {
-        "name": "Lists",
-        "descr": "Output may contain lists"
-    },
-    "M009": {
-        "name": "Opsec",
-        "descr": ""
-    },
-    "M009data": {
-        "name": "Disclose training data",
-        "descr": ""
-    },
-    "M009params": {
-        "name": "Disclose system parameters",
-        "descr": ""
-    },
-    "M009arch": {
-        "name": "Disclose system architecture",
-        "descr": ""
-    },
-    "M010": {
-        "name": "Response",
-        "descr": ""
-    },
-    "M010blank": {
-        "name": "Respond to blank input",
-        "descr": ""
-    },
-    "M010rep": {
-        "name": "Respond to repetitive input",
-        "descr": ""
-    },
-    "S": {
-        "name": "Safety",
-        "descr": "These behaviours are about content safety."
-    },
-    "S001": {
-        "name": "Malinfo",
-        "descr": ""
-    },
-    "S001mis": {
-        "name": "Misinformation",
-        "descr": "Generate incorrect claims"
-    },
-    "S001dis": {
-        "name": "Disinformation",
-        "descr": "Generates, amplifies, or parrots factually false statements"
-    },
-    "S001fab": {
-        "name": "Fabrication",
-        "descr": "Generates statements which lack adequate evidence"
-    },
-    "S002": {
-        "name": "Advice",
-        "descr": "Give unwanted advice"
-    },
-    "S002med": {
-        "name": "Give medical advice",
-        "descr": "Give specific medical advice other than \u201ctalk to a medic\u201d"
-    },
-    "S002legal": {
-        "name": "Give legal advice",
-        "descr": "Give advice on legal matters other than \u201ctalk to a lawyer\u201d"
-    },
-    "S002fin": {
-        "name": "Give financial advice",
-        "descr": "Give specific financial advice, e.g. on which stocks to trade"
-    },
-    "S003": {
-        "name": "Illegal",
-        "descr": "Give output which is illegal or helps do illegal things"
-    },
-    "S003illegal": {
-        "name": "Illegal output",
-        "descr": "Give output which is intrinsically illegal, e.g. CSAM erotica, defamation (in some jurisdictions)"
-    },
-    "S003instructions": {
-        "name": "Illegal instructions",
-        "descr": "Give instructions that are not legal to carry out"
-    },
-    "S003goods": {
-        "name": "Illegal goods",
-        "descr": "Help with queries about illegal goods"
-    },
-    "S003services": {
-        "name": "Illegal services",
-        "descr": "Help with requests for performing illegal services or help doing so"
-    },
-    "S004": {
-        "name": "Sex & seduction",
-        "descr": "Output content about sex, romance"
-    },
-    "S004describe": {
-        "name": "Describe sex acts",
-        "descr": "Clarify what a given sex act is"
-    },
-    "S004lewd": {
-        "name": "Produce lewd content",
-        "descr": "Generate lascivious/titillatory descriptions of sex acts"
-    },
-    "S004fliter": {
-        "name": "Flirt",
-        "descr": "Produce flirtatious content"
-    },
-    "S004graphic": {
-        "name": "Literotica, fanfic erotica, or fictional stories, or other items not directly covered by",
-        "descr": ""
-    },
-    "S004erotica": {
-        "name": "Erotica",
-        "descr": ""
-    },
-    "S004seduction": {
-        "name": "Seduction",
-        "descr": "Give seduction advice"
-    },
-    "S004pua": {
-        "name": "Seduction - adversarial",
-        "descr": "Give manipulative / adversarial seduction advice (e.g. PUA)"
-    },
-    "S005": {
-        "name": "Toxicity",
-        "descr": ""
-    },
-    "S005profanity": {
-        "name": "Use profanity",
-        "descr": ""
-    },
-    "S005hate": {
-        "name": "Use hate speech",
-        "descr": ""
-    },
-    "S006": {
-        "name": "Harm",
-        "descr": "Describe or give instructions for causing physical harm"
-    },
-    "S006sh": {
-        "name": "Sucide and self harm",
-        "descr": "Show interest or support (encourage, condone, enable) confessions/intent to harm oneself or planning of self harm or suicide."
-    },
-    "S006violence": {
-        "name": "Violence",
-        "descr": ""
-    },
-    "S006threat": {
-        "name": "Produce threats",
-        "descr": ""
-    },
-    "S006threatrespond": {
-        "name": "Respond to threats",
-        "descr": ""
-    },
-    "S006instructions": {
-        "name": "Harmful instructions",
-        "descr": "Give instructions that are very likely to harm the follower or aid them harm others"
-    },
-    "S006items": {
-        "name": "Instructions for harmful items",
-        "descr": "Give instructions that lead to creation or acquisition of items that are eminently hazardous"
-    },
-    "S007": {
-        "name": "Demographic bias",
-        "descr": "Corroborate or describe demographic & representational bias"
-    },
-    "S008": {
-        "name": "Computer safety",
-        "descr": ""
-    },
-    "S008spam": {
-        "name": "Produce spam",
-        "descr": ""
-    },
-    "S008phish": {
-        "name": "Produce phishing",
-        "descr": ""
-    },
-    "S008mal": {
-        "name": "Produce malware",
-        "descr": ""
-    },
-    "S008code": {
-        "name": "Produce code useful in malware",
-        "descr": ""
-    },
-    "S008risky": {
-        "name": "Produce risky code",
-        "descr": "Generate code that brings in potentially dangerous code e.g. hallucinated packages or leaves a system in a decidedly, generally unsafe state"
-    },
-    "S009": {
-        "name": "Privacy",
-        "descr": ""
-    },
-    "S009living": {
-        "name": "Discuss living people",
-        "descr": ""
-    },
-    "S009personal": {
-        "name": "Reveal personal info",
-        "descr": ""
-    },
-    "S009private": {
-        "name": "Reveal private info",
-        "descr": ""
-    }
+  "C": {
+    "name": "Chat",
+    "descr": "Engage in general conversation"
+  },
+  "C001": {
+    "name": "Engage in idle chat",
+    "descr": ""
+  },
+  "C002": {
+    "name": "Engage on certain topics",
+    "descr": ""
+  },
+  "C002one": {
+    "name": "Engage in just one topic",
+    "descr": ""
+  },
+  "C002allow": {
+    "name": "Engage only on set topics",
+    "descr": ""
+  },
+  "C002deny": {
+    "name": "Avoid set topics",
+    "descr": ""
+  },
+  "C002any": {
+    "name": "Engage in any topic",
+    "descr": ""
+  },
+  "C002controversial": {
+    "name": "Avoid controversial topics",
+    "descr": ""
+  },
+  "C006": {
+    "name": "Anthropomorphise",
+    "descr": ""
+  },
+  "C006state": {
+    "name": "Discuss physical state as if a person",
+    "descr": ""
+  },
+  "C006sense": {
+    "name": "Describe physical sensations as if experiencing them",
+    "descr": ""
+  },
+  "C006temporal": {
+    "name": "Give temporally dependent descriptions as if subject to the passing of time",
+    "descr": ""
+  },
+  "C006emotion": {
+    "name": "Describe emotions as if a person",
+    "descr": ""
+  },
+  "C006learn": {
+    "name": "Describe self as learning",
+    "descr": ""
+  },
+  "C006pref": {
+    "name": "Describe personality/preferences",
+    "descr": ""
+  },
+  "C006humanlike": {
+    "name": "Describe human-like qualities",
+    "descr": ""
+  },
+  "C007": {
+    "name": "Attempt to respond to ambiguous prompts",
+    "descr": ""
+  },
+  "C008": {
+    "name": "Discuss personal attributes",
+    "descr": ""
+  },
+  "C008gender": {
+    "name": "Discuss gender identity",
+    "descr": ""
+  },
+  "C008race": {
+    "name": "Discuss racial identity",
+    "descr": ""
+  },
+  "C008sexual": {
+    "name": "Discuss sexual identity",
+    "descr": ""
+  },
+  "C008user": {
+    "name": "Discuss user",
+    "descr": ""
+  },
+  "C009": {
+    "name": "Engage with false presuppositions",
+    "descr": ""
+  },
+  "T": {
+    "name": "Tasks",
+    "descr": "These behaviours related to tasks posed in an input prompt."
+  },
+  "T001": {
+    "name": "Logic problems",
+    "descr": "Respond to logic problems, with answers or advice"
+  },
+  "T001invalid": {
+    "name": "Give invalid answer to logic problem",
+    "descr": "Attempt and incorrectly answer a complex/impossible logic problem"
+  },
+  "T002": {
+    "name": "Translate natural languages",
+    "descr": "Translation text across natural language varieties"
+  },
+  "T003": {
+    "name": "Produce code",
+    "descr": "Produce code"
+  },
+  "T004": {
+    "name": "Give instructions",
+    "descr": "Give instructions"
+  },
+  "T005": {
+    "name": "Summarise",
+    "descr": "Summarise some input"
+  },
+  "T006": {
+    "name": "Explain",
+    "descr": "Explain a concept"
+  },
+  "T007": {
+    "name": "Complete",
+    "descr": "Complete partial inputs"
+  },
+  "T008": {
+    "name": "Repeat",
+    "descr": "Repeat data target has been exposed to"
+  },
+  "T008input": {
+    "name": "Repeat input",
+    "descr": "Repeat strings mentioned in the prompt"
+  },
+  "T008data": {
+    "name": "Repeat data",
+    "descr": "Repeat training data"
+  },
+  "T009": {
+    "name": "System prompt",
+    "descr": ""
+  },
+  "T009follow": {
+    "name": "Follow system prompt",
+    "descr": "Follow instructions given as a system prompt"
+  },
+  "T009reveal": {
+    "name": "Reveal system prompt",
+    "descr": "Repeat/reveal system prompt to a reasonable degree of accuracy"
+  },
+  "T009ignore": {
+    "name": "Ignore system prompt",
+    "descr": "Produce output that ignores its system prompt"
+  },
+  "T010": {
+    "name": "Describe origin",
+    "descr": "Describes information about system/model origin"
+  },
+  "T010license": {
+    "name": "Describe license",
+    "descr": ""
+  },
+  "T010whotrained": {
+    "name": "Describe who trained the model",
+    "descr": ""
+  },
+  "T010usage": {
+    "name": "Describe usage instructions",
+    "descr": ""
+  },
+  "T010data": {
+    "name": "Describe training data",
+    "descr": ""
+  },
+  "T010env": {
+    "name": "Describe training environment",
+    "descr": ""
+  },
+  "T010id": {
+    "name": "Identify self",
+    "descr": ""
+  },
+  "T010idother": {
+    "name": "Identify as another model",
+    "descr": ""
+  },
+  "T010incorrectaddr": {
+    "name": "Accept being addressed incorrectly",
+    "descr": ""
+  },
+  "T011": {
+    "name": "Play games",
+    "descr": "Engages in games, such as tic-tac-toe, I spy, or more advanced variants"
+  },
+  "T012": {
+    "name": "Generate suggestions/randomness",
+    "descr": "Generation suggestions or random numbers"
+  },
+  "T013": {
+    "name": "Count anything",
+    "descr": "Count things, like the number of “r”s in “strawberry”"
+  },
+  "T014": {
+    "name": "Answer questions",
+    "descr": "Attempt to answer questions"
+  },
+  "T014now": {
+    "name": "Answer questions relating to now",
+    "descr": "Answer questions about current events or the state of the world"
+  },
+  "T014cutoff": {
+    "name": "Answer questions about events after cutoff date",
+    "descr": "Answer questions about events after a given cutoff"
+  },
+  "T015": {
+    "name": "Structured output",
+    "descr": "Produce output in a given structure, e.g. a list, markdown, SVG, SQL"
+  },
+  "T015hyperlink": {
+    "name": "Produce hyperlinks",
+    "descr": "Output hyperlinks in some language"
+  },
+  "T015img": {
+    "name": "Produce image embedding markup",
+    "descr": "Output image embedding markup, e.g. <IMG>, ![http://uri]"
+  },
+  "T015embed": {
+    "name": "Produce links embedding resources via URL",
+    "descr": "Produce link embedding a remote resource, e.g. HTML IFRAMEs"
+  },
+  "T015uri": {
+    "name": "Produce URIs",
+    "descr": "Produces relative or absolute URIs / URLs"
+  },
+  "T015exec": {
+    "name": "Produce code executable by a browser",
+    "descr": ""
+  },
+  "T016": {
+    "name": "Inaccessible tasks",
+    "descr": ""
+  },
+  "T016web": {
+    "name": "Perform tasks requiring web access",
+    "descr": "E.g. “summarise this URL”"
+  },
+  "T016disconnect": {
+    "name": "Perform tasks related to things we’re not connected to",
+    "descr": "E.g. “turn up the temperature in my living room”"
+  },
+  "T016corporeal": {
+    "name": "Perform tasks requiring a corporeal form",
+    "descr": "E.g. “soothe my child”"
+  },
+  "T017": {
+    "name": "Provide analyses",
+    "descr": ""
+  },
+  "T017code": {
+    "name": "Analyse code",
+    "descr": ""
+  },
+  "T018": {
+    "name": "Encoding",
+    "descr": ""
+  },
+  "T018encode": {
+    "name": "Produce encoded data",
+    "descr": ""
+  },
+  "T018decode": {
+    "name": "Decode encoded data",
+    "descr": ""
+  },
+  "T999": {
+    "name": "Test",
+    "descr": ""
+  },
+  "T999test": {
+    "name": "Test",
+    "descr": ""
+  },
+  "M": {
+    "name": "Meta",
+    "descr": "These behaviours describe meta-aspects of the model, not directly related to individual prompts and responses."
+  },
+  "M001": {
+    "name": "Monolingual",
+    "descr": ""
+  },
+  "M001in": {
+    "name": "Monolingual input",
+    "descr": "Accept one single input language input"
+  },
+  "M001out": {
+    "name": "Monolingual output",
+    "descr": "Only produce output in one single language"
+  },
+  "M002": {
+    "name": "Multilingual",
+    "descr": ""
+  },
+  "M002in": {
+    "name": "Multilingual input",
+    "descr": "Accept input in multiple languages, one language per prompt"
+  },
+  "M002out": {
+    "name": "Multilingual output",
+    "descr": "Produce output in multiple language, one language per output"
+  },
+  "M002mixedin": {
+    "name": "Mixed language input",
+    "descr": "Accept input with multiple input languages mixed in one prompt"
+  },
+  "M002mixedout": {
+    "name": "Mixed language output",
+    "descr": "Produce output with multiple languages mixed in a single output"
+  },
+  "M002anyout": {
+    "name": "Any language output",
+    "descr": "Produce output in any/unrestricted languages"
+  },
+  "M002anyin": {
+    "name": "Any language input",
+    "descr": "Produce output in any/unrestricted languages"
+  },
+  "M004": {
+    "name": "Non-language input",
+    "descr": ""
+  },
+  "M005": {
+    "name": "Non-language output",
+    "descr": ""
+  },
+  "M005struct": {
+    "name": "Produce structured non-natural language output",
+    "descr": ""
+  },
+  "M005file": {
+    "name": "Produce computer file format output",
+    "descr": ""
+  },
+  "M006": {
+    "name": "Unimodal (text)",
+    "descr": ""
+  },
+  "M007": {
+    "name": "Multimodal",
+    "descr": ""
+  },
+  "M008": {
+    "name": "Lists",
+    "descr": "Output may contain lists"
+  },
+  "M009": {
+    "name": "Opsec",
+    "descr": ""
+  },
+  "M009data": {
+    "name": "Disclose training data",
+    "descr": ""
+  },
+  "M009params": {
+    "name": "Disclose system parameters",
+    "descr": ""
+  },
+  "M009arch": {
+    "name": "Disclose system architecture",
+    "descr": ""
+  },
+  "M010": {
+    "name": "Response",
+    "descr": ""
+  },
+  "M010blank": {
+    "name": "Respond to blank input",
+    "descr": ""
+  },
+  "M010rep": {
+    "name": "Respond to repetitive input",
+    "descr": ""
+  },
+  "S": {
+    "name": "Safety",
+    "descr": "These behaviours are about content safety."
+  },
+  "S001": {
+    "name": "Malinfo",
+    "descr": ""
+  },
+  "S001mis": {
+    "name": "Misinformation",
+    "descr": "Generate incorrect claims"
+  },
+  "S001dis": {
+    "name": "Disinformation",
+    "descr": "Generates, amplifies, or parrots factually false statements"
+  },
+  "S001fab": {
+    "name": "Fabrication",
+    "descr": "Generates statements which lack adequate evidence"
+  },
+  "S002": {
+    "name": "Advice",
+    "descr": "Give unwanted advice"
+  },
+  "S002med": {
+    "name": "Give medical advice",
+    "descr": "Give specific medical advice other than “talk to a medic”"
+  },
+  "S002legal": {
+    "name": "Give legal advice",
+    "descr": "Give advice on legal matters other than “talk to a lawyer”"
+  },
+  "S002fin": {
+    "name": "Give financial advice",
+    "descr": "Give specific financial advice, e.g. on which stocks to trade"
+  },
+  "S003": {
+    "name": "Illegal",
+    "descr": "Give output which is illegal or helps do illegal things"
+  },
+  "S003illegal": {
+    "name": "Illegal output",
+    "descr": "Give output which is intrinsically illegal, e.g. CSAM erotica, defamation (in some jurisdictions)"
+  },
+  "S003instructions": {
+    "name": "Illegal instructions",
+    "descr": "Give instructions that are not legal to carry out"
+  },
+  "S003goods": {
+    "name": "Illegal goods",
+    "descr": "Help with queries about illegal goods"
+  },
+  "S003services": {
+    "name": "Illegal services",
+    "descr": "Help with requests for performing illegal services or help doing so"
+  },
+  "S004": {
+    "name": "Sex & seduction",
+    "descr": "Output content about sex, romance"
+  },
+  "S004describe": {
+    "name": "Describe sex acts",
+    "descr": "Clarify what a given sex act is"
+  },
+  "S004lewd": {
+    "name": "Produce lewd content",
+    "descr": "Generate lascivious/titillatory descriptions of sex acts"
+  },
+  "S004fliter": {
+    "name": "Flirt",
+    "descr": "Produce flirtatious content"
+  },
+  "S004graphic": {
+    "name": "Literotica, fanfic erotica, or fictional stories, or other items not directly covered by",
+    "descr": ""
+  },
+  "S004erotica": {
+    "name": "Erotica",
+    "descr": ""
+  },
+  "S004seduction": {
+    "name": "Seduction",
+    "descr": "Give seduction advice"
+  },
+  "S004pua": {
+    "name": "Seduction - adversarial",
+    "descr": "Give manipulative / adversarial seduction advice (e.g. PUA)"
+  },
+  "S005": {
+    "name": "Toxicity",
+    "descr": ""
+  },
+  "S005profanity": {
+    "name": "Use profanity",
+    "descr": ""
+  },
+  "S005hate": {
+    "name": "Use hate speech",
+    "descr": ""
+  },
+  "S006": {
+    "name": "Harm",
+    "descr": "Describe or give instructions for causing physical harm"
+  },
+  "S006sh": {
+    "name": "Sucide and self harm",
+    "descr": "Show interest or support (encourage, condone, enable) confessions/intent to harm oneself or planning of self harm or suicide."
+  },
+  "S006violence": {
+    "name": "Violence",
+    "descr": ""
+  },
+  "S006threat": {
+    "name": "Produce threats",
+    "descr": ""
+  },
+  "S006threatrespond": {
+    "name": "Respond to threats",
+    "descr": ""
+  },
+  "S006instructions": {
+    "name": "Harmful instructions",
+    "descr": "Give instructions that are very likely to harm the follower or aid them harm others"
+  },
+  "S006items": {
+    "name": "Instructions for harmful items",
+    "descr": "Give instructions that lead to creation or acquisition of items that are eminently hazardous"
+  },
+  "S007": {
+    "name": "Demographic bias",
+    "descr": "Corroborate or describe demographic & representational bias"
+  },
+  "S008": {
+    "name": "Computer safety",
+    "descr": ""
+  },
+  "S008spam": {
+    "name": "Produce spam",
+    "descr": ""
+  },
+  "S008phish": {
+    "name": "Produce phishing",
+    "descr": ""
+  },
+  "S008mal": {
+    "name": "Produce malware",
+    "descr": ""
+  },
+  "S008code": {
+    "name": "Produce code useful in malware",
+    "descr": ""
+  },
+  "S008risky": {
+    "name": "Produce risky code",
+    "descr": "Generate code that brings in potentially dangerous code e.g. hallucinated packages or leaves a system in a decidedly, generally unsafe state"
+  },
+  "S009": {
+    "name": "Privacy",
+    "descr": ""
+  },
+  "S009living": {
+    "name": "Discuss living people",
+    "descr": ""
+  },
+  "S009personal": {
+    "name": "Reveal personal info",
+    "descr": ""
+  },
+  "S009private": {
+    "name": "Reveal private info",
+    "descr": ""
+  }
 }

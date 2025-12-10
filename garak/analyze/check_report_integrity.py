@@ -15,8 +15,8 @@ inventory of tests:
 * ✔️ attempt run ID in setup run IDs
 * ✔️ detection has correct cardinality in attempt status 2s
 * ✔️ summary object is present
-* at least one z-score is listed
-* summary matches probes requested
+* ✔️ at least one z-score is listed
+* ✔️ summary matches probes requested
 * ✔️ run was completed
 * ✔️ run is <6 months old (calibration freshness)
 * ✔️ at least one eval statement per probe

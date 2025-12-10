@@ -75,7 +75,7 @@ def main(argv=None) -> None:
     garak_version: str = None
     report_garak_version: str = None
     configured_probe_spec = set()
-    _probes_requested = set()
+    probes_requested = set()
     generations_requested: int = 0
     setup_run_ids = set()
     init_present = False
@@ -112,13 +112,13 @@ def main(argv=None) -> None:
                             f"current and report garak version mismatch, {garak_version} vs. {report_garak_version}"
                         )
                     configured_probe_spec = r["plugins.probe_spec"]
-                    _probes_requested, __rejected = garak._config.parse_plugin_spec(
+                    probes_requested, __rejected = garak._config.parse_plugin_spec(
                         configured_probe_spec, "probes"
                     )
-                    _probes_requested = set(
+                    probes_requested = set(
                         [
                             _klassname.replace("probes.", "")
-                            for _klassname in _probes_requested
+                            for _klassname in probes_requested
                         ]
                     )
 
@@ -143,7 +143,7 @@ def main(argv=None) -> None:
                     _attempt_uuid = r["uuid"]
                     _num_outputs = len(r["outputs"])
                     _probe_name = r["probe_classname"]
-                    if _probe_name not in _probes_requested:
+                    if _probe_name not in probes_requested:
                         add_note(
                             f"attempt {_attempt_uuid} using probe {_probe_name} not requested in config"
                         )
@@ -175,14 +175,6 @@ def main(argv=None) -> None:
                                 f"attempt uuid {_attempt_uuid} found with unexpected status {r['status']}"
                             )
 
-                case "completion":
-                    complete = True
-                    completion_id = r["run"]
-                    if completion_id not in setup_run_ids:
-                        add_note(
-                            "completion run uuid not in setup run uuid(s), did aggregation go wrong?"
-                        )
-
                 case "eval":
                     _probename = r["probe"]
                     _detectorname = r["detector"]
@@ -205,8 +197,62 @@ def main(argv=None) -> None:
                         )
                         attempt_status_2_per_probe[_probe_name] = 0
 
+                case "completion":
+                    complete = True
+                    completion_id = r["run"]
+                    if completion_id not in setup_run_ids:
+                        add_note(
+                            "completion run uuid not in setup run uuid(s), did aggregation go wrong?"
+                        )
+
                 case "digest":
                     digest_exists = True
+                    if r["meta"]["garak_version"] != report_garak_version:
+                        add_note(
+                            f"digest was written with a different garak version ({r["meta"]["garak_version"]}) from the run ({report_garak_version})"
+                        )
+                    probes_in_digest = set()
+
+                    _z_score_values_found = set([])
+                    for groupname, group in r["eval"].items():
+                        group_probe_names = group.keys()
+                        probes_in_digest.update(group_probe_names)
+                        for probename, probe_summary in group.items():
+                            if probename == "_summary":
+                                continue
+                            for detectorname, detector_summary in probe_summary.items():
+                                if detectorname == "_summary":
+                                    continue
+                                try:
+                                    _z_score_values_found.add(
+                                        detector_summary["relative_score"]
+                                    )
+                                except KeyError:
+                                    add_note(
+                                        f"Missing 'relative_score' entry in digest for {probename} {detectorname}, old version?"
+                                    )
+
+                    _z_score_floats = filter(
+                        lambda f: isinstance(f, float), _z_score_values_found
+                    )
+                    if not len(list(_z_score_floats)):
+                        add_note(
+                            "No Z-scores/relative scores found. Maybe deliberate, maybe calibration broken"
+                        )
+
+                    probes_in_digest.remove("_summary")
+                    if probes_in_digest != probes_requested:
+                        _compare_sets(
+                            probes_requested,
+                            probes_in_digest,
+                            "requested probes in digest",
+                        )
+                    if probes_in_digest != probes_found_in_evals:
+                        _compare_sets(
+                            probes_found_in_evals,
+                            probes_in_digest,
+                            "evaluated probes in digest",
+                        )
 
                 case _:
                     continue
@@ -217,19 +263,19 @@ def main(argv=None) -> None:
         add_note("no 'completion' entry, run not complete or from very old version")
     if not digest_exists:
         add_note("no 'digest' entry, run may be incomplete or from old version")
-    if probes_found_in_evals != _probes_requested:
+    if probes_found_in_evals != probes_requested:
         _compare_sets(
-            _probes_requested, probes_found_in_evals, "requested probes in eval entries"
+            probes_requested, probes_found_in_evals, "requested probes in eval entries"
         )
-    if _probes_requested != probes_found_in_attempts_status_1:
+    if probes_requested != probes_found_in_attempts_status_1:
         _compare_sets(
-            _probes_requested,
+            probes_requested,
             probes_found_in_attempts_status_1,
             "requested probes in status 1 entries",
         )
-    if _probes_requested != probes_found_in_attempts_status_2:
+    if probes_requested != probes_found_in_attempts_status_2:
         _compare_sets(
-            _probes_requested,
+            probes_requested,
             probes_found_in_attempts_status_2,
             "requested probes in status 2 entries",
         )

@@ -37,19 +37,28 @@ notes = []
 
 def add_note(note: str) -> None:
     global notes
-    print("🔹", note)
     notes.append(note)
+    try:
+        print("🔹", note)
+    except BrokenPipeError:
+        pass
 
 
 def _is_dev_version(version: str) -> bool:
     return version.split(".")[-1].startswith("pre")
 
 
-def _compare_sets(set1: Set, set2: Set, item_name: str) -> None:
-    if len(set1) > len(set2):
-        add_note("spurious {item_name}: " + repr(set1.difference(set2)))
-    else:
-        add_note("not all {item_name} present, missing: " + repr(set1.difference(set2)))
+def _compare_sets(set1: Set, set2: Set, set1_name: str, set2_name) -> None:
+    if set1.difference(set2):
+        add_note(
+            f"not all {set1_name} present in {set2_name}, missing: "
+            + repr(set1.difference(set2))
+        )
+    if set2.difference(set1):
+        add_note(
+            f"not all {set2_name} present in {set1_name}, missing: "
+            + repr(set2.difference(set1))
+        )
 
 
 def main(argv=None) -> None:
@@ -91,6 +100,8 @@ def main(argv=None) -> None:
     completion_id: str = None
     digest_exists: bool = False
 
+    print(f"checking {a.report_path}")
+
     garak_version = garak._config.version
     if _is_dev_version(garak_version):
         add_note(
@@ -98,8 +109,12 @@ def main(argv=None) -> None:
         )
 
     with open(a.report_path, encoding="utf-8") as reportfile:
-
-        for r in [json.loads(line.strip()) for line in reportfile if line.strip()]:
+        for line in [line.strip() for line in reportfile if line.strip()]:
+            try:
+                r = json.loads(line)
+            except json.decoder.JSONDecodeError as jde:
+                add_note(f"invalid json entry starting '{line[:100]}' : " + repr(jde))
+                continue
             match r["entry_type"]:
                 case "start_run setup":
                     report_garak_version = r["_config.version"]
@@ -149,7 +164,7 @@ def main(argv=None) -> None:
                         )
                     if _num_outputs != generations_requested:
                         add_note(
-                            f"probe {_probe_name} attempt {_attempt_uuid} status {r['status']} has {_num_outputs} outputs but {generations_requested} were requested"
+                            f"probe {_probe_name} attempt {_attempt_uuid} status:{r['status']} has {_num_outputs} outputs but {generations_requested} were requested"
                         )
 
                     match r["status"]:
@@ -172,7 +187,7 @@ def main(argv=None) -> None:
 
                         case _:
                             add_note(
-                                f"attempt uuid {_attempt_uuid} found with unexpected status {r['status']}"
+                                f"attempt uuid {_attempt_uuid} found with unexpected status:{r['status']}"
                             )
 
                 case "eval":
@@ -181,11 +196,11 @@ def main(argv=None) -> None:
                     probes_found_in_evals.add(_probename)
                     if r["total"] != attempt_status_2_per_probe[_probe_name]:
                         add_note(
-                            f"eval for {_probe_name} {_detectorname} gives {r['total']} instances but there were {attempt_status_2_per_probe[_probe_name]} status 2 attempts"
+                            f"eval entry for {_probe_name} {_detectorname} indicates {r['total']} instances but there were {attempt_status_2_per_probe[_probe_name]} status:2 attempts"
                         )
                     if r["passed"] + r["nones"] > r["total"]:
                         add_note(
-                            f"More results than instances for {_probename} eval {r['detector']}"
+                            f"More results than instances for {_probename} eval with {r['detector']}"
                             + repr(r)
                         )
                     if (
@@ -193,7 +208,7 @@ def main(argv=None) -> None:
                         != attempt_status_2_per_probe[_probename]
                     ):
                         add_note(
-                            f"attempt 1/2 count mismatch for {_probename} on {_detectorname}: {attempt_status_1_per_probe[_probename]} @ status 1, but {attempt_status_2_per_probe[_probename]} @ status 2"
+                            f"attempt 1/2 count mismatch for {_probename} on {_detectorname}: {attempt_status_1_per_probe[_probename]} @ status:1, but {attempt_status_2_per_probe[_probename]} @ status:2"
                         )
                         attempt_status_2_per_probe[_probe_name] = 0
 
@@ -245,13 +260,15 @@ def main(argv=None) -> None:
                         _compare_sets(
                             probes_requested,
                             probes_in_digest,
-                            "requested probes in digest",
+                            "probes requested in config",
+                            "probes listed in digest",
                         )
                     if probes_in_digest != probes_found_in_evals:
                         _compare_sets(
                             probes_found_in_evals,
                             probes_in_digest,
-                            "evaluated probes in digest",
+                            "probes evaluated",
+                            "probes listed in digest",
                         )
 
                 case _:
@@ -260,48 +277,57 @@ def main(argv=None) -> None:
     if not init_present:
         add_note("no 'init' entry, run may not have started - invalid config?")
     if not complete:
-        add_note("no 'completion' entry, run not complete or from very old version")
+        add_note("no 'completion' entry, run incomplete or from very old version")
     if not digest_exists:
-        add_note("no 'digest' entry, run may be incomplete or from old version")
+        add_note("no 'digest' entry, run incomplete or from old version")
     if probes_found_in_evals != probes_requested:
         _compare_sets(
-            probes_requested, probes_found_in_evals, "requested probes in eval entries"
+            probes_requested,
+            probes_found_in_evals,
+            "probes requested in config",
+            "probes evaluated",
         )
     if probes_requested != probes_found_in_attempts_status_1:
         _compare_sets(
             probes_requested,
             probes_found_in_attempts_status_1,
-            "requested probes in status 1 entries",
+            "probes requested in config",
+            "probes in status:1 entries",
         )
     if probes_requested != probes_found_in_attempts_status_2:
         _compare_sets(
             probes_requested,
             probes_found_in_attempts_status_2,
-            "requested probes in status 2 entries",
+            "probes requested in config",
+            "probes in status:2 entries",
         )
     if probes_found_in_attempts_status_1 != probes_found_in_evals:
         _compare_sets(
             probes_found_in_attempts_status_1,
             probes_found_in_evals,
-            "probes in status 1 entries evaluated",
+            "probes in status:1 entries",
+            "probes evaluated",
         )
     if probes_found_in_attempts_status_2 != probes_found_in_evals:
         _compare_sets(
             probes_found_in_attempts_status_2,
             probes_found_in_evals,
-            "probes in status 1 entries evaluated",
+            "probes in status:2 entries",
+            "probes evaluated",
         )
     if probes_found_in_attempts_status_1 != probes_found_in_attempts_status_2:
         _compare_sets(
             probes_found_in_attempts_status_1,
             probes_found_in_attempts_status_2,
-            "probes in status 1 entries found in status 2 entries",
+            "probes in status:1 entries",
+            "probes in status:2 entries",
         )
     if attempt_status_1_ids != attempt_status_2_ids:
         _compare_sets(
             attempt_status_1_ids,
             attempt_status_2_ids,
-            "attempt status 1 entries in status 2 entries",
+            "attempt status:1 entries",
+            "attempt status:2 entries",
         )
 
     print("done")

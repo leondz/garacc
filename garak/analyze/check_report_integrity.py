@@ -194,11 +194,16 @@ def main(argv=None) -> None:
                     _probename = r["probe"]
                     _detectorname = r["detector"]
                     probes_found_in_evals.add(_probename)
-                    if r["total"] != attempt_status_2_per_probe[_probe_name]:
+                    total_attempts_processed = r["total"] + r["nones"]
+                    if (
+                        total_attempts_processed
+                        != attempt_status_2_per_probe[_probe_name]
+                        * generations_requested
+                    ):
                         add_note(
-                            f"eval entry for {_probe_name} {_detectorname} indicates {r['total']} instances but there were {attempt_status_2_per_probe[_probe_name]} status:2 attempts"
+                            f"eval entry for {_probe_name} {_detectorname} indicates {r['total']} instances but there were {attempt_status_2_per_probe[_probe_name]} status:2 attempts (generations={generations_requested})"
                         )
-                    if r["passed"] + r["nones"] > r["total"]:
+                    if r["passed"] > r["total"]:
                         add_note(
                             f"More results than instances for {_probename} eval with {r['detector']}"
                             + repr(r)
@@ -330,7 +335,7 @@ def main(argv=None) -> None:
             "attempt status:2 entries",
         )
 
-    print("done")
+    print(f"done with {a.report_path}")
     print(len(notes), "notes")
 
 

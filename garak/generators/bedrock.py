@@ -42,6 +42,7 @@ class BedrockGenerator(Generator):
     active = True
     generator_family_name = "Bedrock"
     supports_multiple_generations = False
+    extra_dependency_names = ["boto3", "botocore"]
 
     DEFAULT_PARAMS = Generator.DEFAULT_PARAMS | {
         "temperature": 0.7,
@@ -49,6 +50,8 @@ class BedrockGenerator(Generator):
         "stop": [],
         "region": "us-east-1",
     }
+
+    _unsafe_attributes = ["client"]
 
     def __init__(self, name="", config_root=_config):
         """Initialize the Bedrock generator.
@@ -102,11 +105,11 @@ class BedrockGenerator(Generator):
 
         super().__init__(self.name, config_root=config_root)
         self._validate_env_var()
-        self._load_client()
+        self._load_unsafe()
 
     def _validate_env_var(self):
         """Validate and set region from environment variables if not configured.
-        
+
         Checks AWS_REGION and AWS_DEFAULT_REGION environment variables only if
         the region parameter is still at its default value.
         """
@@ -115,54 +118,32 @@ class BedrockGenerator(Generator):
             if env_region:
                 logging.info(f"Using AWS region from environment: {env_region}")
                 self.region = env_region
-        
+
         return super()._validate_env_var()
 
-    def _load_client(self):
+    def _load_unsafe(self):
         """Load and configure the boto3 bedrock-runtime client.
 
         Uses boto3's standard credential chain for authentication.
         """
-        try:
-            import boto3
-        except ImportError:
-            raise ImportError(
-                "boto3 is required for the Bedrock generator. "
-                "Install it with: pip install boto3"
-            )
 
-        self.client = boto3.client(
+        self.client = self.boto3.client(
             service_name="bedrock-runtime",
             region_name=self.region,
         )
 
         logging.info(f"Loaded boto3 bedrock-runtime client for region {self.region}")
 
-    def _clear_client(self):
-        """Clear the boto3 client to enable object pickling."""
-        if hasattr(self, "client"):
-            self.client = None
-
-    def __getstate__(self):
-        """Prepare object for pickling by clearing the boto3 client."""
-        self._clear_client()
-        return self.__dict__
-
-    def __setstate__(self, state):
-        """Restore object from pickle and reload the boto3 client."""
-        self.__dict__.update(state)
-        self._load_client()
-
     @staticmethod
     def _conversation_to_list(conversation: Conversation) -> list[dict]:
         """Convert Conversation object to Bedrock Converse API message format.
-        
+
         AWS Bedrock expects messages in the format:
         {"role": "user", "content": [{"text": "message text"}]}
-        
+
         Args:
             conversation: Conversation object to convert
-            
+
         Returns:
             List of message dictionaries in Bedrock format
         """
@@ -174,7 +155,7 @@ class BedrockGenerator(Generator):
 
     @backoff.on_exception(
         backoff.fibo,
-        garak.exception.GarakBackoffTrigger,
+        garak.exception.GeneratorBackoffTrigger,
         max_value=70,
     )
     def _call_model(
@@ -190,7 +171,7 @@ class BedrockGenerator(Generator):
             List of Message objects containing the generated text, or [None] on error
         """
         if self.client is None:
-            self._load_client()
+            self._load_unsafe()
 
         messages = self._conversation_to_list(prompt)
 
@@ -246,20 +227,20 @@ class BedrockGenerator(Generator):
             return [Message(text=text)]
 
         except Exception as e:
-            from botocore.exceptions import ClientError
 
-            if isinstance(e, ClientError):
+            if isinstance(e, self.botocore.exceptions.ClientError):
                 error_code = e.response.get("Error", {}).get("Code", "")
                 error_message = e.response.get("Error", {}).get("Message", "")
 
                 logging.error(f"Bedrock API error [{error_code}]: {error_message}")
 
                 if error_code in ["ThrottlingException", "ServiceUnavailableException"]:
-                    raise garak.exception.GarakBackoffTrigger from e
+                    raise garak.exception.GeneratorBackoffTrigger from e
 
                 return [None]
 
             logging.exception("Error calling Bedrock model")
             return [None]
+
 
 DEFAULT_CLASS = "BedrockGenerator"

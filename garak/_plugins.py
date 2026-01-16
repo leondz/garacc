@@ -404,6 +404,7 @@ def load_plugin(path, break_on_fail=True, config_root=_config) -> object:
             ) from ve
         else:
             return False
+
     module_path = f"garak.{category}.{module_name}"
     try:
         mod = importlib.import_module(module_path)
@@ -434,6 +435,7 @@ def load_plugin(path, break_on_fail=True, config_root=_config) -> object:
         if plugin_instance is None:
             plugin_instance = klass(config_root=config_root)
             PluginProvider.storeInstance(plugin_instance, config_root)
+
     except Exception as e:
         logging.warning(
             "Exception instantiating %s.%s: %s",

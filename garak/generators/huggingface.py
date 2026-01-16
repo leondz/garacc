@@ -21,7 +21,6 @@ import warnings
 
 import backoff
 import torch
-from PIL import Image
 
 from garak import _config
 from garak.attempt import Message, Conversation
@@ -68,9 +67,9 @@ class Pipeline(Generator, HFCompatible):
         mp.set_start_method("spawn", force=True)
 
         self.device = self._select_hf_device()
-        self._load_client()
+        self._load_unsafe()
 
-    def _load_client(self):
+    def _load_unsafe(self):
         if hasattr(self, "generator") and self.generator is not None:
             return
 
@@ -105,14 +104,10 @@ class Pipeline(Generator, HFCompatible):
 
         self._set_hf_context_len(self.generator.model.config)
 
-    def _clear_client(self):
-        self.generator = None
-        self.tokenizer = None
-
     def _call_model(
         self, prompt: Conversation, generations_this_call: int = 1
     ) -> List[Union[Message, None]]:
-        self._load_client()
+        self._load_unsafe()
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=UserWarning)
             try:
@@ -160,52 +155,6 @@ class Pipeline(Generator, HFCompatible):
             if len(text_outputs) > 0
             else [None] * generations_this_call
         )
-
-
-class OptimumPipeline(Pipeline, HFCompatible):
-    """Get text generations from a locally-run Hugging Face pipeline using NVIDIA Optimum"""
-
-    generator_family_name = "NVIDIA Optimum Hugging Face 🤗 pipeline"
-    supports_multiple_generations = True
-    doc_uri = "https://huggingface.co/blog/optimum-nvidia"
-
-    def _load_client(self):
-        if hasattr(self, "generator") and self.generator is not None:
-            return
-
-        try:
-            from optimum.nvidia.pipelines import pipeline
-            from transformers import set_seed
-        except Exception as e:
-            logging.exception(e)
-            raise GarakException(
-                f"Missing required dependencies for {self.__class__.__name__}"
-            )
-
-        if self.seed is not None:
-            set_seed(self.seed)
-
-        import torch.cuda
-
-        if not torch.cuda.is_available():
-            message = "OptimumPipeline needs CUDA, but torch.cuda.is_available() returned False; quitting"
-            logging.critical(message)
-            raise GarakException(message)
-
-        self.use_fp8 = False
-        if _config.loaded:
-            if "use_fp8" in _config.plugins.generators.OptimumPipeline:
-                self.use_fp8 = True
-
-        pipline_kwargs = self._gather_hf_params(hf_constructor=pipeline)
-        self.generator = pipeline("text-generation", **pipline_kwargs)
-        if not hasattr(self, "deprefix_prompt"):
-            self.deprefix_prompt = self.name in models_to_deprefix
-        if _config.loaded:
-            if _config.run.deprefix is True:
-                self.deprefix_prompt = True
-
-        self._set_hf_context_len(self.generator.model.config)
 
 
 class InferenceAPI(Generator):
@@ -398,7 +347,7 @@ class Model(Pipeline, HFCompatible):
     generator_family_name = "Hugging Face 🤗 model"
     supports_multiple_generations = True
 
-    def _load_client(self):
+    def _load_unsafe(self):
         if hasattr(self, "model") and self.model is not None:
             return
 
@@ -445,16 +394,10 @@ class Model(Pipeline, HFCompatible):
         self.generation_config.eos_token_id = self.model.config.eos_token_id
         self.generation_config.pad_token_id = self.model.config.eos_token_id
 
-    def _clear_client(self):
-        self.model = None
-        self.config = None
-        self.tokenizer = None
-        self.generation_config = None
-
     def _call_model(
         self, prompt: Conversation, generations_this_call: int = 1
     ) -> List[Message | None]:
-        self._load_client()
+        self._load_unsafe()
         self.generation_config.max_new_tokens = self.max_tokens
         self.generation_config.do_sample = self.hf_args["do_sample"]
         self.generation_config.num_return_sequences = generations_this_call
@@ -522,6 +465,11 @@ class LLaVA(Generator, HFCompatible):
     NB. This should be use with strict modality matching - generate() doesn't
     support text-only prompts."""
 
+    extra_dependency_names = ["pillow"]
+
+    def _load_deps(self):
+        return super()._load_deps(["PIL"])
+
     DEFAULT_PARAMS = Generator.DEFAULT_PARAMS | {
         "max_tokens": 4000,
         # "exist_tokens + max_new_tokens < 4K is the golden rule."
@@ -577,7 +525,7 @@ class LLaVA(Generator, HFCompatible):
 
         text_prompt = prompt.last_message().text
         try:
-            image_prompt = Image.open(prompt.last_message().data_path)
+            image_prompt = self.PIL.Image.open(prompt.last_message().data_path)
         except FileNotFoundError:
             file_path = prompt.last_message().data_path
             raise FileNotFoundError(f"Cannot open image {file_path}.")

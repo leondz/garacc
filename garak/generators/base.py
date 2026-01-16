@@ -69,6 +69,7 @@ class Generator(Configurable):
             f"🦜 loading {Style.BRIGHT}{Fore.LIGHTMAGENTA_EX}generator{Style.RESET_ALL}: {self.generator_family_name}: {self.name}"
         )
         logging.info("generator init: %s", self)
+        self._load_deps()
 
     def _call_model(
         self, prompt: Conversation, generations_this_call: int = 1

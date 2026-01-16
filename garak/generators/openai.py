@@ -130,7 +130,7 @@ class OpenAICompatible(Generator):
     ENV_VAR = "OpenAICompatible_API_KEY".upper()  # Placeholder override when extending
 
     active = True
-    supports_multiple_generations = True
+    supports_multiple_generations = False
     generator_family_name = "OpenAICompatible"  # Placeholder override when extending
 
     # template defaults optionally override when extending
@@ -147,17 +147,9 @@ class OpenAICompatible(Generator):
         "extra_params": {},
     }
 
-    # avoid attempt to pickle the client attribute
-    def __getstate__(self) -> object:
-        self._clear_client()
-        return dict(self.__dict__)
+    _unsafe_attributes = ["client", "generator"]
 
-    # restore the client attribute
-    def __setstate__(self, d) -> object:
-        self.__dict__.update(d)
-        self._load_client()
-
-    def _load_client(self):
+    def _load_unsafe(self):
         # When extending `OpenAICompatible` this method is a likely location for target application specific
         # customization and must populate self.generator with an openai api compliant object
         self.client = openai.OpenAI(base_url=self.uri, api_key=self.api_key)
@@ -166,10 +158,6 @@ class OpenAICompatible(Generator):
                 f"{self.generator_family_name} requires model name to be set, e.g. --target_name org/private-model-name"
             )
         self.generator = self.client.chat.completions
-
-    def _clear_client(self):
-        self.generator = None
-        self.client = None
 
     def _validate_config(self):
         pass
@@ -180,7 +168,7 @@ class OpenAICompatible(Generator):
         self.fullname = f"{self.generator_family_name} {self.name}"
         self.key_env_var = self.ENV_VAR
 
-        self._load_client()
+        self._load_unsafe()
 
         if self.generator not in (
             self.client.chat.completions,
@@ -194,9 +182,6 @@ class OpenAICompatible(Generator):
 
         super().__init__(self.name, config_root=config_root)
 
-        # clear client config to enable object to `pickle`
-        self._clear_client()
-
     # noinspection PyArgumentList
     @backoff.on_exception(
         backoff.fibo,
@@ -205,7 +190,7 @@ class OpenAICompatible(Generator):
             openai.InternalServerError,
             openai.APITimeoutError,
             openai.APIConnectionError,
-            garak.exception.GarakBackoffTrigger,
+            garak.exception.GeneratorBackoffTrigger,
         ),
         max_value=70,
     )
@@ -214,16 +199,17 @@ class OpenAICompatible(Generator):
     ) -> List[Union[Message, None]]:
         if self.client is None:
             # reload client once when consuming the generator
-            self._load_client()
+            self._load_unsafe()
 
-        # TODO: refactor to always use local scoped variables for _call_model client objects to avoid serialization state issues
         client = self.client
         generator = self.generator
         is_completion = generator == client.completions
 
         create_args = {}
-        if "n" not in self.suppressed_params:
+        if self.supports_multiple_generations:
             create_args["n"] = generations_this_call
+        elif "n" not in self.suppressed_params:
+            create_args["n"] = 1
         for arg in inspect.signature(generator.create).parameters:
             if arg == "model":
                 create_args[arg] = self.name
@@ -275,7 +261,7 @@ class OpenAICompatible(Generator):
         except json.decoder.JSONDecodeError as e:
             logging.exception(e)
             if self.retry_json:
-                raise garak.exception.GarakBackoffTrigger from e
+                raise garak.exception.GeneratorBackoffTrigger from e
             else:
                 raise e
 
@@ -286,7 +272,7 @@ class OpenAICompatible(Generator):
             )
             msg = "no .choices member in generator response"
             if self.retry_json:
-                raise garak.exception.GarakBackoffTrigger(msg)
+                raise garak.exception.GeneratorBackoffTrigger(msg)
             else:
                 return [None]
 
@@ -302,13 +288,14 @@ class OpenAIGenerator(OpenAICompatible):
     ENV_VAR = "OPENAI_API_KEY"
     active = True
     generator_family_name = "OpenAI"
+    supports_multiple_generations = True
 
     # remove uri as it is not overridable in this class.
     DEFAULT_PARAMS = {
         k: val for k, val in OpenAICompatible.DEFAULT_PARAMS.items() if k != "uri"
     }
 
-    def _load_client(self):
+    def _load_unsafe(self):
         self.client = openai.OpenAI(api_key=self.api_key)
 
         if self.name == "":

@@ -14,7 +14,7 @@ import json
 import logging
 from collections.abc import Iterable
 import random
-from typing import Iterable, Union, List
+from typing import Iterable, Union
 
 from colorama import Fore, Style
 import tqdm
@@ -57,7 +57,7 @@ class Probe(Configurable):
     modality: dict = {"in": {"text"}}
     # what tier is this probe? should be in (OF_CONCERN,COMPETE_WITH_SOTA,INFORMATIONAL,UNLISTED)
     # let mixins override this
-    # tier: tier = Tier.UNLISTED
+    # tier: Tier = Tier.UNLISTED
     tier: Tier = Tier.UNLISTED
 
     DEFAULT_PARAMS = {}
@@ -104,6 +104,8 @@ class Probe(Configurable):
             )
 
         logging.info(f"probe init: {self}")
+        self._load_deps()
+
         if "description" not in dir(self):
             if self.__doc__:
                 self.description = self.__doc__.split("\n", maxsplit=1)[0]
@@ -206,7 +208,11 @@ class Probe(Configurable):
         return attempt
 
     def _mint_attempt(
-        self, prompt=None, seq=None, notes=None, lang="*"
+        self,
+        prompt: str | garak.attempt.Message | garak.attempt.Conversation | None = None,
+        seq=None,
+        notes=None,
+        lang="*",
     ) -> garak.attempt.Attempt:
         """function for creating a new attempt given a prompt"""
         turns = []
@@ -258,7 +264,6 @@ class Probe(Configurable):
             seq=seq,
             prompt=prompt,
             notes=notes,
-            lang=lang,
         )
 
         new_attempt = self._attempt_prestore_hook(new_attempt, seq)
@@ -379,7 +384,7 @@ class Probe(Configurable):
             colour=f"#{garak.resources.theme.LANGPROVIDER_RGB}",
             desc="Preparing prompts",
         )
-        if isinstance(prompts[0], str):
+        if isinstance(prompts[0], str):  # self.prompts can be strings
             localized_prompts = self.langprovider.get_text(
                 prompts, notify_callback=preparation_bar.update
             )

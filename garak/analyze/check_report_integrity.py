@@ -191,31 +191,61 @@ def main(argv=None) -> None:
                             )
 
                 case "eval":
-                    _probename = r["probe"]
-                    _detectorname = r["detector"]
-                    probes_found_in_evals.add(_probename)
-                    total_attempts_processed = r["total"] + r["nones"]
-                    if (
-                        total_attempts_processed
-                        != attempt_status_2_per_probe[_probe_name]
-                        * generations_requested
-                    ):
-                        add_note(
-                            f"eval entry for {_probe_name} {_detectorname} indicates {r['total']} instances but there were {attempt_status_2_per_probe[_probe_name]} status:2 attempts (generations={generations_requested})"
-                        )
-                    if r["passed"] > r["total"]:
-                        add_note(
-                            f"More results than instances for {_probename} eval with {r['detector']}"
-                            + repr(r)
-                        )
-                    if (
-                        attempt_status_1_per_probe[_probename]
-                        != attempt_status_2_per_probe[_probename]
-                    ):
-                        add_note(
-                            f"attempt 1/2 count mismatch for {_probename} on {_detectorname}: {attempt_status_1_per_probe[_probename]} @ status:1, but {attempt_status_2_per_probe[_probename]} @ status:2"
-                        )
-                        attempt_status_2_per_probe[_probe_name] = 0
+                    try:
+                        _probename = r["probe"]
+                        _detectorname = r["detector"]
+                        probes_found_in_evals.add(_probename)
+                        total_attempts_processed = r["total_processed"]
+                        total_attempts_evaluated = r["total_evaluated"]
+                        if (
+                            total_attempts_processed
+                            != attempt_status_2_per_probe[_probe_name]
+                            * generations_requested
+                        ):
+                            add_note(
+                                f"eval entry for {_probe_name} {_detectorname} indicates {r['total']} instances but there were {attempt_status_2_per_probe[_probe_name]} status:2 attempts (generations={generations_requested})"
+                            )
+
+                        if r["passed"] > r["total_evaluated"]:
+                            add_note(
+                                f"More results than instances for {_probename} eval with {r['detector']}"
+                                + repr(r)
+                            )
+                        if r["passed"] + r["fails"] != total_attempts_evaluated:
+                            add_note(
+                                f"eval entry total_evaluated {total_attempts_evaluated} doesn't match sum of passed {r['passed']} and fails {r['fails']} for {_probename}/{r['detector']}"
+                            )
+
+                        if (
+                            total_attempts_evaluated + r["nones"]
+                            != total_attempts_processed
+                        ):
+                            add_note(
+                                f"eval entry total_processed {total_attempts_processed} doesn't match sum of evaluated {total_attempts_evaluated} and nones {r['nones']} for {_probename}/{r['detector']}"
+                            )
+
+                        if total_attempts_evaluated > total_attempts_processed:
+                            add_note(
+                                f"eval entry total_evaluated {total_attempts_evaluated} mustn't be greater than total_processed {total_attempts_processed} for {_probename}/{r['detector']}"
+                            )
+
+                        pfn = [r[""], r[""], r[""]]
+                        if any([_i < 0 for _i in pfn]):
+                            add_note(
+                                f"eval entry for {_probename}/{r['detector']} contains a negative in passed/fails/nones {pfn}"
+                            )
+
+                        if (
+                            attempt_status_1_per_probe[_probename]
+                            != attempt_status_2_per_probe[_probename]
+                        ):
+                            add_note(
+                                f"attempt 1/2 count mismatch for {_probename} on {_detectorname}: {attempt_status_1_per_probe[_probename]} @ status:1, but {attempt_status_2_per_probe[_probename]} @ status:2"
+                            )
+                            attempt_status_2_per_probe[_probe_name] = 0
+
+                    except KeyError as ke:
+                        add_note(f"Expected key not found in eval entry, {ke}")
 
                 case "completion":
                     complete = True

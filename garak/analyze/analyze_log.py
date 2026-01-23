@@ -12,7 +12,6 @@ usage:
 """
 import sys
 import json
-import argparse
 
 import garak
 
@@ -101,6 +100,8 @@ def analyze_log(report_path: str) -> None:
 def main(argv=None) -> None:
     if argv is None:
         argv = sys.argv[1:]
+
+    import argparse
 
     garak._config.load_config()
     print(

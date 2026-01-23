@@ -86,8 +86,8 @@ def autodan_generate(
     crossover_rate: float = 0.5,
     num_points: int = 5,
     mutation_rate: float = 0.1,
-    mutation_generator_name: str = "gpt-3.5-turbo",
-    mutation_generator_type: str = "openai",
+    mutation_generator_name: str = "gpt-5-nano",
+    mutation_generator_type: str = "openai.OpenAIGenerator",
     hierarchical: bool = False,
     out_path: Path = cached_autodan_resource_data / "autodan_prompts.txt",
     init_prompt_path: Path = autodan_resource_data / "autodan_init.txt",
@@ -179,7 +179,9 @@ def autodan_generate(
             best_new_adv_prefix = new_adv_prefixes[best_new_adv_prefix_id]
 
             adv_prefix = best_new_adv_prefix
-            conv = Conversation(turns=[Turn(role="user", content=Message(text=adv_prefix))])
+            conv = Conversation(
+                turns=[Turn(role="user", content=Message(text=adv_prefix))]
+            )
             gen_output = generator.generate(prompt=conv)[0]
             success = False
             if gen_output and gen_output.text:

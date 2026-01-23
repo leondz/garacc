@@ -12,7 +12,6 @@ from collections import defaultdict
 import json
 import random
 import sys
-import argparse
 
 import garak
 import garak.analyze
@@ -173,6 +172,8 @@ def qual_review(report_path: str) -> None:
 def main(argv=None) -> None:
     if argv is None:
         argv = sys.argv[1:]
+
+    import argparse
 
     garak._config.load_config()
     print(

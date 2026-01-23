@@ -175,7 +175,7 @@ class OpenAICompatible(Generator):
             self.client.completions,
         ):
             raise ValueError(
-                "Unsupported model at generation time in generators/openai.py - please add a clause!"
+                "Unsupported model at generation time in generators/openai.py; expected chat or completion, got neither"
             )
 
         self._validate_config()
@@ -277,9 +277,19 @@ class OpenAICompatible(Generator):
                 return [None]
 
         if is_completion:
-            return [Message(c.text) for c in response.choices]
+            reponse_message_list = [Message(c.text) for c in response.choices]
         else:
-            return [Message(c.message.content) for c in response.choices]
+            reponse_message_list = [
+                Message(c.message.content) for c in response.choices
+            ]
+
+        if len(reponse_message_list) != generations_this_call:
+            raise garak.exception.BadGeneratorException(
+                "Generator did not return the requested number of responses (asked for %i got %i). supports_multiple_generations may be set incorrectly."
+                % (generations_this_call, len(reponse_message_list))
+            )
+
+        return reponse_message_list
 
 
 class OpenAIGenerator(OpenAICompatible):
@@ -316,11 +326,11 @@ class OpenAIGenerator(OpenAICompatible):
             r"^.+-[01][0-9][0-3][0-9]$", self.name
         ):  # handle model names -MMDDish suffix
             self.generator = self.client.completions
-
         else:
-            raise ValueError(
-                f"No {self.generator_family_name} API defined for '{self.name}' in generators/openai.py - please add one!"
-            )
+            msg = f"❔ No {self.generator_family_name} API defined for '{self.name}' in generators/openai.py - please add one! Assuming chat model"
+            print(msg)
+            logging.info(msg)
+            self.generator = self.client.chat.completions
 
         if self.__class__.__name__ == "OpenAIGenerator" and self.name.startswith("o"):
             msg = "'o'-class models should use openai.OpenAIReasoningGenerator. Try e.g. `-m openai.OpenAIReasoningGenerator` instead of `-m openai`"

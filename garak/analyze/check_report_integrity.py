@@ -259,7 +259,7 @@ def main(argv=None) -> None:
                     digest_exists = True
                     if r["meta"]["garak_version"] != report_garak_version:
                         add_note(
-                            f"digest was written with a different garak version ({r["meta"]["garak_version"]}) from the run ({report_garak_version})"
+                            f'digest was written with a different garak version ({r["meta"]["garak_version"]}) from the run ({report_garak_version})'
                         )
                     probes_in_digest = set()
 

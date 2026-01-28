@@ -118,7 +118,7 @@ def main(argv=None) -> None:
             match r["entry_type"]:
                 case "start_run setup":
                     report_garak_version = r["_config.version"]
-                    if _is_dev_version(garak_version):
+                    if _is_dev_version(report_garak_version):
                         add_note(
                             f"report generated under development garak version {report_garak_version}, implementation will depend on branch+commit"
                         )

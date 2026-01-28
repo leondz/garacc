@@ -51,12 +51,12 @@ def _is_dev_version(version: str) -> bool:
 def _compare_sets(set1: Set, set2: Set, set1_name: str, set2_name: str) -> None:
     if set1.difference(set2):
         add_note(
-            f"not all {set1_name} present in {set2_name}, missing: "
+            f"Not all {set1_name} present in {set2_name}, missing: "
             + repr(set1.difference(set2))
         )
     if set2.difference(set1):
         add_note(
-            f"not all {set2_name} present in {set1_name}, missing: "
+            f"Not all {set2_name} present in {set1_name}, missing: "
             + repr(set2.difference(set1))
         )
 
@@ -105,7 +105,7 @@ def main(argv=None) -> None:
     garak_version = garak._config.version
     if _is_dev_version(garak_version):
         add_note(
-            f"check running in development garak version {garak_version}, implementation will depend on branch+commit"
+            f"Check running in a development garak version {garak_version}, implementation will depend on branch+commit"
         )
 
     with open(a.report_path, encoding="utf-8") as reportfile:
@@ -113,18 +113,18 @@ def main(argv=None) -> None:
             try:
                 r = json.loads(line)
             except json.decoder.JSONDecodeError as jde:
-                add_note(f"invalid json entry starting '{line[:100]}' : " + repr(jde))
+                add_note(f"Invalid json entry starting '{line[:100]}' : " + repr(jde))
                 continue
             match r["entry_type"]:
                 case "start_run setup":
                     report_garak_version = r["_config.version"]
                     if _is_dev_version(report_garak_version):
                         add_note(
-                            f"report generated under development garak version {report_garak_version}, implementation will depend on branch+commit"
+                            f"Report generated under a development garak version {report_garak_version}, implementation will depend on branch+commit"
                         )
                     if report_garak_version != garak_version:
                         add_note(
-                            f"current and report garak version mismatch, {garak_version} vs. {report_garak_version}"
+                            f"Current and report garak version mismatch, {garak_version} vs. {report_garak_version}"
                         )
                     configured_probe_spec = r["plugins.probe_spec"]
                     probes_requested, __rejected = garak._config.parse_plugin_spec(
@@ -144,7 +144,7 @@ def main(argv=None) -> None:
                     init_present = True
                     if r["run"] not in setup_run_ids:
                         add_note(
-                            "init run uuid not in setup run uuid(s), did aggregation go wrong?"
+                            "Init run uuid not in setup run uuid(s), did aggregation go wrong?"
                         )
                     _start = datetime.datetime.fromisoformat(r["start_time"])
                     _now = datetime.datetime.now()
@@ -156,15 +156,17 @@ def main(argv=None) -> None:
 
                 case "attempt":
                     _attempt_uuid = r["uuid"]
+                    _attempt_seq = r["seq"]
+                    _status = r["status"]
                     _num_outputs = len(r["outputs"])
                     _probe_name = r["probe_classname"]
                     if _probe_name not in probes_requested:
                         add_note(
-                            f"attempt {_attempt_uuid} using probe {_probe_name} not requested in config"
+                            f"Attempt {_attempt_uuid} seq {_attempt_seq} status {_status} using probe {_probe_name} not requested in config"
                         )
                     if _num_outputs != generations_requested:
                         add_note(
-                            f"probe {_probe_name} attempt {_attempt_uuid} status:{r['status']} has {_num_outputs} outputs but {generations_requested} were requested"
+                            f"Probe {_probe_name} attempt {_attempt_uuid} seq {_attempt_seq} status:{_status} has {_num_outputs} output(s) but {generations_requested} were requested"
                         )
 
                     match r["status"]:
@@ -182,12 +184,12 @@ def main(argv=None) -> None:
                                 _resultcount = len(_results)
                                 if _resultcount != _num_outputs:
                                     add_note(
-                                        f"attempt has incorrect detection results for {_detectorname}, {_resultcount} results vs. {_num_outputs} outputs"
+                                        f"Attempt uuid {_attempt_uuid} seq {_attempt_seq} status 2 has invalid detection results for {_detectorname}, {_resultcount} result(s) vs. {_num_outputs} output(s)"
                                     )
 
                         case _:
                             add_note(
-                                f"attempt uuid {_attempt_uuid} found with unexpected status:{r['status']}"
+                                f"Attempt uuid {_attempt_uuid} seq {_attempt_seq} found with unexpected status:{_status}"
                             )
 
                 case "eval":
@@ -199,21 +201,21 @@ def main(argv=None) -> None:
                         total_attempts_evaluated = r["total_evaluated"]
                         if (
                             total_attempts_processed
-                            != attempt_status_2_per_probe[_probe_name]
+                            != attempt_status_2_per_probe[_probename]
                             * generations_requested
                         ):
                             add_note(
-                                f"eval entry for {_probe_name} {_detectorname} indicates {r['total']} instances but there were {attempt_status_2_per_probe[_probe_name]} status:2 attempts (generations={generations_requested})"
+                                f"Eval entry for {_probename} {_detectorname} indicates {r['total']} instances but there were {attempt_status_2_per_probe[_probename]} status:2 attempts (generations={generations_requested})"
                             )
 
                         if r["passed"] > r["total_evaluated"]:
                             add_note(
-                                f"More results than instances for {_probename} eval with {r['detector']}"
+                                f"More passing results than instances for {_probename} eval with {r['detector']}"
                                 + repr(r)
                             )
                         if r["passed"] + r["fails"] != total_attempts_evaluated:
                             add_note(
-                                f"eval entry total_evaluated {total_attempts_evaluated} doesn't match sum of passed {r['passed']} and fails {r['fails']} for {_probename}/{r['detector']}"
+                                f"Eval entry total_evaluated {total_attempts_evaluated} doesn't match sum of passed {r['passed']} and fails {r['fails']} for {_probename}/{r['detector']}"
                             )
 
                         if (
@@ -221,18 +223,18 @@ def main(argv=None) -> None:
                             != total_attempts_processed
                         ):
                             add_note(
-                                f"eval entry total_processed {total_attempts_processed} doesn't match sum of evaluated {total_attempts_evaluated} and nones {r['nones']} for {_probename}/{r['detector']}"
+                                f"Eval entry total_processed {total_attempts_processed} doesn't match sum of evaluated {total_attempts_evaluated} and nones {r['nones']} for {_probename}/{r['detector']}"
                             )
 
                         if total_attempts_evaluated > total_attempts_processed:
                             add_note(
-                                f"eval entry total_evaluated {total_attempts_evaluated} mustn't be greater than total_processed {total_attempts_processed} for {_probename}/{r['detector']}"
+                                f"Eval entry total_evaluated {total_attempts_evaluated} mustn't be greater than total_processed {total_attempts_processed} for {_probename}/{r['detector']}"
                             )
 
                         pfn = [r[""], r[""], r[""]]
                         if any([_i < 0 for _i in pfn]):
                             add_note(
-                                f"eval entry for {_probename}/{r['detector']} contains a negative in passed/fails/nones {pfn}"
+                                f"Eval entry for {_probename}/{r['detector']} contains a negative in passed/fails/nones {pfn}"
                             )
 
                         if (
@@ -240,26 +242,28 @@ def main(argv=None) -> None:
                             != attempt_status_2_per_probe[_probename]
                         ):
                             add_note(
-                                f"attempt 1/2 count mismatch for {_probename} on {_detectorname}: {attempt_status_1_per_probe[_probename]} @ status:1, but {attempt_status_2_per_probe[_probename]} @ status:2"
+                                f"Attempt 1/2 count mismatch for {_probename} on {_detectorname}: {attempt_status_1_per_probe[_probename]} @ status:1, but {attempt_status_2_per_probe[_probename]} @ status:2"
                             )
-                            attempt_status_2_per_probe[_probe_name] = 0
+                            # attempt_status_2_per_probe[_probename] = 0 # reset count after eval entry found, since this should indicate end of probing
 
                     except KeyError as ke:
-                        add_note(f"Expected key not found in eval entry, {ke}")
+                        add_note(
+                            f"Expected key not found in eval entry, {ke}: {repr(r)}"
+                        )
 
                 case "completion":
                     complete = True
                     completion_id = r["run"]
                     if completion_id not in setup_run_ids:
                         add_note(
-                            "completion run uuid not in setup run uuid(s), did aggregation go wrong?"
+                            "Completion run uuid not in setup run uuid(s), did aggregation go wrong?"
                         )
 
                 case "digest":
                     digest_exists = True
                     if r["meta"]["garak_version"] != report_garak_version:
                         add_note(
-                            f'digest was written with a different garak version ({r["meta"]["garak_version"]}) from the run ({report_garak_version})'
+                            f'Digest was written with a different garak version ({r["meta"]["garak_version"]}) from the run ({report_garak_version})'
                         )
                     probes_in_digest = set()
 
@@ -310,11 +314,11 @@ def main(argv=None) -> None:
                     continue
 
     if not init_present:
-        add_note("no 'init' entry, run may not have started - invalid config?")
+        add_note("No 'init' entry, run may not have started - invalid config?")
     if not complete:
-        add_note("no 'completion' entry, run incomplete or from very old version")
+        add_note("🍎 No 'completion' entry, run incomplete or from very old version")
     if not digest_exists:
-        add_note("no 'digest' entry, run incomplete or from old version")
+        add_note("No 'digest' entry, run incomplete or from old version")
     if probes_found_in_evals != probes_requested:
         _compare_sets(
             probes_requested,
@@ -365,7 +369,7 @@ def main(argv=None) -> None:
             "attempt status:2 entries",
         )
 
-    print(f"done with {a.report_path}")
+    print(f"Done with {a.report_path}")
     print(len(notes), "notes")
 
 

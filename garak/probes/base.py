@@ -75,9 +75,9 @@ class Probe(Configurable):
 
         # Handle deprecated recommended_detector migration
         if (
-            self.primary_detector is None
-            and self.recommended_detector != ["always.Fail"]
-            and len(self.recommended_detector) > 0
+                self.primary_detector is None
+                and self.recommended_detector != ["always.Fail"]
+                and len(self.recommended_detector) > 0
         ):
             from garak import command
 
@@ -146,7 +146,7 @@ class Probe(Configurable):
         return langprovider_instance
 
     def _attempt_prestore_hook(
-        self, attempt: garak.attempt.Attempt, seq: int
+            self, attempt: garak.attempt.Attempt, seq: int
     ) -> garak.attempt.Attempt:
         """hook called when a new attempt is registered, allowing e.g.
         systematic transformation of attempts"""
@@ -158,7 +158,7 @@ class Probe(Configurable):
         pass
 
     def _buff_hook(
-        self, attempts: Iterable[garak.attempt.Attempt]
+            self, attempts: Iterable[garak.attempt.Attempt]
     ) -> Iterable[garak.attempt.Attempt]:
         """this is where we do the buffing, if there's any to do"""
         if len(_config.buffmanager.buffs) == 0:
@@ -170,14 +170,14 @@ class Probe(Configurable):
                 buffed_attempts.append(attempt)
         for buff in _config.buffmanager.buffs:
             if (
-                _config.plugins.buff_max is not None
-                and buffed_attempts_added >= _config.plugins.buff_max
+                    _config.plugins.buff_max is not None
+                    and buffed_attempts_added >= _config.plugins.buff_max
             ):
                 break
             if buff.post_buff_hook:
                 self.post_buff_hook = True
             for buffed_attempt in buff.buff(
-                attempts, probename=".".join(self.probename.split(".")[-2:])
+                    attempts, probename=".".join(self.probename.split(".")[-2:])
             ):
                 buffed_attempts.append(buffed_attempt)
                 buffed_attempts_added += 1
@@ -197,13 +197,13 @@ class Probe(Configurable):
         self.generator.clear_history()
 
     def _postprocess_hook(
-        self, attempt: garak.attempt.Attempt
+            self, attempt: garak.attempt.Attempt
     ) -> garak.attempt.Attempt:
         """hook called to process completed attempts; always called"""
         return attempt
 
     def _mint_attempt(
-        self, prompt=None, seq=None, notes=None, lang="*"
+            self, prompt=None, seq=None, notes=None, lang="*"
     ) -> garak.attempt.Attempt:
         """function for creating a new attempt given a prompt"""
         turns = []
@@ -246,9 +246,9 @@ class Probe(Configurable):
 
         new_attempt = garak.attempt.Attempt(
             probe_classname=(
-                str(self.__class__.__module__).replace("garak.probes.", "")
-                + "."
-                + self.__class__.__name__
+                    str(self.__class__.__module__).replace("garak.probes.", "")
+                    + "."
+                    + self.__class__.__name__
             ),
             goal=self.goal,
             status=garak.attempt.ATTEMPT_STARTED,
@@ -305,11 +305,11 @@ class Probe(Configurable):
         attempts_completed: Iterable[garak.attempt.Attempt] = []
 
         if (
-            self.parallel_attempts
-            and self.parallel_attempts > 1
-            and self.parallelisable_attempts
-            and len(attempts) > 1
-            and self.generator.parallel_capable
+                self.parallel_attempts
+                and self.parallel_attempts > 1
+                and self.parallelisable_attempts
+                and len(attempts) > 1
+                and self.generator.parallel_capable
         ):
             from multiprocessing import Pool
 
@@ -325,7 +325,7 @@ class Probe(Configurable):
             try:
                 with Pool(pool_size) as attempt_pool:
                     for result in attempt_pool.imap_unordered(
-                        self._execute_attempt, attempts
+                            self._execute_attempt, attempts
                     ):
                         processed_attempt = self._postprocess_attempt(result)
 
@@ -448,7 +448,6 @@ class Probe(Configurable):
 
 
 class TreeSearchProbe(Probe):
-
     DEFAULT_PARAMS = Probe.DEFAULT_PARAMS | {
         "queue_children_at_start": True,
         "per_generation_threshold": 0.5,
@@ -543,8 +542,8 @@ class TreeSearchProbe(Probe):
             # get prompts
             for surface_form in new_surface_forms:
                 if (
-                    surface_form in surface_forms_probed
-                    or surface_form in self.never_queue_forms
+                        surface_form in surface_forms_probed
+                        or surface_form in self.never_queue_forms
                 ):
                     continue
 
@@ -608,7 +607,7 @@ class TreeSearchProbe(Probe):
             logging.debug("%s  node score %s" % (self.__class__.__name__, mean_score))
 
             if (mean_score > self.per_node_threshold and self.target_soft) or (
-                mean_score < self.per_node_threshold and not self.target_soft
+                    mean_score < self.per_node_threshold and not self.target_soft
             ):
                 children = self._get_node_children(current_node)
                 logging.debug(
@@ -616,9 +615,9 @@ class TreeSearchProbe(Probe):
                 )
                 for child in children:
                     if (
-                        self._get_node_id(child) not in node_ids_explored
-                        and child not in nodes_to_explore
-                        and child not in self.never_queue_nodes
+                            self._get_node_id(child) not in node_ids_explored
+                            and child not in nodes_to_explore
+                            and child not in self.never_queue_nodes
                     ):
                         logging.debug("%s   %s" % (self.__class__.__name__, child))
                         nodes_to_explore.append(child)
@@ -677,7 +676,7 @@ class IntentProbe(Probe):
         self._build_prompts()
 
     def _attempt_prestore_hook(
-        self, attempt: garak.attempt.Attempt, seq: int
+            self, attempt: garak.attempt.Attempt, seq: int
     ) -> garak.attempt.Attempt:
         attempt.notes = dict(
             attempt.notes
@@ -714,6 +713,15 @@ class IntentProbe(Probe):
             self.prompts.extend(prompts)
             self.prompt_notes.extend([{"intent": self.stub_intents[i]}] * len(prompts))
 
-    def probe(self, generator) -> Iterable[garak.attempt.Attempt]:
+    def attack_target(self, intent_stubs, generator) -> Iterable[garak.attempt.Attempt]:
+        # TODO: better way to plug this
+        for stub in intent_stubs:
+            prompts = self._apply_technique(stub)
+            self.prompts.extend(prompts)
+            # Add a link back to the original stub
+            self.prompt_notes.extend([{"stub": stub}] * len(prompts))
 
         return super().probe(generator)
+
+    def probe(self, generator) -> Iterable[garak.attempt.Attempt]:
+        return self.attack_target(self.stub_intents, generator)

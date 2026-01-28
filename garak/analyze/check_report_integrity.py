@@ -120,7 +120,7 @@ def main(argv=None) -> None:
                     report_garak_version = r["_config.version"]
                     if _is_dev_version(garak_version):
                         add_note(
-                            f"report generated under development garak version {garak_version}, implementation will depend on branch+commit"
+                            f"report generated under development garak version {report_garak_version}, implementation will depend on branch+commit"
                         )
                     if report_garak_version != garak_version:
                         add_note(

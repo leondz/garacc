@@ -48,7 +48,7 @@ def _is_dev_version(version: str) -> bool:
     return version.split(".")[-1].startswith("pre")
 
 
-def _compare_sets(set1: Set, set2: Set, set1_name: str, set2_name) -> None:
+def _compare_sets(set1: Set, set2: Set, set1_name: str, set2_name: str) -> None:
     if set1.difference(set2):
         add_note(
             f"not all {set1_name} present in {set2_name}, missing: "

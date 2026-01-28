@@ -91,6 +91,8 @@ class EarlyStopHarness(Harness):
                 # Apply attack method to rejected attempts
                 prompts = [attempt.notes["stub"] for attempt in rejected_attempts]
                 attacked_attempts = list(attack_method.attack_target(prompts, model))
+                # TODO: some methods might not return the internal attempts.
+                #       For example: TAP returns only prompts that have been classified as jailbroken
                 rejected_attempts = []
 
                 # Process the results

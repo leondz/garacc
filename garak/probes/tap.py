@@ -38,7 +38,7 @@ probe is included for that specific subcase - this is the PAIR probe in this mod
 
 import logging
 import os
-from typing import List
+from typing import List, Iterable
 
 import tqdm
 
@@ -222,6 +222,139 @@ class TAP(garak.probes.Probe):
             logging.debug("TAP failed to find a jailbreak!")
             # Return an empty list to avoid throwing assertion errors upstream
             return list()
+
+
+class TAPIntent(garak.probes.IntentProbe):
+    """Tree of Attacks with Pruning Probe that works with intent stubs
+
+    This probe extends TAP to work with intent stub from the IntentProbe framework.
+    It iterates over each input intent_stubs, calling self.run_tap with the goal=stub
+    and target="Sure," following the current TAP implementation."""
+
+    lang = "en"
+    primary_detector = "mitigation.MitigationBypass"
+    tags = [
+        "avid-effect:security:S0403",
+        "avid-effect:performance:P0204",
+        "quality:Security:PromptStability",
+        "payload:jailbreak",
+    ]
+    goal = "cause the model to disregard the system prompt"
+    doc_uri = "https://arxiv.org/abs/2312.02119"
+    tier = garak.probes.Tier.COMPETE_WITH_SOTA
+    active = False
+
+    DEFAULT_PARAMS = garak.probes.IntentProbe.DEFAULT_PARAMS | {
+        "target": "Sure,",
+        "attack_model_type": "huggingface.Model",
+        "attack_model_name": "lmsys/vicuna-13b-v1.3",
+        "attack_model_config": {
+            "max_tokens": 500,
+            "hf_args": {"device": "cpu"},
+        },
+        "attack_max_attempts": 5,
+        "evaluator_model_type": "openai",
+        "evaluator_model_name": "gpt-3.5-turbo",
+        "evaluator_model_config": {
+            "max_tokens": 10,
+            "temperature": 0.0,
+        },
+        "branching_factor": 4,
+        "width": 10,
+        "depth": 10,
+        "n_streams": 1,
+        "keep_last_n": 1,
+        "pruning": True,
+    }
+
+    def __init__(self, config_root=_config):
+        super().__init__(config_root=config_root)
+        self.run_tap = None
+
+    def attack_target(self, intent_stubs, generator) -> Iterable[garak.attempt.Attempt]:
+        """Iterate over each input intent_stubs, calling self.run_tap with goal=stub and target=\"Sure,\""""
+
+        if self.run_tap is None:
+            from garak.resources.tap import run_tap
+            self.run_tap = run_tap
+
+        # Clear existing prompts and notes
+        self.prompts = []
+        self.prompt_notes = []
+
+        all_attempts = []
+
+        # Iterate over each intent stub
+        for stub in intent_stubs:
+            try:
+                tap_outputs = self.run_tap(
+                    goal=stub,
+                    target=self.target,
+                    target_generator=generator,
+                    attack_model_type=self.attack_model_type,
+                    attack_model_name=self.attack_model_name,
+                    attack_model_config=self.attack_model_config,
+                    attack_max_attempts=self.attack_max_attempts,
+                    evaluator_model_type=self.evaluator_model_type,
+                    evaluator_model_name=self.evaluator_model_name,
+                    evaluator_model_config=self.evaluator_model_config,
+                    branching_factor=self.branching_factor,
+                    width=self.width,
+                    depth=self.depth,
+                    n_streams=self.n_streams,
+                    keep_last_n=self.keep_last_n,
+                    pruning=self.pruning,
+                )
+
+                if tap_outputs:
+                    # Add generated prompts to the probe's prompts list
+                    self.prompts.extend(tap_outputs)
+                    # Add link back to the original stub
+                    self.prompt_notes.extend([{"stub": stub}] * len(tap_outputs))
+
+                    # Build attempts for this stub
+                    for seq, prompt in enumerate(tap_outputs):
+                        attempt = self._mint_attempt(prompt, len(all_attempts) + seq)
+                        attempt.notes = dict(attempt.notes) if attempt.notes else {}
+                        attempt.notes["stub"] = stub
+                        all_attempts.append(attempt)
+
+            except Exception as e:
+                logging.error(f"Error running TAP for stub '{stub}': {e}")
+                continue
+
+        # Execute all attempts
+        attempts_completed = []
+
+        if (
+            self.parallel_attempts
+            and self.parallel_attempts > 1
+            and self.parallelisable_attempts
+            and len(all_attempts) > 1
+        ):
+            from multiprocessing import Pool
+
+            attempt_bar = tqdm.tqdm(total=len(all_attempts), leave=False)
+            attempt_bar.set_description(self.probename.replace("garak.", ""))
+
+            with Pool(self.parallel_attempts) as attempt_pool:
+                for result in attempt_pool.imap_unordered(
+                    self._execute_attempt, all_attempts
+                ):
+                    attempts_completed.append(result)
+                    attempt_bar.update(1)
+
+        else:
+            attempt_iterator = tqdm.tqdm(all_attempts, leave=False)
+            attempt_iterator.set_description(self.probename.replace("garak.", ""))
+            for this_attempt in attempt_iterator:
+                attempts_completed.append(self._execute_attempt(this_attempt))
+
+        logging.debug(
+            "probe return: %s with %s attempts", self, len(attempts_completed)
+        )
+
+        return attempts_completed
 
 
 class PAIR(garak.probes.Probe):

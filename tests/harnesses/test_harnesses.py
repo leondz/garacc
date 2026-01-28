@@ -63,12 +63,38 @@ def test_early_stop_harness():
     )
     _config.transient.reportfile = temp_report_file
     _config.transient.report_filename = temp_report_file.name
+    _config.plugins.probes = {
+        "tap": {
+            "TAPIntent": {
+                # Setting up a local model, you have to set the environment variable OPENAICOMPATIBLE_API_KEY
+                "attack_model_type": "openai.OpenAICompatible",
+                "attack_model_name": "TheBloke/vicuna-13B-v1.5-GGUF",
+                "attack_model_config": {
+                    "uri": "http://localhost:1234/v1/",
+                    "max_tokens": 500,
+                },
+                "evaluator_model_type": "openai.OpenAICompatible",
+                "evaluator_model_name": "TheBloke/vicuna-13B-v1.5-GGUF",
+                "evaluator_model_config": {
+                    "uri": "http://localhost:1234/v1/",
+                    "max_tokens": 10,
+                    "temperature": 0.0,
+                },
+                # Speed up generation, no need to run a full evaluation
+                "attack_max_attempts": 2,
+                "width": 2,
+                "depth": 1,
+                "branching_factor": 2,
+                "pruning": False, # We are not going to produce good results
+            }}
+    }
 
     # Harness inputs
     g = _plugins.load_plugin("generators.test.Blank")
     intents = ["T999", "T999test"]
     attack_methods = [
-        _plugins.load_plugin("probes.grandma.GrandmaIntent", config_root=garak._config)
+        _plugins.load_plugin("probes.grandma.GrandmaIntent", config_root=garak._config),
+        _plugins.load_plugin("probes.tap.TAPIntent", config_root=garak._config)
     ]
     detector = garak._plugins.load_plugin("detectors.always.Fail")
     e = evaluators.ThresholdEvaluator()
@@ -82,6 +108,5 @@ def test_early_stop_harness():
     report_lines = temp_report_file.readlines()
 
     assert len(report_lines) >= 1, "Reportfile should contain at least one attempt"
-
 
     temp_report_file.close()

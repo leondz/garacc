@@ -20,6 +20,8 @@ run:
 
 cas:
   intent_spec:
+  policy_data_path:      # path to trait typology JSON (relative to garak_data.path)
+  policy_points: {}      # dict mapping trait codes to True/False/None
 
 plugins:
   target_type:

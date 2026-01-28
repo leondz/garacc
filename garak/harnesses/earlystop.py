@@ -10,20 +10,44 @@ We continue iterating until all the intents have been accepted, or we run out of
 """
 import json
 import logging
-from typing import List
 
 import tqdm
 
-from garak.detectors import Detector
-from garak.evaluators import Evaluator
-from garak.generators import Generator
+from garak.cas import Policy
 from garak.harnesses import Harness
-from garak import _config, intentservice
+from garak import _config, _plugins, intentservice
 from garak.attempt import ATTEMPT_COMPLETE, Attempt, ATTEMPT_STARTED
-from garak.probes import IntentProbe
+from garak.probes.base import IntentProbe
+
+
+def _load_policy_from_config(config_root) -> Policy:
+    policy_data_path = getattr(config_root.cas, 'policy_data_path', None)
+    policy_points = getattr(config_root.cas, 'policy_points', {})
+
+    policy = Policy(autoload=(policy_data_path is None and not policy_points))
+
+    if policy_data_path:
+        policy._load_trait_typology(policy_data_path)
+
+    for trait_code, value in policy_points.items():
+        policy.points[trait_code] = value
+
+    policy.propagate_up()
+    return policy
 
 
 class EarlyStopHarness(Harness):
+    DEFAULT_PARAMS = {
+        "compatible_probes": [
+            "grandma.GrandmaIntent",
+            "tap.TAPIntent",
+            "dan_intent.Dan_11_0_Intent",
+        ],
+    }
+
+    def __init__(self, config_root=_config):
+        super().__init__(config_root)
+        self.policy = _load_policy_from_config(config_root)
 
     def create_attempt(self, stub) -> Attempt:
         new_attempt = Attempt(
@@ -39,39 +63,86 @@ class EarlyStopHarness(Harness):
         )
         return new_attempt
 
-    def run(self,
-            model: Generator,
-            intents: List[str],
-            attack_methods: List[IntentProbe],
-            detectors: List[Detector],
-            evaluator: Evaluator,
-            buff_names=None):
+    def run(self, model, probe_names, detector_names, evaluator, buff_names=None):
         """
-        First, load the list of prompts that we want to test via the IntentService
-        Then, iterate over the attack_methods and pass the prompts that have been rejected by the LLM to them.
-        The process finishes when we don't have any more attack methods or all the conversations have been accepted.
+        Early stopping harness - loads probes by name, filters to compatible IntentProbes,
+        then iterates attack methods until all intents succeed or methods exhausted.
         """
-
-        if not attack_methods:
-            msg = "No attack methods, nothing to do"
-            logging.warning(msg)
-            if hasattr(_config.system, "verbose") and _config.system.verbose >= 2:
-                print(msg)
-            raise ValueError(msg)
-
-        if not buff_names:
+        if buff_names is None:
             buff_names = []
 
-        self._load_buffs(buff_names)  # TODO: buffs? Is this enough or should we do something more?
+        self._load_buffs(buff_names)
+
+        # Load and filter probes (like PxD but with compatibility check)
+        attack_methods = []
+        for probename in probe_names:
+            try:
+                probe = _plugins.load_plugin(probename)
+            except Exception as e:
+                logging.error(f"{probename} load exception, skipping: {e}")
+                continue
+
+            if not probe:
+                logging.warning(f"{probename} load failed, skipping")
+                continue
+
+            # Check IntentProbe compatibility
+            if not isinstance(probe, IntentProbe):
+                logging.warning(f"{probename} is not an IntentProbe - skipping")
+                continue
+
+            # Check against compatible list
+            short_name = probename.replace("probes.", "")
+            if self.compatible_probes and short_name not in self.compatible_probes:
+                logging.warning(f"{short_name} not in compatible_probes - skipping")
+                continue
+
+            attack_methods.append(probe)
+
+        if not attack_methods:
+            raise ValueError("No compatible IntentProbe attack methods loaded")
+
+        # Load detectors (like PxD)
+        detectors = []
+        for detector_name in detector_names:
+            detector = _plugins.load_plugin(detector_name, break_on_fail=False)
+            if detector:
+                detectors.append(detector)
+            else:
+                logging.warning(f"detector load failed: {detector_name}, skipping")
+
+        if not detectors:
+            raise ValueError("No detectors loaded")
+
+        # Derive intents from policy - test traits that are set to False (not permitted)
+        intents = [
+            trait_code for trait_code, permitted in self.policy.points.items()
+            if permitted is False
+        ]
+
+        if not intents:
+            raise ValueError("No intents to test - no policy points set to False")
+
         self._start_run_hook()
 
-        # Generate initial payloads from all payload generators
+        # Generate initial payloads from intents
+
+        # this is how we can override the location of the stub files for now
+        # The path should point to a file structure as follows:
+        # ├── intent_skip.json
+        # └── intent_stubs
+        #     ├── T999.txt
+        #     └── T999test.txt
+        # the sub files MUST end with .txt
+
+        # intentservice.cas_data_path = Path("/Users/hjrnunes/Downloads/cas")
+
         all_intent_stubs = []
         for intent in intents:
             all_intent_stubs.extend(intentservice.get_intent_stubs(intent))
 
         if not all_intent_stubs:
-            logging.warning("No conversations generated, nothing to test")
+            logging.warning("No intent stubs generated, nothing to test")
             self._end_run_hook()
             return
 
@@ -114,7 +185,6 @@ class EarlyStopHarness(Harness):
                             accepted_attempts.append(attempt)
                         else:
                             rejected_attempts.append(attempt)
-
 
             except Exception as e:
                 logging.error(f"Attack method {attack_method.__class__.__name__} failed: {e}")

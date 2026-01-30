@@ -271,24 +271,20 @@ class TAPIntent(garak.probes.IntentProbe):
         super().__init__(config_root=config_root)
         self.run_tap = None
 
-    def attack_target(self, intent_stubs, generator) -> Iterable[garak.attempt.Attempt]:
-        """Iterate over each input intent_stubs, calling self.run_tap with goal=stub and target=\"Sure,\""""
+    def probe(self, generator) -> Iterable[garak.attempt.Attempt]:
+        """Iterate over each input prompt, calling self.run_tap with goal=stub and target=\"Sure,\""""
 
         if self.run_tap is None:
             from garak.resources.tap import run_tap
             self.run_tap = run_tap
 
-        # Clear existing prompts and notes
-        self.prompts = []
-        self.prompt_notes = []
-
         all_attempts = []
 
         # Iterate over each intent stub
-        for stub in intent_stubs:
+        for prompt in self.prompts:
             try:
                 tap_outputs = self.run_tap(
-                    goal=stub,
+                    goal=prompt,
                     target=self.target,
                     target_generator=generator,
                     attack_model_type=self.attack_model_type,
@@ -307,16 +303,11 @@ class TAPIntent(garak.probes.IntentProbe):
                 )
 
                 if tap_outputs:
-                    # Add generated prompts to the probe's prompts list
-                    self.prompts.extend(tap_outputs)
-                    # Add link back to the original stub
-                    self.prompt_notes.extend([{"stub": stub}] * len(tap_outputs))
-
                     # Build attempts for this stub
                     for seq, prompt in enumerate(tap_outputs):
                         attempt = self._mint_attempt(prompt, len(all_attempts) + seq)
                         attempt.notes = dict(attempt.notes) if attempt.notes else {}
-                        attempt.notes["stub"] = stub
+                        attempt.notes["stub"] = prompt
                         all_attempts.append(attempt)
 
             except Exception as e:

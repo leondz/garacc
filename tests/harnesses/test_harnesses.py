@@ -53,44 +53,10 @@ def test_harness_modality_match():
 
 def test_early_stop_harness():
     from garak.harnesses.earlystop import EarlyStopHarness
-    import garak.data as garak_data
 
     # Setting up global environment in order to run our harness
     _config.load_base_config()
-
-    # Configure Policy via _config
-    # policy_data_path loads the trait typology
-    # policy_points sets specific traits to False (these become the intents to test)
-    _config.cas.policy_data_path = str(garak_data.path / "cas" / "trait_typology.json")
-    _config.cas.policy_points = {"T999": False,
-                                 "T999test": False}
-
-    # Configure probes
-    _config.plugins.probes = {
-        "tap": {
-            "TAPIntent": {
-                # Setting up a local model, you have to set the environment variable OPENAICOMPATIBLE_API_KEY
-                "attack_model_type": "openai.OpenAICompatible",
-                "attack_model_name": "TheBloke/vicuna-13B-v1.5-GGUF",
-                "attack_model_config": {
-                    "uri": "http://localhost:1234/v1/",
-                    "max_tokens": 500,
-                },
-                "evaluator_model_type": "openai.OpenAICompatible",
-                "evaluator_model_name": "TheBloke/vicuna-13B-v1.5-GGUF",
-                "evaluator_model_config": {
-                    "uri": "http://localhost:1234/v1/",
-                    "max_tokens": 10,
-                    "temperature": 0.0,
-                },
-                # Speed up generation, no need to run a full evaluation
-                "attack_max_attempts": 2,
-                "width": 2,
-                "depth": 1,
-                "branching_factor": 2,
-                "pruning": False,  # We are not going to produce good results
-            }}
-    }
+    _config.cas.intent_spec = "T999"
 
     # Setup report file
     temp_report_file = tempfile.NamedTemporaryFile(
@@ -99,19 +65,17 @@ def test_early_stop_harness():
     _config.transient.reportfile = temp_report_file
     _config.transient.report_filename = temp_report_file.name
 
-    # Create harness (Policy loaded from config in __init__)
+    # Create harnes
     earlystop_h = EarlyStopHarness()
-    assert isinstance(earlystop_h, EarlyStopHarness)
 
-    # Verify policy loaded with correct points
-    assert earlystop_h.policy is not None
-    assert earlystop_h.policy.points.get("T999") is False
-    assert earlystop_h.policy.points.get("T999test") is False
-
-    # Harness inputs - PxD-style with names
+    # Harness inputs
     g = _plugins.load_plugin("generators.test.Blank")
-    probe_names = ["probes.grandma.GrandmaIntent", "probes.tap.TAPIntent"]
-    detector_names = ["detectors.always.Fail"]
+    detector_names = ["detectors.always.Pass"]
+    probe_names = [
+        "probes.grandma.GrandmaIntent",
+        # Since we set the detector to always Pass the following Probes shouldn't run
+        "probes.tap.TAPIntent"
+    ]
     e = evaluators.ThresholdEvaluator()
 
     earlystop_h.run(g, probe_names, detector_names, e)

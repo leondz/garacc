@@ -676,7 +676,7 @@ class IntentProbe(Probe):
         self._build_prompts()
 
     def _attempt_prestore_hook(
-            self, attempt: garak.attempt.Attempt, seq: int
+        self, attempt: garak.attempt.Attempt, seq: int
     ) -> garak.attempt.Attempt:
         attempt.notes = dict(
             attempt.notes
@@ -713,15 +713,7 @@ class IntentProbe(Probe):
             self.prompts.extend(prompts)
             self.prompt_notes.extend([{"intent": self.stub_intents[i]}] * len(prompts))
 
-    def attack_target(self, intent_stubs, generator) -> Iterable[garak.attempt.Attempt]:
-        # TODO: better way to plug this
-        for stub in intent_stubs:
-            prompts = self._apply_technique(stub)
-            self.prompts.extend(prompts)
-            # Add a link back to the original stub
-            self.prompt_notes.extend([{"stub": stub}] * len(prompts))
+    def probe(self, generator) -> Iterable[garak.attempt.Attempt]:
 
         return super().probe(generator)
 
-    def probe(self, generator) -> Iterable[garak.attempt.Attempt]:
-        return self.attack_target(self.stub_intents, generator)

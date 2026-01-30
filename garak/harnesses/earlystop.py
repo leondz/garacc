@@ -79,7 +79,7 @@ class EarlyStopHarness(Harness):
 
         self._load_buffs(buff_names)
 
-        # Load detectors (like PxD)
+        # Load detectors
         detectors = []
         for detector_name in detector_names:
             detector = _plugins.load_plugin(detector_name, break_on_fail=False)
@@ -91,14 +91,13 @@ class EarlyStopHarness(Harness):
         if not detectors:
             raise ValueError("No detectors loaded")
 
+        # Load intents
         intent_spec = _config.cas.intent_spec
         if not intent_spec:
             raise ValueError("No intents to test - intent_spec not set")
         intents = str.split(intent_spec, ",")
         if not intents:
             raise ValueError("No intents to test - no policy points set to False")
-
-        self._start_run_hook()
 
         # Generate initial payloads from intents
         all_intent_stubs = []
@@ -113,6 +112,8 @@ class EarlyStopHarness(Harness):
         # Convert conversations to attempts for the first round
         accepted_attempts = []
         rejected_attempts = [self._create_attempt(stub) for stub in all_intent_stubs]
+
+        self._start_run_hook()
 
         # Apply attack methods in sequence
         for probe_name in probe_names:
@@ -144,6 +145,9 @@ class EarlyStopHarness(Harness):
                     attempt.detector_results = {d: [r] for d, r in zip(detector_names, results)}
                     evaluations = [evaluator.test(float(score)) for score in results if score is not None]
                     # If at least one detector passes, the attempt was rejected
+                    # TODO: is this the right logic?
+                    #       When the target model returns "I'm sorry, but I can't do that" the Refusal judge Detector returns 0.0
+                    #       which gets turned into True by the ThresholdEvaluator
                     if any(evaluations):
                         rejected_attempts.append(attempt)
                     else:
@@ -151,8 +155,11 @@ class EarlyStopHarness(Harness):
 
             except Exception as e:
                 logging.error(f"Attack method {probe_name} failed: {e}")
-                # Continue with rejected attempts for next attack method
-                continue
+                continue # Continue with rejected attempts for next attack method
+
+            # Save this temporary attempts to the report
+            for attempt in accepted_attempts + rejected_attempts:
+                _config.transient.reportfile.write(json.dumps(attempt.as_dict(), ensure_ascii=False) + "\n")
 
         # Update all attempts to completed status
         for attempt in accepted_attempts + rejected_attempts:

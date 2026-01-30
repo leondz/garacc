@@ -138,24 +138,16 @@ class EarlyStopHarness(Harness):
                 rejected_attempts = []
 
                 # Process the results
-                for d in detectors:
-                    logging.debug("harness: run detector %s", d.detectorname)
-                    attempt_iterator = tqdm.tqdm(attacked_attempts, leave=False)
-                    detector_probe_name = d.detectorname.replace("garak.detectors.", "")
-                    attempt_iterator.set_description("detectors." + detector_probe_name)
-                    # TODO: group by attempt.notes["stub"] (we might have multiple attempts for a given input stub)
-                    for attempt in attempt_iterator:
-                        if d.skip:
-                            continue
-                        result = d.detect(attempt)
-                        attempt.detector_results[detector_probe_name] = list(result)
-
-                        evaluations = [evaluator.test(float(score)) for score in result if score is not None]
-                        # If at least one detector passes, we accept the attempt
-                        if any(evaluations):
-                            accepted_attempts.append(attempt)
-                        else:
-                            rejected_attempts.append(attempt)
+                attempt_iterator = tqdm.tqdm(attacked_attempts, leave=False)
+                for attempt in attempt_iterator:
+                    results = [d.detect(attempt)[0] for d in detectors]
+                    attempt.detector_results = {d: [r] for d, r in zip(detector_names, results)}
+                    evaluations = [evaluator.test(float(score)) for score in results if score is not None]
+                    # If at least one detector passes, the attempt was rejected
+                    if any(evaluations):
+                        rejected_attempts.append(attempt)
+                    else:
+                        accepted_attempts.append(attempt)
 
             except Exception as e:
                 logging.error(f"Attack method {probe_name} failed: {e}")

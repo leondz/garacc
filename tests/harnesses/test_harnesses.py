@@ -70,10 +70,10 @@ def test_early_stop_harness():
 
     # Harness inputs
     g = _plugins.load_plugin("generators.test.Blank")
-    detector_names = ["detectors.always.Pass"]
+    detector_names = ["detectors.always.Fail"]
     probe_names = [
         "probes.grandma.GrandmaIntent",
-        # Since we set the detector to always Pass the following Probes shouldn't run
+        # Since we set the detector to always Fail the following Probes shouldn't run
         "probes.tap.TAPIntent"
     ]
     e = evaluators.ThresholdEvaluator()

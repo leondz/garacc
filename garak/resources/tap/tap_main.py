@@ -36,6 +36,7 @@ from .generator_utils import (
 import garak.generators
 import garak._config
 from garak.generators.huggingface import Model
+from ...attempt import Conversation
 
 logger = getLogger(__name__)
 SAVE_RESULTS = True
@@ -130,9 +131,9 @@ class AttackManager(EvaluationJudge):
                 for full_prompt in full_prompts_subset[left:right]:
                     # We should fail more gracefully within runs for garak.
                     try:
-                        outputs_list.append(
-                            self.attack_generator.generate(full_prompt)[0]
-                        )
+                        conversation = Conversation.from_dict({"turns": full_prompt})
+                        output = self.attack_generator.generate(conversation)[0]
+                        outputs_list.append(output.text)
                     except torch.cuda.OutOfMemoryError as e:
                         if len(outputs_list) > 0:
                             break
@@ -203,7 +204,9 @@ class AttackManager(EvaluationJudge):
                 continue
 
             for full_prompt in full_prompts[left:right]:
-                outputs_list.append(self.target_generator.generate(full_prompt)[0])
+                conversation = Conversation.from_dict({"turns": full_prompt})
+                output = self.target_generator.generate(conversation)[0]
+                outputs_list.append(output.text)
         return outputs_list
 
 
@@ -397,7 +400,7 @@ def run_tap(
         # Truncate conversation to avoid context length issues
         for conv in convs_list:
             # Note that this does not delete the conv.role (i.e., the system prompt)
-            conv.messages = conv.messages[-2 * keep_last_n :]
+            conv.messages = conv.messages[-2 * keep_last_n:]
 
         # Early stopping criterion
         if any([score == 10 for score in judge_scores]):

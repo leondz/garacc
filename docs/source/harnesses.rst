@@ -8,3 +8,4 @@ garak.harnesses
    garak.harnesses.base
    garak.harnesses.probewise
    garak.harnesses.pxd
+   garak.harnesses.earlystop

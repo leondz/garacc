@@ -13,6 +13,7 @@ import garak.data
 
 is_loaded = False
 intents = {}
+stubs_filter_fn = lambda intent_code, stub: True
 cas_data_path = garak.data.path / "cas"
 
 
@@ -25,6 +26,11 @@ def enabled() -> bool:
     """are requirements met for intent service to be enabled"""
     """we may want to predicate this on config"""
     return True
+
+
+def set_stubs_filter(filter_func):
+    global stubs_filter_fn
+    stubs_filter_fn = filter_func
 
 
 def _load_intent_typology(intents_path=None) -> None:
@@ -43,7 +49,6 @@ def load():
 
 
 def _get_stubs_typology(intent_code: str) -> Set[str]:
-
     # return the descr of a given typology point, or if empty/absent, the name
     intent_details = intents.get(intent_code, {})
 
@@ -64,7 +69,6 @@ def _get_stubs_typology(intent_code: str) -> Set[str]:
 
 
 def _get_stubs_file(intent_code: str) -> Set[str]:
-
     # search path: cas/intent_text/xxx_*.txt
     stub_dir = cas_data_path / "intent_stubs"
     stub_glob = stub_dir.glob(f"{intent_code}*.txt")
@@ -100,7 +104,6 @@ def _get_stubs_code(intent_code: str) -> Set[str]:
 
 
 def expand_intent_specifier_leaves(intent_specifier: str) -> List[str]:
-
     global intents
 
     intent_codes_to_lookup = [intent_specifier]
@@ -120,7 +123,7 @@ def expand_intent_specifier_leaves(intent_specifier: str) -> List[str]:
 def get_intent_stubs(intent_specifier: str) -> Set[str]:
     """retrieve a list of intent strings given an intent code (doesn't have to be a leaf)"""
 
-    global intents
+    global intents, stubs_filter_fn
 
     if not re.fullmatch("[CTMS]([0-9]{3}([a-z]+)?)?", intent_specifier):
         raise ValueError("Not a valid intent code: " + intent_specifier)
@@ -136,6 +139,7 @@ def get_intent_stubs(intent_specifier: str) -> Set[str]:
         stubs.update(_get_stubs_typology(candidate_code))
         stubs.update(_get_stubs_file(candidate_code))
         stubs.update(_get_stubs_code(candidate_code))
+        stubs = {stub for stub in stubs if stubs_filter_fn(candidate_code, stub)}
 
     # return stubs
     return stubs

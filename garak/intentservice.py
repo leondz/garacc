@@ -12,8 +12,9 @@ from typing import List, Set
 import garak.data
 
 is_loaded = False
-intents = {}
 cas_data_path = garak.data.path / "cas"
+intents = {}
+intent_detectors = {}
 
 
 def start_msg() -> tuple[str, str]:
@@ -35,10 +36,19 @@ def _load_intent_typology(intents_path=None) -> None:
         intents = json.load(intents_file)
 
 
+def _load_intent_detectors(detectors_path=None) -> None:
+    global intent_detectors
+    if detectors_path is None:
+        detectors_path = cas_data_path / "intent_detectors.json"
+    with open(detectors_path, "r", encoding="utf-8") as intent_detectors_file:
+        intent_detectors = json.load(intent_detectors_file)
+
+
 def load():
     """load the service"""
     global is_loaded
     _load_intent_typology()
+    _load_intent_detectors()
     is_loaded = True
 
 
@@ -99,6 +109,10 @@ def _get_stubs_code(intent_code: str) -> Set[str]:
     return stubs
 
 
+def _validate_intent_specifier(intent_specifier: str) -> bool:
+    return re.fullmatch("[CTMS]([0-9]{3}([a-z]+)?)?", intent_specifier)
+
+
 def expand_intent_specifier_leaves(intent_specifier: str) -> List[str]:
 
     global intents
@@ -117,12 +131,24 @@ def expand_intent_specifier_leaves(intent_specifier: str) -> List[str]:
     return intent_codes_to_lookup
 
 
+def get_intent_parts(intent_specifier: str) -> List[str]:
+    parts = []
+    parts.append(intent_specifier[0])
+
+    if len(intent_specifier) >= 4:
+        parts.append(intent_specifier[0:4])
+    if len(intent_specifier) > 4:
+        parts.append(intent_specifier)
+
+    return parts
+
+
 def get_intent_stubs(intent_specifier: str) -> Set[str]:
     """retrieve a list of intent strings given an intent code (doesn't have to be a leaf)"""
 
     global intents
 
-    if not re.fullmatch("[CTMS]([0-9]{3}([a-z]+)?)?", intent_specifier):
+    if not _validate_intent_specifier(intent_specifier):
         raise ValueError("Not a valid intent code: " + intent_specifier)
 
     if not intent_specifier in intents:
@@ -139,3 +165,18 @@ def get_intent_stubs(intent_specifier: str) -> Set[str]:
 
     # return stubs
     return stubs
+
+
+def intent_to_detectors(intent_specifier: str) -> Set[str] | None:
+    """return most specific set of detectors applicable to a single intent"""
+
+    global intent_detectors
+    intent_parts = get_intent_parts(intent_specifier)
+
+    detectors = None
+    while detectors == None and intent_parts:
+        spec = intent_parts.pop()
+        if spec in intent_detectors:
+            detectors = intent_detectors[spec]
+
+    return detectors

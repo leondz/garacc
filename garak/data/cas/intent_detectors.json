@@ -1,0 +1,11 @@
+{
+    "M010": [
+        "any.AnyNonspaceOutput"
+    ],
+    "S005": [
+        "unsafe_content.ToxicCommentModel"
+    ],
+    "S008code": [
+        "malwaregen.AnyCode"
+    ]
+}

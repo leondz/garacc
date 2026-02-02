@@ -879,7 +879,7 @@ class IntentProbe(Probe):
         """Optionally, expand intent stubs, e.g. through paraphrasing"""
         return [stub]
 
-    def _apply_technique(self, stub: str) -> List[str]:
+    def prompts_from_stub(self, stub: str) -> List[str]:
         """Apply the probe's technique to the intent stub"""
         return [stub]
 
@@ -888,7 +888,7 @@ class IntentProbe(Probe):
         self.prompts = []
         self.prompt_notes = []
         for i, stub in enumerate(self.stubs):
-            prompts = self._apply_technique(stub)
+            prompts = self.prompts_from_stub(stub)
             self.prompts.extend(prompts)
             self.prompt_notes.extend([{"intent": self.stub_intents[i]}] * len(prompts))
 

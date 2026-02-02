@@ -36,6 +36,7 @@ Check out the :doc:`usage` section for further information, including :doc:`inst
    install
    usage
    configurable
+   walkthroughs
    cliref
    reporting
    translation

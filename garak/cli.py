@@ -213,7 +213,7 @@ def main(arguments=None) -> None:
     parser.add_argument(
         "--intents",
         "-i",
-        type="str",
+        type=str,
         default=_config.cas.intent_spec,
         help="comma-separated list of intents & intent prefixes to use. Default is empty, for all",
     )

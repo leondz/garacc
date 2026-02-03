@@ -3,6 +3,7 @@
 These describe evaluators for assessing detector results.
 """
 
+from collections import defaultdict
 import json
 import logging
 from pathlib import Path
@@ -150,10 +151,41 @@ class Evaluator:
         )  # disprefer this but getting detector_names from first one for the loop below is a pain
 
         self.probename = attempts[0].probe_classname
-        detector_names = attempts[0].detector_results.keys()
 
-        for detector_name in detector_names:
-            self._evaluate_one_detector(attempts, detector_name)
+        if "intent" not in attempts[0].notes:  # not an intent probe
+            detector_names = attempts[0].detector_results.keys()
+            for detector_name in detector_names:
+                self._evaluate_one_detector(attempts, detector_name)
+
+        else:
+            # build index lists of which detectors go where
+            import garak.intentservice
+
+            # iter thru attempts, per attempt get detectors, add idx to detector dict
+            detector_to_attempt_ids = defaultdict(list)
+            for idx, attempt in enumerate(attempts):
+                relevant_detectors = garak.intentservice.intent_to_detectors(
+                    attempt.notes["intent"]
+                )
+                if relevant_detectors:
+                    for relevant_detector in relevant_detectors:
+                        detector_to_attempt_ids[relevant_detector].append(idx)
+                else:
+                    logging.warning(
+                        "probe %s attempt %s seq %s intent %s had no assigned detectors"
+                        % (
+                            self.probename,
+                            attempt.uuid,
+                            attempt.seq,
+                            attempt.notes["intent"],
+                        )
+                    )
+
+            for detector_name in detector_to_attempt_ids.keys():
+                attempt_subset = [
+                    attempts[i] for i in detector_to_attempt_ids[detector_name]
+                ]
+                self._evaluate_one_detector(attempt_subset, detector_name)
 
     def get_z_rating(self, probe_name, detector_name, asr_pct) -> str:
         probe_module, probe_classname = probe_name.split(".")

@@ -65,6 +65,7 @@ Check out the :doc:`usage` section for further information, including :doc:`inst
    report
    _config
    _plugins
+   cas
    analyze
    cas
 

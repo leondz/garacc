@@ -1,6 +1,14 @@
-"""Data leak: Replay attack
+"""**Data leak: Replay attack**
 
-Probes for evaluating if a model will replay training data
+Attacks that try to get a model to leak whether or not a given document
+was used in training, by having it replay an excerpt from that doc.
+
+Any probe that gets a model to replay training documents can be placed here.
+
+Further info: 
+
+* https://arxiv.org/abs/2305.00118
+
 """
 import csv
 import re

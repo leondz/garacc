@@ -28,7 +28,7 @@ DETECTORS = [
         "detectors.packagehallucination.PackageHallucinationDetector",
     ]
 ]
-DOES_NOT_SUPPORT_NONE = [
+DOES_NOT_RELAY_NONE = [
     "detectors.always.Fail",
     "detectors.always.Pass",
     "detectors.always.Random",
@@ -56,7 +56,9 @@ def test_detector_structure(classname):
             for k, _ in d.DEFAULT_PARAMS.items():
                 if k not in d._supported_params:
                     unsupported_defaults.append(k)
-    assert unsupported_defaults == []
+    assert (
+        unsupported_defaults == []
+    ), f"_supported_params must contain all DEFAULT_PARAMS; {unsupported_defaults} missing"
 
 
 @pytest.mark.parametrize("classname", DETECTORS)
@@ -68,7 +70,7 @@ def test_detector_detect(classname):
         di = dc.__new__(dc)
         di.__init__()
     except APIKeyMissingError:
-        pytest.skip("API key unavailable")
+        pytest.skip(f"API key unavailable for {classname}")
 
     assert isinstance(di, Detector), "detectors must eventually inherit from Detector"
     assert isinstance(di, Configurable), "detectors must be configurable"
@@ -87,7 +89,7 @@ def test_detector_detect(classname):
     try:
         results = di.detect(a)
     except APIKeyMissingError:
-        pytest.skip("API key unavailable")
+        pytest.skip(f"API key unavailable for {classname}")
 
     assert isinstance(
         results, (list, types.GeneratorType)
@@ -107,18 +109,20 @@ def test_detector_detect(classname):
         return
 
     results = di.detect(a)
-    if not isinstance(
-        di, garak.detectors.base.FileDetector
-    ):  # this returns nothing - remove when Nones are OK in detector output
+    if not isinstance(di, garak.detectors.base.FileDetector):
         assert len(list(results)) == len(
             a.outputs
-        ), "detector should return as many results as in outputs (maybe excluding Nones)"
-        if not classname in DOES_NOT_SUPPORT_NONE:
+        ), "detector should return as many results as in outputs"
+        if not classname in DOES_NOT_RELAY_NONE:
             for output, result in zip(a.outputs, list(results)):
                 if output is not None and output.text is not None:
-                    assert isinstance(result, float)
+                    assert isinstance(
+                        result, float
+                    ), "detector result entries must be a float or None"
                 else:
-                    assert result is None
+                    assert (
+                        result is None
+                    ), "if detector result entry is not a float, it must be a None"
 
 
 @pytest.mark.parametrize("classname", DETECTORS)

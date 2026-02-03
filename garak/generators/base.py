@@ -4,6 +4,7 @@ All `garak` generators must inherit from this.
 """
 
 import logging
+import random
 import re
 from typing import List, Union
 
@@ -13,7 +14,7 @@ import tqdm
 from garak import _config
 from garak.attempt import Message, Conversation
 from garak.configurable import Configurable
-from garak.exception import GarakException
+from garak.exception import BadGeneratorException, GarakException
 import garak.resources.theme
 
 
@@ -60,10 +61,15 @@ class Generator(Configurable):
         if not self.generator_family_name:
             self.generator_family_name = "<empty>"
 
+        self._rng = random.Random()
+        if self.seed:
+            self._rng.seed(self.seed)
+
         print(
             f"🦜 loading {Style.BRIGHT}{Fore.LIGHTMAGENTA_EX}generator{Style.RESET_ALL}: {self.generator_family_name}: {self.name}"
         )
         logging.info("generator init: %s", self)
+        self._load_deps()
 
     def _call_model(
         self, prompt: Conversation, generations_this_call: int = 1
@@ -81,14 +87,14 @@ class Generator(Configurable):
         pass
 
     @staticmethod
-    def _verify_model_result(result: List[Union[Message, None]]):
+    def _verify_target_result(result: List[Union[Message, None]]):
         assert isinstance(result, list), "_call_model must return a list"
         assert (
             len(result) == 1
         ), f"_call_model must return a list of one item when invoked as _call_model(prompt, 1), got {result}"
         assert (
             isinstance(result[0], Message) or result[0] is None
-        ), "_call_model's item must be a Message or None"
+        ), f"_call_model's item must be a Message or None, got {result[0].__class__.__name__}: {repr(result[0])}"
 
     def clear_history(self):
         pass
@@ -145,15 +151,20 @@ class Generator(Configurable):
                 prompt, Conversation
             ), "generate() must take a Conversation object"
 
+        if self.seed is not None:
+            self._rng.seed(self.seed)
+
         self._pre_generate_hook()
 
-        assert (
-            generations_this_call >= 0
-        ), f"Unexpected value for generations_per_call: {generations_this_call}"
+        outputs = []
 
         if generations_this_call == 0:
             logging.debug("generate() called with generations_this_call = 0")
             return []
+
+        assert (
+            isinstance(generations_this_call, int) and generations_this_call > 0
+        ), f"Unexpected value for generations_per_call: {generations_this_call}"
 
         if generations_this_call == 1:
             outputs = self._call_model(prompt, 1)
@@ -162,8 +173,6 @@ class Generator(Configurable):
             outputs = self._call_model(prompt, generations_this_call)
 
         else:
-            outputs = []
-
             if (
                 hasattr(self, "parallel_requests")
                 and self.parallel_requests
@@ -190,7 +199,7 @@ class Generator(Configurable):
                         for result in pool.imap_unordered(
                             self._call_model, [prompt] * generations_this_call
                         ):
-                            self._verify_model_result(result)
+                            self._verify_target_result(result)
                             outputs.append(result[0])
                             multi_generator_bar.update(1)
                 except OSError as o:
@@ -212,8 +221,14 @@ class Generator(Configurable):
                     output_one = self._call_model(
                         prompt, 1
                     )  # generate once as `generation_iterator` consumes `generations_this_call`
-                    self._verify_model_result(output_one)
+                    self._verify_target_result(output_one)
                     outputs.append(output_one[0])
+
+        if len(outputs) != generations_this_call:
+            raise BadGeneratorException(
+                "Generator did not return the requested number of responses (asked for %i got %i). supports_multiple_generations may be set incorrectly."
+                % (generations_this_call, len(outputs))
+            )
 
         outputs = self._post_generate_hook(outputs)
 

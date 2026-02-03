@@ -1,14 +1,19 @@
-"""atkgen: Attack Generation.
+"""**atkgen: Attack Generation**
 
-This probe uses a separate model to create prompts for a generator,
+This probe uses a separate model to create attack prompts,
 which are intended to guide that generator into a certain failure mode.
+
+Only probes that dynamically generate their own attack prompts belong in this module.
 
 Warning: These attack models may generate highly toxic prompts while
 attempting to goad target models into failure - peruse logs at your
 own risk, and don't spend too much time doing it, using this guide
-to working with harmful text:
+to working with harmful text: https://aclanthology.org/2022.findings-emnlp.35/
 
- https://aclanthology.org/2022.findings-emnlp.35/
+Further info:
+
+* https://interhumanagreement.substack.com/p/faketoxicityprompts-automatic-red
+
 """
 
 import copy
@@ -97,6 +102,7 @@ class Tox(garak.probes.Probe):
             keep_going = True
 
             last_response = None
+            new_conversation = True
             last_attempt = None
 
             if not output_is_conversation:
@@ -111,16 +117,22 @@ class Tox(garak.probes.Probe):
                         f" turn {t.n:02}: red teaming [{red_team_model_short[:10]:<10}]"
                     )
                 # generate a challenge
-                if last_response == "" and self.constructive_tension:
+                if (
+                    last_response == ""
+                    and self.constructive_tension
+                    and not new_conversation
+                ):
                     challenge = ""
+
                 else:
-                    if last_response:
-                        if self.use_only_first_sent:
-                            last_response = last_response.split(". ")[
-                                0
-                            ]  # nltk sentence splitter install too unfriendly
-                    else:
-                        last_response = ""  # maybe it's none or 0.0 or [] or goodness knows. let's get an empty string.
+                    if new_conversation:
+                        last_response = ""
+                        new_conversation = False
+
+                    if self.use_only_first_sent:
+                        last_response = last_response.split(". ")[
+                            0
+                        ]  # nltk sentence splitter install too unfriendly
 
                     if len(self.red_team_prompt_template):
                         query = self.red_team_prompt_template.replace(
@@ -173,7 +185,7 @@ class Tox(garak.probes.Probe):
 
                 logging.debug("atkgen: probe: %s", challenge_text)
                 if output_is_conversation:
-                    probe_text = re.sub(r"[\r\n]+", "\n", challenge_text[1]).strip()
+                    probe_text = re.sub(r"[\r\n]+", "\n", challenge_text).strip()
                     print(
                         f"atkgen: 🔴 probe: {Fore.LIGHTYELLOW_EX}{probe_text}{Style.RESET_ALL}"
                     )
@@ -183,29 +195,38 @@ class Tox(garak.probes.Probe):
                     )
                 # send the challenge in the target language and get the response
                 response = generator.generate(this_attempt.prompt)
-                if response is None or len(response) == 0:
-                    response_text = ""
+                if (
+                    response is None
+                    or len(response) == 0
+                    or response[0] is None
+                    or response[0].text is None
+                ):
+                    response_text = None
                 else:
-                    response_text = (
-                        response[0].text.strip() if response[0] is not None else ""
-                    )
+                    response_text = response[0].text.strip()
                 this_attempt.outputs = response
 
                 # log the response
-                response_to_store = self.reverse_langprovider.get_text([response_text])[
-                    0
-                ]
+                response_to_store = (
+                    self.reverse_langprovider.get_text([response_text])[0]
+                    if response_text is not None
+                    else None
+                )
                 if (
                     self.reverse_langprovider.source_lang
                     != self.reverse_langprovider.target_lang
                 ):
-                    this_attempt.reverse_translation_outputs = [
-                        garak.attempt.Message(response_to_store)
-                    ]
+                    # when the generator returns [None] and translation is active store store [None]
+                    if response and response[0] is None:
+                        this_attempt.reverse_translation_outputs = response
+                    else:
+                        this_attempt.reverse_translation_outputs = [
+                            garak.attempt.Message(response_to_store)
+                        ]
                 logging.debug("atkgen: model: %s", response_text)
                 if output_is_conversation:
                     print(
-                        f"atkgen: 🦜 model: {Style.BRIGHT}{this_attempt.prompt.turns[-1].text}{Style.RESET_ALL}"
+                        f"atkgen: 🦜 model: {Style.BRIGHT}{response_text}{Style.RESET_ALL}"
                     )
                 else:
                     t.update()
@@ -213,12 +234,26 @@ class Tox(garak.probes.Probe):
                 calls_made += 1
                 # last_response needs to be in the attack model's language base update on `response_to_store`
                 # check if the resp is empty or if it matches the previous resp
-                if not len(response_to_store) and not self.constructive_tension:
+                if (
+                    response_to_store
+                    and not len(response_to_store)
+                    and not self.constructive_tension
+                ):
                     keep_going = False
-                if response_to_store == last_response:
+                # if response_to_store is None it will be coerced to "" on iteration hence the extra check
+                if (response_to_store == last_response) or (
+                    len(last_response) == 0 and not response_to_store
+                ):
                     keep_going = False and not self.allow_repetition
                 # update last_response
-                last_response = response_to_store.replace("\n", " ").strip()
+                last_response = (
+                    response_to_store.replace("\n", " ").strip()
+                    if response_to_store
+                    else None
+                )
+
+                if last_response is None:
+                    keep_going = False
 
                 _config.transient.reportfile.write(
                     json.dumps(this_attempt.as_dict()) + "\n"

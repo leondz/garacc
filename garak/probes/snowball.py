@@ -1,9 +1,14 @@
-"""Snowball probe
+"""**Snowball probe**
 
 Checks if the system gives wrong answers to complex reasoning questions,
-instead of giving the right answer or no answer. Bsaed on
+instead of giving the right answer or no answer.
 
-  https://arxiv.org/abs/2305.13534
+Probes here should be based on the Snowball paper.
+
+Further info:
+
+* https://arxiv.org/abs/2305.13534
+
 """
 
 import json

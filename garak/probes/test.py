@@ -1,6 +1,6 @@
-"""Test Probes
+"""**Test Probes**
 
-Probes that help with testing, but aren't necessarily useful in
+Probes that help with testing garak, but aren't necessarily useful in
 deployment practice."""
 
 import garak.probes

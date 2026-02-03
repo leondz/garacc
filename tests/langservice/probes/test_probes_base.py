@@ -7,7 +7,7 @@ import tempfile
 import os
 
 from garak import _config, _plugins
-from garak.attempt import Message, Attempt
+from garak.attempt import Message, Attempt, Conversation
 
 
 NON_PROMPT_PROBES = [
@@ -15,6 +15,7 @@ NON_PROMPT_PROBES = [
     "probes.tap.TAP",
     "probes.suffix.BEAST",
     "probes.suffix.GCG",
+    "probes.fitd.FITD",
 ]
 ATKGEN_PROMPT_PROBES = ["probes.atkgen.Tox"]
 VISUAL_PROBES = [
@@ -36,7 +37,7 @@ openai_api_key_missing = not os.getenv("OPENAI_API_KEY")
 
 
 @pytest.fixture(autouse=True)
-def probe_pre_req(classname):
+def probe_pre_req(classname, request):
     # this sets up config for probes that access _config still
     _config.run.seed = 42
     local_config_path = str(
@@ -55,6 +56,11 @@ def probe_pre_req(classname):
     # since this does not go through cli generations must be set
     _, module, klass = classname.split(".")
     _config.plugins.probes[module][klass]["generations"] = 1
+
+    def close_report():
+        temp_report_file.close()
+
+    request.addfinalizer(close_report)
 
 
 RESPONSE_SAMPLES = [
@@ -121,7 +127,7 @@ def test_base_postprocess_attempt(responses, mocker):
         wraps=null_provider.get_text,
     )
 
-    a = Attempt(prompt="just a test attempt", lang="fr")
+    a = Attempt(prompt=Message("just a test attempt", lang="fr"))
     a.outputs = responses
     p = garak.probes.base.Probe()
     p.lang = "en"
@@ -240,6 +246,8 @@ def test_multi_modal_probe_translation(classname, mocker):
         expected_provision_calls += len(probe_instance.attempt_descrs) * 2
 
     assert prompt_mock.call_count == expected_provision_calls
+    for prompt in probe_instance.prompts:
+        assert isinstance(prompt.text, str)
 
 
 @pytest.mark.parametrize("classname", PROBES)
@@ -286,12 +294,25 @@ def test_probe_prompt_translation(classname, mocker):
 
     probe_instance.probe(generator_instance)
 
-    expected_provision_calls = len(probe_instance.prompts) + 1
+    prompts = probe_instance.prompts or []
+    forward_translation_calls = 0
+    if prompts:
+        if isinstance(prompts[0], str):
+            forward_translation_calls = 1
+        else:
+            # Conversation prompts trigger a translation per turn, while message prompts translate once per prompt.
+            for prompt in prompts:
+                if isinstance(prompt, Conversation):
+                    forward_translation_calls += len(prompt.turns)
+                elif isinstance(prompt, Message):
+                    forward_translation_calls += 1
+
+    expected_provision_calls = len(prompts) + forward_translation_calls
     if hasattr(probe_instance, "triggers"):
         # increase prompt calls by 1 or if triggers are lists by the len of triggers
         if isinstance(probe_instance.triggers[0], list):
             expected_provision_calls += len(probe_instance.triggers)
-        else:
+        elif not classname.startswith("probes.encoding"):
             expected_provision_calls += 1
 
     if hasattr(probe_instance, "attempt_descrs"):

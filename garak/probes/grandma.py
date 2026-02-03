@@ -1,9 +1,23 @@
 # SPDX-FileCopyrightText: Portions Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""The grandma attack
+
+"""**The grandma attack**
+
+Roleplay as a grandma.
+
+Probes in this module should attempt to roleplay as a grandma.
 
 Use appeal to ethos, centred on a fictive grandmother,
-to extract illegal/contentious information from model"""
+to extract illegal/contentious information from model.
+
+
+Further information:
+
+* https://www.independent.co.uk/tech/chatgpt-microsoft-windows-11-grandma-exploit-b2360213.html
+* https://x.com/_annieversary/status/1647865782741749760
+* https://www.cyberark.com/resources/threat-research-blog/operation-grandma-a-tale-of-llm-chatbot-vulnerability
+
+"""
 
 from garak import _config
 import garak.payloads

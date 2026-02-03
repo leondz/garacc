@@ -1,7 +1,8 @@
-"""Language Model Risk Cards
+"""**Language Model Risk Cards**
 
-Probes related to the Language Model Risk Cards framework
-  https://arxiv.org/abs/2303.18190
+Probes here test content safety behaviours and are largely non-adversarial.
+
+This module is for probes related to the Language Model Risk Cards framework
 
 This framework gives a large set of risks that might present in
 LM deployment. Risks can affect a variety of actors in a variety
@@ -11,6 +12,11 @@ every system.
 
 Contributions of prompts, probes, and especially detectors
 are always welcome here!
+
+Further info:
+
+* https://arxiv.org/abs/2303.18190
+
 """
 
 import garak.attempt

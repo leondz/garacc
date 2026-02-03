@@ -12,7 +12,6 @@ useful for e.g. assembling a report that's been run one probe at a time
 #   output file
 #   input filespec
 
-import argparse
 import datetime
 import json
 import uuid
@@ -43,18 +42,24 @@ def _process_file_body(in_file, out_file, aggregate_uuid) -> dict | None:
         out_file.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
-p = argparse.ArgumentParser(
-    description="aggregate multiple similar garak reports into one jsonl"
-)
-p.add_argument("-o", "--output", help="output filename", required=True)
-p.add_argument("infiles", nargs="+", help="garak jsonl reports to be aggregated")
-a = p.parse_args()
-
-
 def model_target_depr_notice(entry):
     import garak.command
 
     garak.command.deprecation_notice(f"config plugins.{entry}", "0.13.1.pre1")
+
+
+def _aggregate_probespec(filenames: list[str]) -> str:
+    """
+    One pass over jsonl files to aggregate probespecs from the first line in each
+    """
+    probespecs = set([])
+    for filename in filenames:
+        with open(filename, "r", encoding="utf8") as fd:
+            setup_line = fd.readline()
+            setup = json.loads(setup_line)
+            assert setup["entry_type"] == "start_run setup"
+            probespecs.add(setup["plugins.probe_spec"])
+    return ",".join(sorted(probespecs))
 
 
 def main(argv=None) -> None:
@@ -62,6 +67,7 @@ def main(argv=None) -> None:
         argv = sys.argv[1:]
 
     import garak._config
+    import argparse
 
     garak._config.load_config()
     print(
@@ -89,6 +95,7 @@ def main(argv=None) -> None:
     with open(a.output_path, "w+", encoding="utf-8") as out_file:
         lead_filename = in_filenames[0]
         print("lead file", in_filenames[0])
+        probespecs = _aggregate_probespec(in_filenames)
         with open(in_filenames[0], "r", encoding="utf8") as lead_file:
             # extract model type, model name, garak version
             setup_line = lead_file.readline()
@@ -104,6 +111,7 @@ def main(argv=None) -> None:
             target_name = setup["plugins.target_name"]
             version = setup["_config.version"]
             setup["aggregation"] = in_filenames
+            setup["plugins.probe_spec"] = probespecs
 
             # write the header, completed attempts, and eval rows
 
@@ -123,11 +131,7 @@ def main(argv=None) -> None:
 
             out_file.write(json.dumps(init) + "\n")
 
-            digest = _process_file_body(lead_file, out_file, aggregate_uuid)
-            digest["meta"]["report_aggregation"] = {
-                "files": [lead_filename],
-                "lead_file": lead_filename,
-            }
+            _process_file_body(lead_file, out_file, aggregate_uuid)
 
         if len(in_filenames) > 1:
             # for each other file
@@ -155,21 +159,15 @@ def main(argv=None) -> None:
                     assert init["garak_version"] == version
 
                     # write the completed attempts and eval rows
-                    subsequent_digest = _process_file_body(
-                        subsequent_file, out_file, aggregate_uuid
-                    )
-                    digest["meta"]["report_aggregation"]["files"].append(
-                        subsequent_filename
-                    )
-                    digest["eval"] = digest["eval"] | subsequent_digest["eval"]
-
-                    # write the completed attempts and eval rows
                     _process_file_body(subsequent_file, out_file, aggregate_uuid)
 
+    digest = garak.analyze.report_digest.build_digest(a.output_path)
+    with open(a.output_path, "a+", encoding="utf-8") as out_file:
         garak.analyze.report_digest.append_report_object(out_file, digest)
 
     print("done")
 
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")
     main()

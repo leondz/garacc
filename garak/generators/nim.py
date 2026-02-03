@@ -4,7 +4,6 @@
 """NVIDIA NIM Microservice LLM Interface"""
 
 import logging
-import random
 from typing import List, Union
 
 import openai
@@ -54,7 +53,7 @@ class NVOpenAIChat(OpenAICompatible):
 
     timeout = 60
 
-    def _load_client(self):
+    def _load_unsafe(self):
         self.client = openai.OpenAI(base_url=self.uri, api_key=self.api_key)
         if self.name in ("", None):
             raise ValueError(
@@ -76,10 +75,10 @@ class NVOpenAIChat(OpenAICompatible):
         ), "generations_per_call / n > 1 is not supported"
 
         if self.vary_seed_each_call:
-            self.seed = random.randint(0, 65535)
+            self.seed = self._rng.randint(0, 65535)
 
         if self.vary_temp_each_call:
-            self.temperature = random.random()
+            self.temperature = self._rng.random()
 
         prompt = self._prepare_prompt(prompt)
         if prompt is None:
@@ -132,7 +131,7 @@ class NVOpenAICompletion(NVOpenAIChat):
        the name of the model on build.nvidia.com, such as ``--target_name 'mistralai/mixtral-8x7b-instruct-v0.1'``.
     """
 
-    def _load_client(self):
+    def _load_unsafe(self):
         self.client = openai.OpenAI(base_url=self.uri, api_key=self.api_key)
         self.generator = self.client.completions
 

@@ -14,10 +14,10 @@ Specifying Custom Configuration
 garak can be configured in multiple ways:
 
 * Via command-line parameters
-* Using YAML configs
+* Using YAML or JSON config files
 * Through specifying JSON on the command line
 
-The easiest way is often to use a YAML config, and how to do that is
+The easiest way is often to use a config file (YAML or JSON), and how to do that is
 described below.
 
 Garak Config Hierarchy
@@ -28,13 +28,13 @@ Configuration values can come from multiple places. At garak load, the
 the priority of which values go where. The hierarchy is as follows:
 
 1. Values given at the command line
-2. Config values given in a YAML file passed via ``--config``
-3. Values in a YAML site config, ``garak.site.yaml``, placed in the config directory (``XDG_CONFIG_DIR``, which is ``~/.config/garak/`` on Linux; see XDG spec for details)
+2. Config values given in a YAML or JSON file passed via ``--config``
+3. Values in a YAML or JSON site config, ``garak.site.yaml``, ``garak.site.yml``, or ``garak.site.json``, placed in the config directory (``XDG_CONFIG_DIR``, which is ``~/.config/garak/`` on Linux; see XDG spec for details)
 4. Fixed values kept in the garak core config - don't edit this. Package updates will overwrite it, and you might break your garak install. It's in ``garak/resources`` if you want to take a look.
 5. Default values specified in plugin code
 
-Config YAML
-^^^^^^^^^^^
+Config Files (YAML and JSON)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Let's take a look at the core config.
 
@@ -94,14 +94,30 @@ such as ``show_100_pass_modules``.
 System Config Items
 """""""""""""""""""
 
-* ``parallel_requests`` - For generators not supporting multiple responses per prompt: how many requests to send in parallel with the same prompt? (raising ``parallel_attempts`` generally yields higher performance, depending on how high ``generations`` is set)
 * ``parallel_attempts`` - For parallelisable generators, how many attempts should be run in parallel? Raising this is a great way of speeding up garak runs for API-based models
+* ``parallel_requests`` - For generators not supporting multiple responses per prompt: how many requests to send in parallel with the same prompt? (raising ``parallel_attempts`` generally yields higher performance, depending on how high ``generations`` is set)
 * ``lite`` - Should we display a caution message that the run might not give very thorough results?
 * ``verbose`` - Degree of verbosity (values above 0 are experimental, the report & log are authoritative)
 * ``narrow_output`` - Support output on narrower CLIs
 * ``show_z`` - Display Z-scores and visual indicators on CLI. It's good, but may be too much info until one has seen garak run a couple of times
 * ``enable_experimental`` - Enable experimental function CLI flags. Disabled by default. Experimental functions may disrupt your installation and provide unusual/unstable results. Can only be set by editing core config, so a git checkout of garak is recommended for this.
 * ``max_workers`` - Cap on how many parallel workers can be requested. When raising this in order to use higher parallelisation, keep an eye on system resources (e.g. `ulimit -n 4026` on Linux)
+
+
+
+**Parallel requests and parallel attempts** These items enable parallelisation within a probe, by launching multiple processes to either try many prompts at the same time (``parallel_attempts``), or to try multiple copies of the same prompt at the same time (``parallel_requests``).
+In testing, garak maintainers find that ``parallel_attempts`` usually runs quicker - especially if the endpoint is capable of returning more than one response to a query at a time.
+
+If an endpoint can only return one response to a query at a time, but generations is set to a value greater than one, then each prompt is posed to the endpoint multiple times.
+This can be slow.
+Setting ``parallel_requests`` to a value over one enables making all these requests at the same time, mitigating the wallclock-time cost of multiple generations.
+
+Parameter ``parallel_requests`` has no effect if generations is set to 1.
+Setting ``parallel_requests`` higher than generations also has the same effect as setting ``parallel_requests`` equal to generations.
+
+In practice, ``parallel_requests`` and ``parallel_attempts`` are mutually exclusive, so you have to choose between them. 
+We find that using ``parallel_attempts`` usually gives a faster run completion time - especially when the number of generations is lower than the number of different prompts from a probe, which is more oftent he case than not in a default garak run.
+
 
 Run Config Items
 """"""""""""""""
@@ -153,25 +169,28 @@ Bundled Quick Configs
 ^^^^^^^^^^^^^^^^^^^^^
 
 Garak comes bundled with some quick configs that can be loaded directly using ``--config``.
-These don't need the ``.yml`` extension when being requested. They include:
 
-* ``broad`` - Run all active probes, just once each, for a rapid broad test
+**Note on extensions:** JSON configs can be loaded without the ``.json`` extension (e.g., ``--config fast``).
+YAML configs require the explicit ``.yaml`` or ``.yml`` extension (e.g., ``--config fast.yaml`` or ``--config fast.yml``).
+Extensions are case-insensitive, so ``.JSON``, ``.YAML``, and ``.YML`` are also accepted.
+
+Bundled configs include:
+
+* ``bag`` - The config used for calibration
 * ``fast`` - Go through a selection of light probes; skip extended detectors
-* ``full`` - Select many probes, and multiple payloads; use a paraphrase buff to get multiple variations on each prompt
-* ``long_attack_gen`` - Focus on ``atkgen``, with many generations, to give a higher chance of breaking through (i.e. yielding toxicity)
-* ``notox`` - Scan without any toxicity-inducing probes
-* ``tox_and_buffs`` - Go through toxicity & slur probes, using only relevant payloads, and a fast paraphraser
 
-These are great places to look at to get an idea of how garak YAML configs can look.
+These are great places to look at to get an idea of how garak configs can look.
 Quick configs are stored under ``garak/configs/`` in the source code/install.
 
 
 Using a Custom Config
 ^^^^^^^^^^^^^^^^^^^^^
 
-To override values in this we can create a new YAML file and point to it from the
+To override values in this we can create a new config file (YAML or JSON) and point to it from the
 command line using ``--config``. For example, to select just ``latentinjection``
 probes and run each prompt just once:
+
+**YAML format:**
 
 .. code-block:: yaml
 
@@ -183,8 +202,23 @@ probes and run each prompt just once:
         probe_spec: latentinjection
 
 If we save this as ``latent1.yaml`` somewhere, then we can use it with ``garak --config latent1.yaml``.
+Note: YAML configs require the explicit ``.yaml`` or ``.yml`` extension (case-insensitive).
 
+**JSON format:**
 
+.. code-block:: json
+
+    {
+      "run": {
+        "generations": 1
+      },
+      "plugins": {
+        "probe_spec": "latentinjection"
+      }
+    }
+
+If we save this as ``latent1.json`` somewhere, then we can use it with ``garak --config latent1.json``
+or without the extension: ``garak --config latent1``.
 
 Using a Custom JSON Config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -241,6 +275,26 @@ overridden at run time by the CLI setup.
 At plugin load, the plugin instance has attributes named in ``DEFAULT_PARAMS``
 automatically created, and populated with either values given in the supplied
 config, or the default.
+
+Fixed plugin parameters
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Some plugin parameters aren't intended to be altered at instantiation via config.
+These are the fixed plugin parameters, and are generally those not given in ``DEFAULT_PARAMS``.
+Descriptions of these are as follows (for a probe - other plugins are similar):
+
+* ``description`` - A short description of what the plugin does
+* ``active`` - Whether or not the plugin is active (i.e. selected) by default
+* ``doc_uri`` - Link to more information about the plugin
+* ``extended_detectors`` - Option detectors to use on probe results
+* ``extra_dependency_names`` - Extra Python modules that garka should import when instantiatng the plugin
+* ``goal`` - Brief description in imperative form of the probe's intent
+* ``modality`` - Which modalities the probe supports (as of Nov 2024 the list is ``text``, ``image``, ``audio``, ``video``, ``3d``)
+* ``parallelisable_attempts`` - Is the probe parallelisable? Recommended false if it has to use an LLM to develop attacks, particularly a local one
+* ``primary_detector`` - What detector should be used on the probe's outputs?
+* ``tags`` - List of tags applicable to the plugin, drawn from ``garak/data/tags.misp.tsv``
+* ``mod_time`` - Modification timestamp of the plugin source file used to generate this data
+
 
 .. _config_with_yaml:
 

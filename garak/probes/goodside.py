@@ -1,6 +1,10 @@
-"""Goodside
+"""**Goodside**
 
-Implementations of [Riley Goodside](https://twitter.com/goodside) attacks"""
+Attacks discovered by `Riley Goodside <https://twitter.com/goodside>`_.
+
+Probes in this module are originally authored by Riley Goodside.
+
+"""
 
 import re
 import tqdm

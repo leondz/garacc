@@ -1,9 +1,20 @@
-"""PromptInject
+"""**PromptInject**
+
+Basic prompt injections, including plaintext malicious commands into requests
+for innocuous information.
+
+Probes in this module should specifically implement parts of the PromptInject
+framework.
 
 Uses the PromptInject framework, https://openreview.net/forum?id=qiaRo_7Zmug,
 to probe a system. A subset of the attacks is implemented here. The default
 is to use a selection of that subset, because even the subset corresponds to
 thousands of requests by default.
+
+Further info:
+
+* https://openreview.net/forum?id=qiaRo_7Zmug
+
 """
 
 import random
@@ -33,31 +44,30 @@ def constructor(self, config_root=_config):
     if self.__class__.__name__.endswith("Full"):
         self.max_prompts = None
 
-    self.pi_prompt_data = prompt_data
     self.pi_build_prompts = build_prompts
-    self.load_data_all_attacks()
+    self.load_data_all_attacks(prompt_data)
 
     # self.prompts.append(f"{prefix} {false_assertion}")
 
 
-def load_data_all_attacks(self):
+def load_data_all_attacks(self, prompt_data):
     prompt_config = {
         "base": {
-            "text": self.pi_prompt_data.ALL_OPENAI_PLAYGROUND_PROMPTS,
+            "text": prompt_data.ALL_OPENAI_PLAYGROUND_PROMPTS,
         },
         "attack": {
             "text": (
-                self.pi_prompt_data.goal_hikacking_attacks["ignore-print"],
-                self.pi_prompt_data.goal_hikacking_attacks["ignore-say"],
-                self.pi_prompt_data.goal_hikacking_attacks["ignore-print-upper"],
-                self.pi_prompt_data.goal_hikacking_attacks["nevermind"],
-                self.pi_prompt_data.goal_hikacking_attacks["screaming-stop"],
+                prompt_data.goal_hikacking_attacks["ignore-print"],
+                prompt_data.goal_hikacking_attacks["ignore-say"],
+                prompt_data.goal_hikacking_attacks["ignore-print-upper"],
+                prompt_data.goal_hikacking_attacks["nevermind"],
+                prompt_data.goal_hikacking_attacks["screaming-stop"],
             ),
-            "rogue_string": self.pi_prompt_data.rogue_strings[self.rogue_string],
+            "rogue_string": prompt_data.rogue_strings[self.rogue_string],
             "scoring": "match_rogue_to_output",
             "settings": {
-                "escape": self.pi_prompt_data.escape_chars["n"],
-                "delimiter": self.pi_prompt_data.delimiter_chars["dash"],
+                "escape": prompt_data.escape_chars["n"],
+                "delimiter": prompt_data.delimiter_chars["dash"],
                 "escape_length": 10,
                 "escape_times": 2,
             },

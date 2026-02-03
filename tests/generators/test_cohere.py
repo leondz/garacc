@@ -8,6 +8,15 @@ from garak.attempt import Message, Turn, Conversation
 from garak.generators.cohere import CohereGenerator, COHERE_GENERATION_LIMIT
 from garak.exception import APIKeyMissingError
 
+try:
+    import cohere
+
+except:
+    pytest.skip(
+        "couldn't import cohere, skipping cohere tests", allow_module_level=True
+    )
+
+
 # Default model name and API URLs
 DEFAULT_MODEL_NAME = "command"
 COHERE_API_BASE = "https://api.cohere.com"
@@ -43,7 +52,6 @@ def cohere_mock_responses():
             "json": {
                 "generations": [
                     {"text": "Mocked generate response 1."},
-                    {"text": "Mocked generate response 2."},
                 ]
             },
         },
@@ -159,8 +167,7 @@ def test_cohere_generate_api_respx(respx_mock, cohere_mock_responses):
 
     # Assert response parsing
     assert result == [
-        cohere_mock_responses["generate_response"]["json"]["generations"][0]["text"],
-        cohere_mock_responses["generate_response"]["json"]["generations"][1]["text"],
+        cohere_mock_responses["generate_response"]["json"]["generations"][0]["text"]
     ]
 
 

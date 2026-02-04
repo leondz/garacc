@@ -134,6 +134,7 @@ class GarakCommands(cmd2.CommandSet):
             print("Please check your generator model name.")
 
         evaluator = _plugins.load_plugin("evaluators.base.ThresholdEvaluator")
+        evaluator.eval_threshold = self._cmd.eval_threshold
         harness = garak.harnesses.probewise.ProbewiseHarness()
         harness.run(generator, [self._cmd.probe], evaluator)
         logger.info("Run complete, ending")

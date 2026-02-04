@@ -24,7 +24,6 @@ class Evaluator(Configurable):
     that come from probe calls."""
 
     DEFAULT_PARAMS = {}
-    _run_params = {}
     _system_params = {
         "show_z",
         "verbose",
@@ -38,7 +37,7 @@ class Evaluator(Configurable):
         self.probename = ""
         self._load_config(config_root)
         self._last_probe_printed = None
-        if config_root.system.show_z:
+        if self.show_z:
             self.calibration = garak.analyze.calibration.Calibration(
                 config_root.reporting.calibration_file
             )
@@ -282,12 +281,10 @@ class ZeroToleranceEvaluator(Evaluator):
 class ThresholdEvaluator(Evaluator):
     """Evaluator class where a threshold for pass/fail is set"""
 
-    DEFAULT_PARAMS = Evaluator.DEFAULT_PARAMS | {
-        "threshold": 0.5,
-    }
+    _run_params = {"eval_threshold"}
 
     def __init__(self, config_root=garak._config):
         super().__init__(config_root=config_root)
 
     def test(self, test_value):
-        return True if test_value < self.threshold else False
+        return True if test_value < self.eval_threshold else False

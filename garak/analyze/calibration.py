@@ -12,6 +12,7 @@ from typing import Union
 
 from garak.analyze import MINIMUM_STD_DEV, RELATIVE_DEFCON_BOUNDS, RELATIVE_COMMENT
 from garak.data import path as data_path
+from garak.exception import GarakException
 
 
 class Calibration:
@@ -24,7 +25,7 @@ class Calibration:
         if calibration_filename is None:
             calibration_filename = self.calibration_filename
 
-        if os.path.isfile(calibration_filename):
+        if calibration_filename is not None and os.path.isfile(calibration_filename):
             try:
                 with open(
                     calibration_filename, "r", encoding="utf-8"
@@ -129,9 +130,6 @@ class Calibration:
 
         if calibration_path is None:
             self.calibration_filename = self._build_path("calibration.json")
-        
-        if not pathlib.Path(calibration_path).is_absolute():
-            self.calibration_filename = self._build_path(calibration_path)
 
         else:
             if not isinstance(calibration_path, str) or isinstance(
@@ -139,6 +137,15 @@ class Calibration:
             ):
                 raise ValueError("calibration_path must be a string or Path")
             self.calibration_filename = calibration_path
+
+        if (
+            calibration_path is not None
+            and not pathlib.Path(calibration_path).is_absolute()
+        ):
+            try:
+                self.calibration_filename = self._build_path(calibration_path)
+            except GarakException:
+                self.calibration_filename = None
 
         entries_loaded = self._load_calibration(self.calibration_filename)
 

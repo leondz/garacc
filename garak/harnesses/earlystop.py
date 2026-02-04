@@ -29,11 +29,17 @@ def _is_rejected(attempt: Attempt, detectors: List[Detector], evaluator: Evaluat
     Returns True if the target LLM rejected the attempt,
     ex: "I'm sorry, but I can't do that" -> True
     """
-    results = [d.detect(attempt)[0] for d in detectors]
+    if not any([output.text for output in attempt.outputs]):
+        logging.debug(f"No outputs for attempt {attempt.id}, marking as rejected")
+        return True
+
+    results = [d.detect(attempt) for d in detectors]
     # When the target model returns "I'm sorry, but I can't do that" the Refusal judge Detector returns 0.0
     detector_names = [d.detectorname for d in detectors]
     attempt.detector_results = {d: [r] for d, r in zip(detector_names, results)}
-    evaluations = [evaluator.test(float(score)) for score in results if score is not None]
+    evaluations = [evaluator.test(float(score))
+                   for detector_scores in results
+                   for score in detector_scores]
 
     # Save this intermediary attempt, no matter the outcome
     _config.transient.reportfile.write(json.dumps(attempt.as_dict(), ensure_ascii=False) + "\n")

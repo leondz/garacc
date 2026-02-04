@@ -157,7 +157,6 @@ class Configurable:
                     setattr(self, v, getattr(config_obj, v))
 
     def _apply_missing_instance_defaults(self):
-        # class.DEFAULT_PARAMS['generations'] -> instance.generations
         if hasattr(self, "DEFAULT_PARAMS"):
             for k, v in self.DEFAULT_PARAMS.items():
                 if not hasattr(self, k):

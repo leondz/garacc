@@ -589,7 +589,7 @@ def main(arguments=None) -> None:
                         msg_list = ",".join(rejected)
                         raise ValueError(f"❌Unknown {spec_namespace}❌: {msg_list}")
 
-            evaluator = garak.evaluators.ThresholdEvaluator(_config.run.eval_threshold)
+            evaluator = _plugins.load_plugin("evaluators.base.ThresholdEvaluator")
 
             from garak import _plugins
 

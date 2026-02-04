@@ -13,7 +13,6 @@ from colorama import Fore, Style
 
 import garak.harnesses.probewise
 from garak import _config
-from garak.evaluators import ThresholdEvaluator
 from garak.data import path as data_path
 from garak._plugins import enumerate_plugins
 
@@ -134,7 +133,7 @@ class GarakCommands(cmd2.CommandSet):
             logger.error(e)
             print("Please check your generator model name.")
 
-        evaluator = ThresholdEvaluator(self._cmd.eval_threshold)
+        evaluator = _plugins.load_plugin("evaluators.base.ThresholdEvaluator")
         harness = garak.harnesses.probewise.ProbewiseHarness()
         harness.run(generator, [self._cmd.probe], evaluator)
         logger.info("Run complete, ending")

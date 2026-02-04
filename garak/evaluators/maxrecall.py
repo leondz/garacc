@@ -5,14 +5,13 @@ deprecated
 Should register a complete failure if there are any failures
 """
 
+import garak._config
 from garak.evaluators.base import Evaluator
 
 
 class MaxRecallEvaluator(Evaluator):
-    def __init__():
-        super().__init__()
 
-    def evaluate(self, results):
+    def evaluate(self, results, config_root=garak._config):
         for test in results.keys().sorted():
             no_failures = True
             if map(float, results[test]) != [0.0] * len(results[test]):

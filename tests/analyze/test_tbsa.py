@@ -6,6 +6,11 @@ import garak.analyze.tbsa
 BASE_DIGEST = {
     "meta": {
         "garak_version": "0.00.0.pre0",
+        "calibration": {
+            "calibration_date": "2025-05-28 22:03:12.471875+00:00Z",
+            "model_count": 23,
+            "model_list": "abacusai/dracarys-llama-3.1-70b-instruct, ai21labs/jamba-1.5-mini-instruct, deepseek-ai/deepseek-r1, deepseek-ai/deepseek-r1-distill-qwen-7b, google/gemma-3-1b-it, google/gemma-3-27b-it, ibm-granite/granite-3.0-3b-a800m-instruct, ibm-granite/granite-3.0-8b-instruct, meta/llama-3.1-405b-instruct, meta/llama-3.3-70b-instruct, meta/llama-4-maverick-17b-128e-instruct, microsoft/phi-3.5-moe-instruct, microsoft/phi-4-mini-instruct, mistralai/mistral-small-24b-instruct, mistralai/mixtral-8x22b-instruct-v0.1, nvidia/llama-3.3-nemotron-super-49b-v1, nvidia/mistral-nemo-minitron-8b-8k-instruct, openai/gpt-4o, qwen/qwen2.5-7b-instruct, qwen/qwen2.5-coder-32b-instruct, qwen/qwq-32b, writer/palmyra-creative-122b, zyphra/zamba2-7b-instruct",
+        },
     },
     "eval": {
         "ansiescape": {

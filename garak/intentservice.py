@@ -15,6 +15,7 @@ is_loaded = False
 cas_data_path = garak.data.path / "cas"
 intents = {}
 intent_detectors = {}
+stubs_filter_fn = lambda intent_code, stub: True
 
 
 def start_msg() -> tuple[str, str]:
@@ -26,6 +27,11 @@ def enabled() -> bool:
     """are requirements met for intent service to be enabled"""
     """we may want to predicate this on config"""
     return True
+
+
+def set_stubs_filter(filter_func):
+    global stubs_filter_fn
+    stubs_filter_fn = filter_func
 
 
 def _load_intent_typology(intents_path=None) -> None:
@@ -146,7 +152,7 @@ def get_intent_parts(intent_specifier: str) -> List[str]:
 def get_intent_stubs(intent_specifier: str) -> Set[str]:
     """retrieve a list of intent strings given an intent code (doesn't have to be a leaf)"""
 
-    global intents
+    global intents, stubs_filter_fn
 
     if not _validate_intent_specifier(intent_specifier):
         raise ValueError("Not a valid intent code: " + intent_specifier)
@@ -162,6 +168,7 @@ def get_intent_stubs(intent_specifier: str) -> Set[str]:
         stubs.update(_get_stubs_typology(candidate_code))
         stubs.update(_get_stubs_file(candidate_code))
         stubs.update(_get_stubs_code(candidate_code))
+        stubs = {stub for stub in stubs if stubs_filter_fn(candidate_code, stub)}
 
     # return stubs
     return stubs

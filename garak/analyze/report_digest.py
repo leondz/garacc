@@ -345,6 +345,7 @@ def _get_calibration_info(calibration):
 
     return {
         "calibration_date": calibration_date,
+        "calibration_filename": str(calibration.calibration_filename),
         "model_count": calibration_model_count,
         "model_list": calibration_model_list,
     }

@@ -382,6 +382,8 @@ def main(arguments=None) -> None:
         _config.plugins.detector_spec = args.detectors
     if "buffs" in args:
         _config.plugins.buff_spec = args.buffs
+    if "intents" in args:
+        _config.cas.intent_spec = args.intents
 
     # base config complete
 
@@ -620,7 +622,15 @@ def main(arguments=None) -> None:
             command.start_run()  # start the run now that all config validation is complete
             print(f"📜 reporting to {_config.transient.report_filename}")
 
-            if parsed_specs["detector"] == []:
+            if _config.cas.intent_spec:
+                command.early_stop_run(
+                    generator,
+                    parsed_specs["probe"],
+                    parsed_specs["detector"],
+                    evaluator,
+                    parsed_specs["buff"],
+                )
+            elif parsed_specs["detector"] == []:
                 command.probewise_run(
                     generator, parsed_specs["probe"], evaluator, parsed_specs["buff"]
                 )

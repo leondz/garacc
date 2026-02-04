@@ -1,41 +1,42 @@
 ---
 system:
-  verbose: 0
-  narrow_output: false
-  parallel_requests: false
-  parallel_attempts: false
-  lite: true
-  show_z: false
   enable_experimental: false
+  lite: true
   max_workers: 500
+  narrow_output: false
+  parallel_attempts: false
+  parallel_requests: false
+  show_z: false
+  verbose: 0
 
 run:
-  seed:
   deprefix: true
   eval_threshold: 0.5
   generations: 5
   probe_tags:
-  user_agent: "garak/{version} (LLM vulnerability scanner https://garak.ai)"
+  seed:
   soft_probe_prompt_cap: 256
+  user_agent: "garak/{version} (LLM vulnerability scanner https://garak.ai)"
 
 plugins:
-  target_type:
-  target_name:
-  probe_spec: all
-  detector_spec: auto
-  extended_detectors: true
+  buff_max: 
   buff_spec:
   buffs_include_original_prompt: false
-  buff_max: 
-  detectors: {}
-  generators: {}
   buffs: {}
+  detector_spec: auto
+  detectors: {}
+  extended_detectors: true
+  generators: {}
   harnesses: {}
+  probe_spec: all
+  target_name:
+  target_type:
 
 reporting:
-  report_prefix:
-  taxonomy:
+  calibration_file: calibration.json
+  group_aggregation_function: lower_quartile
   report_dir: garak_runs
+  report_prefix:
   show_100_pass_modules: true
   show_top_group_score: true
-  group_aggregation_function: lower_quartile
+  taxonomy:

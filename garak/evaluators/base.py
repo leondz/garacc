@@ -39,7 +39,9 @@ class Evaluator(Configurable):
         self._load_config(config_root)
         self._last_probe_printed = None
         if config_root.system.show_z:
-            self.calibration = garak.analyze.calibration.Calibration()
+            self.calibration = garak.analyze.calibration.Calibration(
+                config_root.reporting.calibration_file
+            )
 
     def test(self, test_value: float) -> bool:
         """Function for converting the detector result to a boolean, True=pass

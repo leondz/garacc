@@ -374,7 +374,9 @@ def build_digest(report_filename: str, config=_config):
     with open(report_filename, "r", encoding="utf-8") as reportfile:
         init, setup, payloads, evals = _parse_report(reportfile)
 
-    calibration = garak.analyze.calibration.Calibration()
+    calibration = garak.analyze.calibration.Calibration(
+        config.reporting.calibration_file
+    )
     calibration_used = False
 
     header_content = _report_header_content(
@@ -458,13 +460,17 @@ def build_html(digest: dict, config=_config) -> str:
         content = template_file.read()
 
     if "__GARAK_INSERT_HERE__" not in content:
-        print("❌ Marker __GARAK_INSERT_HERE__ not found in template HTML", file=sys.stderr)
+        print(
+            "❌ Marker __GARAK_INSERT_HERE__ not found in template HTML",
+            file=sys.stderr,
+        )
         return json.dumps(digest, indent=2)  # fallback: just dump JSON
 
     # Embed digest JSON inside the template
     digest_json = json.dumps([digest], separators=(",", ":"))
     final_html = content.replace("__GARAK_INSERT_HERE__", digest_json)
     return final_html
+
 
 def _get_report_digest(report_path):
     with open(report_path, "r", encoding="utf-8") as reportfile:

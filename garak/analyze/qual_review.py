@@ -38,7 +38,7 @@ def build_tiers() -> dict:
 
 def qual_review(report_path: str) -> None:
     tiers = build_tiers()
-    c = garak.analyze.calibration.Calibration()
+    c = garak.analyze.calibration.Calibration(garak._config.reporting.calibration_file)
     probe_detector_scores = {}
     pos_examples = defaultdict(list)
     neg_examples = defaultdict(list)

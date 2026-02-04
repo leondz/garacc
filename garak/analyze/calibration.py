@@ -67,6 +67,7 @@ class Calibration:
             return None
 
         if "garak_calibration_meta" in self._data:
+            logging.info("Calibration data loaded from %s", calibration_filename)
             self.metadata = self._data["garak_calibration_meta"]
             del self._data["garak_calibration_meta"]
 
@@ -128,6 +129,9 @@ class Calibration:
 
         if calibration_path is None:
             self.calibration_filename = self._build_path("calibration.json")
+        
+        if not pathlib.Path(calibration_path).is_absolute():
+            self.calibration_filename = self._build_path(calibration_path)
 
         else:
             if not isinstance(calibration_path, str) or isinstance(

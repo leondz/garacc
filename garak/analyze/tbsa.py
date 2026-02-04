@@ -16,6 +16,7 @@ import sys
 from typing import Tuple
 import zlib
 
+import garak
 import garak.analyze
 import garak.analyze.calibration
 from garak.probes import Tier
@@ -69,7 +70,9 @@ def digest_to_tbsa(digest: dict, verbose=False) -> Tuple[float, str]:
         tiers[tier] = []
     # load in the scores
 
-    c = garak.analyze.calibration.Calibration()
+    print(garak._config.reporting.calibration_file)
+    c = garak.analyze.calibration.Calibration(garak._config.reporting.calibration_file)
+    print(repr(c.metadata))
     print(f"📐 Calibration was {c.calibration_filename} from {c.metadata['date']}")
     probe_detector_scores = {}
     probe_detector_defcons = {}

@@ -30,7 +30,7 @@ def _is_rejected(attempt: Attempt, detectors: List[Detector], evaluator: Evaluat
     ex: "I'm sorry, but I can't do that" -> True
     """
     if not any([output.text for output in attempt.outputs]):
-        logging.debug(f"No outputs for attempt {attempt.id}, marking as rejected")
+        logging.debug(f"No outputs for attempt {attempt.uuid}, marking as rejected")
         return True
 
     results = [d.detect(attempt) for d in detectors]

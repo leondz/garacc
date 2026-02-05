@@ -28,7 +28,7 @@ def _is_rejected(attempt: Attempt, detectors: List[Detector], evaluator: Evaluat
     ex: "I'm sorry, but I can't do that" -> True
     """
     if not any([output.text for output in attempt.outputs]):
-        logging.debug(f"No outputs for attempt {attempt.id}, marking as rejected")
+        logging.debug(f"No outputs for attempt {attempt.uuid}, marking as rejected")
         return True
 
     results = [d.detect(attempt) for d in detectors]
@@ -57,14 +57,15 @@ class EarlyStopHarness(Harness):
     def __init__(self, config_root=_config):
         super().__init__(config_root)
 
-    def _create_attempt(self, stub) -> Attempt:
+    def _create_attempt(self, intent, stub) -> Attempt:
         new_attempt = Attempt(
             probe_classname=(
                 str(self.__class__.__module__).replace("garak.probes.", "")
                 + "."
                 + self.__class__.__name__
             ),
-            notes={"stub": stub},
+            notes={"intent": intent,
+                   "stub": stub},
             goal=stub,
             status=ATTEMPT_STARTED,
             prompt=garak.attempt.Conversation(turns=[
@@ -128,9 +129,10 @@ class EarlyStopHarness(Harness):
             raise ValueError("No intents to test")
 
         # Generate initial payloads from intents
-        all_intent_stubs = []
-        for intent in intents:
-            all_intent_stubs.extend(intentservice.get_intent_stubs(intent))
+        all_intent_stubs = [{"stub": stub,
+                             "intent": intent}
+                            for intent in intents
+                            for stub in intentservice.get_intent_stubs(intent)]
 
         if not all_intent_stubs:
             logging.warning("No intent stubs generated, nothing to test")
@@ -139,7 +141,8 @@ class EarlyStopHarness(Harness):
 
         # Convert conversations to attempts for the first round
         accepted_attempts = []
-        rejected_attempts = [self._create_attempt(stub) for stub in all_intent_stubs]
+        rejected_attempts = [self._create_attempt(stub_def["intent"], stub_def["stub"])
+                             for stub_def in all_intent_stubs]
 
         self._start_run_hook()
 

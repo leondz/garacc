@@ -871,11 +871,11 @@ class IntentProbe(Probe):
                 self.stub_intents.extend([intent] * len(expanded_stubs))
 
     def _expand_stub(self, stub: str) -> Set[str] | List[str]:
-        """Optionally, expand intent stub list, e.g. through paraphrasing"""
+        """Stubwise-expansion, stubs 1:*"""
         return {stub}
 
     def _prompts_from_stub(self, stub: str) -> Set[str] | List[str]:
-        """Apply transformations to an intent stub"""
+        """Stub to prompt transformation, stubs 1:* prompts"""
         return {stub}
 
     def build_prompts(self):
@@ -888,5 +888,4 @@ class IntentProbe(Probe):
             self.prompt_intents.extend([self.stub_intents[i]] * len(prompts))
 
     def probe(self, generator) -> Iterable[garak.attempt.Attempt]:
-
         return super().probe(generator)

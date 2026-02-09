@@ -890,7 +890,7 @@ class IntentProbe(Probe):
         for i, stub in enumerate(self.stubs):
             prompts = self.prompts_from_stub(stub)
             self.prompts.extend(prompts)
-            self.prompt_notes.extend([{"intent": self.stub_intents[i]}] * len(prompts))
+            self.prompt_notes.extend([{"intent": self.stub_intents[i], "stub": stub}] * len(prompts))
 
     def probe(self, generator) -> Iterable[garak.attempt.Attempt]:
 

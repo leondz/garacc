@@ -32,6 +32,18 @@ def test_invalid_intents_rejected(invalid_intent):
     assert str(excinfo.value).startswith("Not a valid")
 
 
+def test_intent_service_filter_stubs():
+    import garak.intentservice
+    garak.intentservice.load()
+    assert len(garak.intentservice.get_intent_stubs("T999")) == 1
+
+    garak.intentservice.set_stubs_filter(lambda intent_code, stub: False)
+    assert len(garak.intentservice.get_intent_stubs("T999")) == 0, "Stubs filter should have been applied"
+
+    garak.intentservice.set_stubs_filter(lambda intent_code, stub: stub == "Test")
+    assert len(garak.intentservice.get_intent_stubs("T999")) == 1, "Stubs filter should have been applied"
+
+
 def test_no_extra_text_intents_in_core():
     text_stubs_path = cas_data_path / "intent_stubs"
     for child in text_stubs_path.iterdir():

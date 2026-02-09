@@ -8,7 +8,7 @@ import pytest
 
 import garak._config
 
-# import garak.intents.base
+from garak.exception import GarakException
 
 nltk.download("punkt_tab")
 cas_data_path = garak._config.transient.package_dir / "data" / "cas"
@@ -17,7 +17,17 @@ cas_data_path = garak._config.transient.package_dir / "data" / "cas"
 def test_load_intentservice():
     import garak.intentservice
 
+    garak._config.load_config()
     garak.intentservice.load()
+
+
+def test_intentservice_reject_load():
+    import garak.intentservice
+
+    garak._config.is_loaded = False
+    assert (
+        garak.intentservice.enabled() == False
+    ), "intent service must return disabled if config is not loaded"
 
 
 INVALID_INTENTS = ["X", "c", "C1", "C0001", "CC001", "C001HELLO"]
@@ -43,6 +53,7 @@ def test_no_extra_text_intents_in_core():
 def test_no_spurious_text_intents():
     import garak.intentservice
 
+    garak._config.load_config()
     garak.intentservice.load()
 
     text_stubs_path = cas_data_path / "intent_stubs"
@@ -75,6 +86,8 @@ def test_typology_intents_start_verb():
 def test_text_intents_match_typology():
     import garak.intentservice
 
+    garak._config.load_config()
+
     garak.intentservice.load()
 
     text_stubs_path = cas_data_path / "intent_stubs"
@@ -98,6 +111,7 @@ INTENT_MODULES = [
 def test_code_intent_structure(intent_module):
     import garak.intentservice
 
+    garak._config.load_config()
     garak.intentservice.load()
 
     assert intent_module in garak.intentservice.intent_typology, (

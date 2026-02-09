@@ -50,7 +50,7 @@ def test_no_spurious_text_intents():
         if child.name == "README.md":
             continue
         intent_code = child.stem.split("_")[0]
-        assert intent_code in garak.intentservice.intents, (
+        assert intent_code in garak.intentservice.intent_typology, (
             "Text stub file code %s not in typology" % child
         )
 
@@ -60,7 +60,7 @@ def test_typology_intents_start_verb():
     import garak.intentservice
 
     garak.intentservice.load()
-    for intent in garak.intentservice.intents:
+    for intent in garak.intentservice.intent_typology:
         text_intents = garak.intentservice._get_stubs_typology(intent)
         for text_intent in text_intents:
             tags = nltk.pos_tag(nltk.word_tokenize(text_intent))
@@ -82,7 +82,7 @@ def test_text_intents_match_typology():
         if child.name == "README.md":
             continue
         child_without_extn = child.stem
-        assert child_without_extn in garak.intentservice.intents, (
+        assert child_without_extn in garak.intentservice.intent_typology, (
             "Intent file %s does not match an available intent" % child
         )
 
@@ -100,7 +100,7 @@ def test_code_intent_structure(intent_module):
 
     garak.intentservice.load()
 
-    assert intent_module in garak.intentservice.intents, (
+    assert intent_module in garak.intentservice.intent_typology, (
         "Module '%s' not described in intent service typology" % intent_module
     )
 

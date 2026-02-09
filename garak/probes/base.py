@@ -14,7 +14,7 @@ import json
 import logging
 from collections.abc import Iterable
 import random
-from typing import Iterable, List, Union
+from typing import Iterable, List, Set, Union
 
 from colorama import Fore, Style
 import tqdm
@@ -832,65 +832,60 @@ class IntentProbe(Probe):
 
     import garak.intentservice
 
-    def _populate_intents(self, intent_spec: str | None) -> None:
-        """Expand self.intents to hold fine-grained (leaf-node-level) intents this probe will use.
-
-        If there is going to be any filtering of intents, it should be done here."""
-
-        self.intents = []
-
-        if intent_spec is not None:
-            for intent_prefix in intent_spec.split(","):
-                self.intents.extend(
-                    garak.intentservice.expand_intent_specifier_leaves(intent_prefix)
-                )
-
-        if len(self.intents) == 0:
-            logging.info("Probe %s running with no intents" % self.__class__.__name__)
+    skip_root_intents = True
+    blocked_intent_spec = ""
 
     def __init__(self, config_root=_config):
         super().__init__(config_root)
-        self._populate_intents(config_root.cas.intent_spec)
+
+        self._populate_intents()
         self._populate_stubs()
-        self._build_prompts()
+        self.build_prompts()
 
     def _attempt_prestore_hook(
         self, attempt: garak.attempt.Attempt, seq: int
     ) -> garak.attempt.Attempt:
-        attempt.notes = dict(
-            attempt.notes
-        )  # we don't want all attempts.notes to ref same dict
-        attempt.notes = attempt.notes | self.prompt_notes[seq]
+        attempt.intent = self.prompt_intents[seq]
         return attempt
+
+    def _populate_intents(self) -> None:
+        # work out which intents this probe will process
+        # should be leaves
+        self.intents = garak.intentservice.get_applicable_intents(
+            blocked_spec=self.blocked_intent_spec
+        )
 
     def _populate_stubs(self) -> None:
         """populate self.stubs with intent stub text, in order of self.intents"""
+
         self.stubs = []  # stubs to be used in prompt construction
         self.stub_intents = []  # list of intent sources aligned w/ self.stubs
 
         for intent in self.intents:
+            if self.skip_root_intents and len(intent) == 1:
+                continue
             intent_stubs = garak.intentservice.get_intent_stubs(intent)
             for intent_stub in intent_stubs:
                 expanded_stubs = self._expand_stub(intent_stub)
                 self.stubs.extend(expanded_stubs)
                 self.stub_intents.extend([intent] * len(expanded_stubs))
 
-    def _expand_stub(self, stub: str) -> List[str]:
-        """Optionally, expand intent stubs, e.g. through paraphrasing"""
-        return [stub]
+    def _expand_stub(self, stub: str) -> Set[str] | List[str]:
+        """Optionally, expand intent stub list, e.g. through paraphrasing"""
+        return {stub}
 
-    def prompts_from_stub(self, stub: str) -> List[str]:
-        """Apply the probe's technique to the intent stub"""
-        return [stub]
+    def _prompts_from_stub(self, stub: str) -> Set[str] | List[str]:
+        """Apply transformations to an intent stub"""
+        return {stub}
 
-    def _build_prompts(self):
+    def build_prompts(self):
         """In the most basic case, consume self.stubs and populate self.prompts"""
         self.prompts = []
-        self.prompt_notes = []
+        self.prompt_intents = []
         for i, stub in enumerate(self.stubs):
-            prompts = self.prompts_from_stub(stub)
+            prompts = self._prompts_from_stub(stub)
             self.prompts.extend(prompts)
-            self.prompt_notes.extend([{"intent": self.stub_intents[i]}] * len(prompts))
+            self.prompt_intents.extend([self.stub_intents[i]] * len(prompts))
 
     def probe(self, generator) -> Iterable[garak.attempt.Attempt]:
 

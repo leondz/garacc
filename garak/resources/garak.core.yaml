@@ -19,7 +19,8 @@ run:
   soft_probe_prompt_cap: 256
 
 cas:
-  intent_spec:
+  intent_spec: S
+  expand_intent_tree: True
 
 plugins:
   target_type:

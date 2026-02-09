@@ -42,7 +42,7 @@ cas_params = "intent_spec".split()
 project_dir_name = "garak"
 
 
-loaded = False
+is_loaded = False
 
 
 @dataclass
@@ -289,11 +289,11 @@ def get_http_lib_agents():
 
 
 def load_base_config() -> None:
-    global loaded
+    global is_loaded
     settings_files = [str(transient.package_dir / "resources" / "garak.core.yaml")]
     logging.debug("Loading configs from: %s", ",".join(settings_files))
     _store_config(settings_files=settings_files)
-    loaded = True
+    is_loaded = True
 
 
 def load_config(
@@ -301,7 +301,7 @@ def load_config(
 ) -> None:
     # would be good to bubble up things from run_config, e.g. generator, probe(s), detector(s)
     # and then not have cli be upset when these are not given as cli params
-    global loaded
+    global is_loaded
 
     settings_files = [str(transient.package_dir / "resources" / "garak.core.yaml")]
 
@@ -404,7 +404,7 @@ def load_config(
 
     if DICT_CONFIG_AFTER_LOAD:
         _lock_config_as_dict()
-    loaded = True
+    is_loaded = True
 
 
 def parse_plugin_spec(

@@ -9,12 +9,14 @@ import logging
 import re
 from typing import List, Set
 
+import garak._config
 import garak.data
 
 is_loaded = False
 cas_data_path = garak.data.path / "cas"
-intents = {}
+intent_typology = {}
 intent_detectors = {}
+intents_active = set()
 
 
 def start_msg() -> tuple[str, str]:
@@ -25,18 +27,21 @@ def start_msg() -> tuple[str, str]:
 def enabled() -> bool:
     """are requirements met for intent service to be enabled"""
     """we may want to predicate this on config"""
+    if not garak._config.is_loaded:
+        logging.warning("_config must be loaded before intentservice is started")
+        return False
     return True
 
 
 def _load_intent_typology(intents_path=None) -> None:
-    global intents
+    global intent_typology
     if intents_path is None:
         intents_path = cas_data_path / "trait_typology.json"
     with open(intents_path, "r", encoding="utf-8") as intents_file:
-        intents = json.load(intents_file)
+        intent_typology = json.load(intents_file)
 
 
-def _load_intent_detectors(detectors_path=None) -> None:
+def _load_intent_detector_mapping(detectors_path=None) -> None:
     global intent_detectors
     if detectors_path is None:
         detectors_path = cas_data_path / "intent_detectors.json"
@@ -44,18 +49,62 @@ def _load_intent_detectors(detectors_path=None) -> None:
         intent_detectors = json.load(intent_detectors_file)
 
 
+def _expand_intent_spec(
+    intent_spec: str | None, expand_subnodes: bool = True
+) -> Set[str]:
+    """expand an intent spec"""
+
+    global intent_typology
+
+    expanded_intents = set()
+
+    if intent_spec is None or intent_spec in ("*", "all", ""):
+        expanded_intents = set(
+            [
+                non_top_intent
+                for non_top_intent in intent_typology.keys()
+                if len(non_top_intent) >= 4
+            ]
+        )
+    else:
+        for intent_prefix in intent_spec.split(","):
+            if expand_subnodes:
+                expanded_intents.update(_expand_intent_specifier_leaves(intent_prefix))
+            else:
+                expanded_intents.update({intent_prefix})
+
+    return expanded_intents
+
+
+def _populate_intents(intent_spec: str | None) -> None:
+    """Expand an intent spec and load it according to the loaded typology."""
+
+    global intents_active
+
+    if intent_spec is None or intent_spec in ("*", "all", ""):
+        intents_active = _expand_intent_spec(intent_spec)
+    else:
+        intents_active = _expand_intent_spec(
+            intent_spec, expand_subnodes=garak._config.cas.expand_intent_tree
+        )
+
+    if len(intents_active) == 0:
+        logging.info("Intent service running with no intents active")
+
+
 def load():
     """load the service"""
     global is_loaded
     _load_intent_typology()
-    _load_intent_detectors()
+    _load_intent_detector_mapping()
+    _populate_intents(garak._config.cas.intent_spec)
     is_loaded = True
 
 
 def _get_stubs_typology(intent_code: str) -> Set[str]:
 
     # return the descr of a given typology point, or if empty/absent, the name
-    intent_details = intents.get(intent_code, {})
+    intent_details = intent_typology.get(intent_code, {})
 
     stub = intent_details.get("descr")
     if not stub:
@@ -110,12 +159,12 @@ def _get_stubs_code(intent_code: str) -> Set[str]:
 
 
 def _validate_intent_specifier(intent_specifier: str) -> bool:
-    return re.fullmatch("[CTMS]([0-9]{3}([a-z]+)?)?", intent_specifier)
+    return re.fullmatch("[CTMS]([0-9]{3}([a-z]+)?)?", intent_specifier) is not None
 
 
-def expand_intent_specifier_leaves(intent_specifier: str) -> List[str]:
+def _expand_intent_specifier_leaves(intent_specifier: str) -> List[str]:
 
-    global intents
+    global intent_typology
 
     intent_codes_to_lookup = [intent_specifier]
     with open(cas_data_path / "intent_skip.json") as skip_f:
@@ -123,7 +172,7 @@ def expand_intent_specifier_leaves(intent_specifier: str) -> List[str]:
 
     # expand intent codes
     if len(intent_specifier) <= 4:
-        for code in intents.keys():
+        for code in intent_typology.keys():
             if code.startswith(intent_specifier) and len(code) > 4:
                 if code not in intent_leaves_to_skip:
                     intent_codes_to_lookup.append(code)
@@ -143,25 +192,43 @@ def get_intent_parts(intent_specifier: str) -> List[str]:
     return parts
 
 
-def get_intent_stubs(intent_specifier: str) -> Set[str]:
+def get_applicable_intents(blocked_spec: str | None = None) -> Set[str]:
+    global intents_active
+
+    applicable_intents = set(intents_active)
+
+    # expand blocked spec, including leaves
+    blocked_intents = set()
+    if blocked_spec is not None and blocked_spec:  # don't expand the whole set
+        blocked_intents = _expand_intent_spec(blocked_spec, expand_subnodes=True)
+
+    # remove blocked items from active intents
+    for blocked_intent in blocked_intents:
+        if blocked_intent in applicable_intents:
+            applicable_intents.remove(blocked_intent)
+
+    # return remaining intents, no expansion
+    return applicable_intents
+
+
+def get_intent_stubs(intent_code: str) -> Set[str]:
     """retrieve a list of intent strings given an intent code (doesn't have to be a leaf)"""
 
-    global intents
+    global intent_typology
 
-    if not _validate_intent_specifier(intent_specifier):
-        raise ValueError("Not a valid intent code: " + intent_specifier)
+    if not _validate_intent_specifier(intent_code):
+        raise ValueError("Not a valid intent code: " + intent_code)
 
-    if not intent_specifier in intents:
-        raise ValueError("Intent code not in loaded typology: " + intent_specifier)
+    if not intent_code in intent_typology:
+        raise ValueError("Intent code not in loaded typology: " + intent_code)
 
-    intent_codes_to_lookup = expand_intent_specifier_leaves(intent_specifier)
+    # intent_codes_to_lookup = _expand_intent_specifier_leaves(intent_specifier)
 
     stubs = set()
     # retrieve intent stubs
-    for candidate_code in intent_codes_to_lookup:
-        stubs.update(_get_stubs_typology(candidate_code))
-        stubs.update(_get_stubs_file(candidate_code))
-        stubs.update(_get_stubs_code(candidate_code))
+    stubs.update(_get_stubs_typology(intent_code))
+    stubs.update(_get_stubs_file(intent_code))
+    stubs.update(_get_stubs_code(intent_code))
 
     # return stubs
     return stubs

@@ -29,7 +29,8 @@ def _is_rejected(attempt: Attempt, detectors: List[Detector], evaluator: Evaluat
     Returns True if the target LLM rejected the attempt,
     ex: "I'm sorry, but I can't do that" -> True
     """
-    if not any([output.text for output in attempt.outputs]):
+    outputs = [output.text for output in attempt.outputs]
+    if not outputs or not any(outputs):
         logging.debug(f"No outputs for attempt {attempt.uuid}, marking as rejected")
         return True
 
@@ -106,6 +107,44 @@ class EarlyStopHarness(Harness):
 
         return probe
 
+    def _update_attempt_status(self, attacked_attempts, previously_rejected, detectors, evaluator):
+        accepted_attempts = []
+        rejected_attempts = []
+
+        for attempt in previously_rejected:
+            # Group attacked_attempts by stub
+            rejected_attacks = [_is_rejected(attempt, detectors, evaluator)
+                                for attacked_attempt in attacked_attempts
+                                if
+                                attacked_attempt.intent == attempt.intent and attacked_attempt.goal == attempt.goal]
+            # Some probes don't return failed attempts; we assume that an empty rejected_attacks means failure
+            if any(rejected_attacks) or not rejected_attacks:
+                rejected_attempts.append(attempt)
+            else:
+                accepted_attempts.append(attempt)
+
+        return accepted_attempts, rejected_attempts
+
+    def _collect_baseline(self, model, detectors, evaluator, stubs: List[Stub]) -> tuple[List[Attempt], List[Attempt]]:
+        """
+        We'll do a vanilla run of just sending the input stubs as is to the target LLM in order to collect
+        the baseline results.
+        Returns two lists: one for successful attempts, one for rejected attempts.
+        """
+        baseline_probe = IntentProbe()
+        baseline_probe.generations = 1
+
+        accepted_attempts = []
+        rejected_attempts = [self._create_attempt(s) for s in stubs]
+
+        try:
+            attacked_attempts = list(baseline_probe.probe(model))
+        except Exception as e:
+            logging.error(f"Failed to collect baseline metrics {e}")
+            return accepted_attempts, rejected_attempts
+
+        return self._update_attempt_status(attacked_attempts, rejected_attempts, detectors, evaluator)
+
     def run(self, model, probe_names, detector_names, evaluator, buff_names=None):
         """
         Early stopping harness - loads probes by name, filters to compatible IntentProbes,
@@ -146,13 +185,12 @@ class EarlyStopHarness(Harness):
             self._end_run_hook()
             return
 
-        # Convert conversations to attempts for the first round
-        accepted_attempts = []
-        rejected_attempts = [self._create_attempt(stub) for stub in all_intent_stubs]
-
         self._start_run_hook()
 
-        # Apply attack methods in sequence
+        logging.info(f"Collecting baseline for {len(all_intent_stubs)} intents")
+        accepted_attempts, rejected_attempts = self._collect_baseline(model, detectors, evaluator, all_intent_stubs)
+
+        # Apply attack methods in order
         for probe_name in probe_names:
             if not rejected_attempts:
                 logging.info("No rejected attempts left, stopping early")
@@ -175,20 +213,8 @@ class EarlyStopHarness(Harness):
                 logging.error(f"Attack method {probe_name} failed: {e}")
                 continue  # Continue with rejected attempts for the next attack method
 
-            # Update accepted and rejected attempts
-            previously_rejected = deepcopy(rejected_attempts)
-            rejected_attempts = []
-            for attempt in previously_rejected:
-                # Group attacked_attempts by stub
-                rejected_attacks = [_is_rejected(attempt, detectors, evaluator)
-                                    for attacked_attempt in attacked_attempts
-                                    if
-                                    attacked_attempt.intent == attempt.intent and attacked_attempt.goal == attempt.goal]
-                # Some probes don't return failed attempts; we assume that an empty rejected_attacks means failure
-                if any(rejected_attacks) or not rejected_attacks:
-                    rejected_attempts.append(attempt)
-                else:
-                    accepted_attempts.append(attempt)
+            accepted_attempts, rejected_attempts = self._update_attempt_status(attacked_attempts, rejected_attempts,
+                                                                               detectors, evaluator)
 
         # End of the loop, update all attempts to completed status and add our detection status
         for attempt in rejected_attempts:

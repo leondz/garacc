@@ -1,6 +1,9 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+import pytest
+import typing
+
 import garak.attempt
 import garak.intents
 
@@ -19,20 +22,42 @@ def test_stub_getset():
     s = garak.intents.Stub()
     s.intent = TEST_INTENT
     s.content = TEST_CONTENT
-    assert s.intent == TEST_INTENT, "Stub intent should as per string set in .intent"
-    assert (
-        s.content == TEST_CONTENT
-    ), "Stub content should as per string set in .content"
+    assert s.intent == TEST_INTENT, "Stub intent should be as in .intent"
+    assert s.content == TEST_CONTENT, "Stub content should be as in .content"
 
 
-def test_stub_construct():
-    s = garak.intents.Stub(TEST_INTENT, TEST_CONTENT)
+def test_textstub_basic():
+    t = garak.intents.TextStub()
+    assert t.intent is None, "TextStub intent should be None on raw stub"
+    assert t.content is None, "TextStub content should be None on raw stub"
+
+
+def test_textstub_getset():
+    t = garak.intents.TextStub()
+    t.intent = TEST_INTENT
+    t.content = TEST_CONTENT
     assert (
-        s.intent == TEST_INTENT
-    ), "Stub intent should as per string set in constructor"
+        t.intent == TEST_INTENT
+    ), "TextStub intent should as per string set in .intent"
     assert (
-        s.content == TEST_CONTENT
-    ), "Stub content should as per string set in constructor"
+        t.content == TEST_CONTENT
+    ), "TextStub content should as per string set in .content"
+
+
+def test_textstub_construct():
+    t = garak.intents.TextStub(TEST_INTENT, TEST_CONTENT)
+    assert (
+        t.intent == TEST_INTENT
+    ), "TextStub intent should as per string set in constructor"
+    assert (
+        t.content == TEST_CONTENT
+    ), "TextStub content should as per string set in constructor"
+
+
+def test_textstub_reject_nonstr():
+    t = garak.intents.TextStub()
+    with pytest.raises(TypeError):
+        t.content = 9218
 
 
 def test_convstub_basic():
@@ -84,3 +109,16 @@ def test_convstub_construct_conv():
     assert (
         c.content == TEST_CONV
     ), "ConversationStub content should be Conversation given in Constructor"
+
+
+stub_klasses = [
+    cls
+    for name, cls in garak.intents.__dict__.items()
+    if isinstance(cls, type) and cls.__name__.endswith("Stub")
+]
+
+
+@pytest.mark.parametrize("stub_klass", stub_klasses)
+def test_stubs_hashable(stub_klass):
+    """we're going to be doing set operations"""
+    assert isinstance(stub_klass, typing.Hashable), "Stub classes must be hashable"

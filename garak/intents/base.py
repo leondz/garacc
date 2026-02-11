@@ -25,8 +25,13 @@ class Stub:
     def content(self, value) -> None:
         self._content = value
 
-    def __hash__(self):
+    def __hash__(
+        self,
+    ):  # contentious if intent/content remain mutable after instantiation
         return hash(str(self.intent) + str(self._content))
+
+    def __eq__(self, other):
+        return self.intent == other.intent and self.content == other.content
 
 
 @dataclass
@@ -43,6 +48,9 @@ class TextStub(Stub):
             self._content = value
         else:
             raise TypeError("TextStub only supports str content")
+
+    def __hash__(self):
+        return super().__hash__()
 
 
 @dataclass

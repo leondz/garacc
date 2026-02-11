@@ -182,7 +182,7 @@ class Harness(Configurable):
                 intent_to_detector = {}
 
                 for a in attempt_results_list:
-                    intent = a.notes["intent"]
+                    intent = a.intent
                     if not intent:
                         logging.warning(
                             "probe %s attempt %s seq %s has no or empty intent"
@@ -209,7 +209,7 @@ class Harness(Configurable):
                     d = _plugins.load_plugin(f"detectors.{detector_name}")
                     attempt_subset = []
                     for a in attempt_results_list:
-                        if detector_name in intent_to_detector[a.notes["intent"]]:
+                        if detector_name in intent_to_detector[a.intent]:
                             attempt_subset.append(a)
                     self._run_detector(attempt_subset, d)
                     del d

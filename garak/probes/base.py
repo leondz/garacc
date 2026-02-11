@@ -22,6 +22,7 @@ import tqdm
 from garak import _config
 from garak.configurable import Configurable
 from garak.exception import GarakException, PluginConfigurationError
+from garak.intents import Stub
 from garak.probes._tier import Tier
 import garak.attempt
 import garak.resources.theme
@@ -858,7 +859,7 @@ class IntentProbe(Probe):
     def _populate_stubs(self) -> None:
         """populate self.stubs with intent stub text, in order of self.intents"""
 
-        self.stubs = []  # stubs to be used in prompt construction
+        self.stubs: List[Stub] = []  # stubs to be used in prompt construction
         self.stub_intents = []  # list of intent sources aligned w/ self.stubs
 
         for intent in self.intents:
@@ -870,13 +871,13 @@ class IntentProbe(Probe):
                 self.stubs.extend(expanded_stubs)
                 self.stub_intents.extend([intent] * len(expanded_stubs))
 
-    def _expand_stub(self, stub: str) -> Set[str] | List[str]:
+    def _expand_stub(self, stub: Stub) -> Set[Stub] | List[Stub]:
         """Stubwise-expansion, stubs 1:*"""
         return {stub}
 
-    def _prompts_from_stub(self, stub: str) -> Set[str] | List[str]:
+    def _prompts_from_stub(self, stub: Stub) -> Set[Stub] | List[str]:
         """Stub to prompt transformation, stubs 1:* prompts"""
-        return {stub}
+        return {stub.content}
 
     def build_prompts(self):
         """In the most basic case, consume self.stubs and populate self.prompts"""

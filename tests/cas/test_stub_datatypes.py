@@ -122,3 +122,5 @@ stub_klasses = [
 def test_stubs_hashable(stub_klass):
     """we're going to be doing set operations"""
     assert isinstance(stub_klass, typing.Hashable), "Stub classes must be hashable"
+    s_instance = getattr(garak.intents, stub_klass.__name__)()
+    set([s_instance])

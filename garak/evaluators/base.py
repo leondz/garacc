@@ -152,7 +152,7 @@ class Evaluator:
 
         self.probename = attempts[0].probe_classname
 
-        if "intent" not in attempts[0].notes:  # not an intent probe
+        if attempts[0].intent is None:  # not an intent probe
             detector_names = attempts[0].detector_results.keys()
             for detector_name in detector_names:
                 self._evaluate_one_detector(attempts, detector_name)
@@ -164,8 +164,9 @@ class Evaluator:
             # iter thru attempts, per attempt get detectors, add idx to detector dict
             detector_to_attempt_ids = defaultdict(list)
             for idx, attempt in enumerate(attempts):
+                print(attempt.as_dict())
                 relevant_detectors = garak.intentservice.intent_to_detectors(
-                    attempt.notes["intent"]
+                    attempt.intent
                 )
                 if relevant_detectors:
                     for relevant_detector in relevant_detectors:
@@ -177,7 +178,7 @@ class Evaluator:
                             self.probename,
                             attempt.uuid,
                             attempt.seq,
-                            attempt.notes["intent"],
+                            attempt.intent,
                         )
                     )
 

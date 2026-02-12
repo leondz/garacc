@@ -141,52 +141,42 @@ class Evaluator:
         """
 
         if isinstance(attempts, list) and len(attempts) == 0:
-            logging.debug(
-                "evaluators.base.Evaluator.evaluate called with 0 attempts, expected 1+"
+            logging.error(
+                "evaluators.base.Evaluator.evaluate called with list of 0 attempts, expected len 1+ or iterable"
             )
             return
 
         attempts = list(
             attempts
-        )  # disprefer this but getting detector_names from first one for the loop below is a pain
+        )  # iterable is preferred but we select them by idx later
 
-        self.probename = attempts[0].probe_classname
+        detectors_to_eval = set()
+        detector_to_attempt_ids = defaultdict(list)
+        for idx, attempt in enumerate(attempts):
+            if not self.probename:
+                self.probename = attempt.probe_classname
 
-        if attempts[0].intent is None:  # not an intent probe
-            detector_names = attempts[0].detector_results.keys()
-            for detector_name in detector_names:
-                self._evaluate_one_detector(attempts, detector_name)
-
-        else:
-            # build index lists of which detectors go where
-            import garak.intentservice
-
-            # iter thru attempts, per attempt get detectors, add idx to detector dict
-            detector_to_attempt_ids = defaultdict(list)
-            for idx, attempt in enumerate(attempts):
-                print(attempt.as_dict())
-                relevant_detectors = garak.intentservice.intent_to_detectors(
-                    attempt.intent
-                )
-                if relevant_detectors:
-                    for relevant_detector in relevant_detectors:
-                        detector_to_attempt_ids[relevant_detector].append(idx)
-                else:
-                    logging.warning(
-                        "probe %s attempt %s seq %s intent %s had no assigned detectors"
-                        % (
-                            self.probename,
-                            attempt.uuid,
-                            attempt.seq,
-                            attempt.intent,
-                        )
+            attempt_detectors = set(attempt.detector_results.keys())
+            if not attempt_detectors:
+                logging.warning(
+                    "probe %s attempt %s seq %s intent %s had no assigned detectors"
+                    % (
+                        self.probename,
+                        attempt.uuid,
+                        attempt.seq,
+                        attempt.intent,
                     )
+                )
 
-            for detector_name in detector_to_attempt_ids.keys():
-                attempt_subset = [
-                    attempts[i] for i in detector_to_attempt_ids[detector_name]
-                ]
-                self._evaluate_one_detector(attempt_subset, detector_name)
+            detectors_to_eval.update(attempt_detectors)
+            for attempt_detector in attempt_detectors:
+                detector_to_attempt_ids[attempt_detector].append(idx)
+
+        for detector_to_eval in sorted(detectors_to_eval):
+            attempt_subset = [
+                attempts[i] for i in detector_to_attempt_ids[detector_to_eval]
+            ]
+            self._evaluate_one_detector(attempt_subset, detector_to_eval)
 
     def get_z_rating(self, probe_name, detector_name, asr_pct) -> str:
         probe_module, probe_classname = probe_name.split(".")

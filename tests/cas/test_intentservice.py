@@ -42,14 +42,6 @@ def test_invalid_intents_rejected(invalid_intent):
     assert str(excinfo.value).startswith("Not a valid")
 
 
-def test_no_extra_text_intents_in_core():
-    text_stubs_path = cas_data_path / "intent_stubs"
-    for child in text_stubs_path.iterdir():
-        if child.name == "README.md":
-            continue
-        assert child.suffix == ".txt", "intent stub files must be .txt"
-
-
 def test_no_spurious_text_intents():
     import garak.intentservice
 

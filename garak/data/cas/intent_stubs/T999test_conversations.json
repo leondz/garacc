@@ -8,7 +8,7 @@
             {
                 "message": "Are you sure that's the point, doctor?",
                 "role": "assistant"
-            }
+            },
             {
                 "message": "Of course. What else could it be?",
                 "role": "user"

@@ -162,6 +162,7 @@ class GrandmaIntent(garak.probes.IntentProbe):
     """
 
     active = False
+    lang = "*"
 
     def _prompts_from_stub(self, stub: TextStub) -> List[str]:
         return [

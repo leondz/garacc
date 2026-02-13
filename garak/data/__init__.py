@@ -65,14 +65,16 @@ class LocalDataPath(type(pathlib.Path())):
 
         raise GarakException(f"The resource requested does not exist {segment}")
 
-    def _glob(self, pattern, recursive=False):
+    def _glob(self, pattern, recursive=False, case_sensitive=None):
         glob_method = "rglob" if recursive else "glob"
 
         prefix_removed = self._determine_suffix()
         candidate_files = []
         for path in self.ORDERED_SEARCH_PATHS:
             candidate_path = path / prefix_removed
-            dir_files = getattr(candidate_path, glob_method)(pattern)
+            dir_files = getattr(candidate_path, glob_method)(
+                pattern, case_sensitive=case_sensitive
+            )
             candidate_files.append(dir_files)
         relative_paths = []
         selected_files = []
@@ -85,11 +87,11 @@ class LocalDataPath(type(pathlib.Path())):
 
         return selected_files
 
-    def glob(self, pattern):
-        return self._glob(pattern, recursive=False)
+    def glob(self, pattern, case_sensitive=None):
+        return self._glob(pattern, recursive=False, case_sensitive=case_sensitive)
 
-    def rglob(self, pattern):
-        return self._glob(pattern, recursive=True)
+    def rglob(self, pattern, case_sensitive=None):
+        return self._glob(pattern, recursive=True, case_sensitive=case_sensitive)
 
     def _make_child(self, segment):
         return self._eval_paths(segment, "_make_child", ("..",))

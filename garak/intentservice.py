@@ -126,10 +126,10 @@ def _get_stubs_typology(intent_code: str) -> Set[Stub]:
 
 def glob_stubs(intent_code: str, suffix_expr: str):
     stub_glob = set()
-    stub_glob.update(stub_dir.glob(f"{intent_code}.{suffix_expr}", case_sensitive=False))
-    stub_glob.update(stub_dir.glob(f"{intent_code}_*.{suffix_expr}", case_sensitive=False))
+    stub_glob.update(stub_dir.glob(f"{intent_code}.{suffix_expr}"))
+    stub_glob.update(stub_dir.glob(f"{intent_code}_*.{suffix_expr}"))
     return stub_glob
-    
+
 
 def _get_stubs_txt(intent_code: str) -> Set[Stub]:
     """get stubs for an intent based on text files, one stub per line"""

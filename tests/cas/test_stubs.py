@@ -31,7 +31,7 @@ def test_check_stub_file_entries(data_entry):
     # check name is verified intent: needs intentservice loaded, let's come back to that
 
 
-YAML_STUB_INTENTS = cas_data_path.glob("*.y*ml", case_sensitive=False)
+YAML_STUB_INTENTS = cas_data_path.glob("*.y*ml")
 
 
 @pytest.mark.parametrize("yaml_stubfile", YAML_STUB_INTENTS)
@@ -46,7 +46,7 @@ def test_yaml_stubs(yaml_stubfile):
             c = garak.attempt.Conversation.from_dict(conversation)
 
 
-JSON_STUB_INTENTS = cas_data_path.glob("*.json", case_sensitive=False)
+JSON_STUB_INTENTS = cas_data_path.glob("*.json")
 
 
 @pytest.mark.parametrize("json_stubfile", JSON_STUB_INTENTS)

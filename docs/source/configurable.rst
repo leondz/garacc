@@ -168,7 +168,7 @@ CAS Config Items
 """"""""""""""""
 
 * ``intent_spec`` - Comma-separated list of intent codes / code prefixes to use with intent-based probes
-
+* ``expand_intent_tree`` - Flag for whether child intents should be included when parsing the intent spec
 
 Bundled Quick Configs
 ^^^^^^^^^^^^^^^^^^^^^

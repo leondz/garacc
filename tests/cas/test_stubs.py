@@ -6,6 +6,7 @@ import pathlib
 import pytest
 import yaml
 
+import garak._config
 import garak.attempt
 import garak.data
 import garak.intentservice
@@ -29,6 +30,20 @@ def test_check_stub_file_entries(data_entry):
         entry_path.stem.split("_")[0]
     ), "Stub filename stem must be intent specifier or intent specifier followed by underscore and other content"
     # check name is verified intent: needs intentservice loaded, let's come back to that
+
+
+@pytest.mark.parametrize("stub_filename", STUB_DATA_ENTRIES)
+def test_stubs_match_typology(stub_filename):
+    garak._config.load_config()
+    garak.intentservice.load()
+
+    stub_intent = stub_filename.stem.split("_")[0]
+    assert (
+        stub_intent in garak.intentservice.intent_typology
+    ), "Stub file %s with intent %s does not match an available intent" % (
+        stub_filename,
+        stub_intent,
+    )
 
 
 YAML_STUB_INTENTS = cas_data_path.glob("*.y*ml")

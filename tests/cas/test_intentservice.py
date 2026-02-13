@@ -75,23 +75,6 @@ def test_typology_intents_start_verb():
             )
 
 
-def test_text_intents_match_typology():
-    import garak.intentservice
-
-    garak._config.load_config()
-
-    garak.intentservice.load()
-
-    text_stubs_path = cas_data_path / "intent_stubs"
-    for child in text_stubs_path.iterdir():
-        if child.name == "README.md":
-            continue
-        child_without_extn = child.stem
-        assert child_without_extn in garak.intentservice.intent_typology, (
-            "Intent file %s does not match an available intent" % child
-        )
-
-
 INTENT_MODULES = [
     module.name.replace(".py", "")
     for module in (garak._config.transient.package_dir / "intents").iterdir()

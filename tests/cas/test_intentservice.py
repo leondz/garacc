@@ -103,7 +103,7 @@ def test_text_intents_match_typology():
 INTENT_MODULES = [
     module.name.replace(".py", "")
     for module in (garak._config.transient.package_dir / "intents").iterdir()
-    if module.name not in ("base.py", "__pycache__")
+    if module.name not in ("base.py", "__pycache__", "__init__.py")
 ]
 
 

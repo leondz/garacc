@@ -199,6 +199,7 @@ def _get_stubs_yaml(intent_code: str) -> Set[Stub]:
                             logging.warning(
                                 "skipping stub entry %s", repr(stub_obj_entry)
                             )
+    return stubs
 
 
 def _get_stubs_code(intent_code: str) -> Set[Stub]:

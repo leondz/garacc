@@ -62,8 +62,6 @@ def _expand_intent_spec(
     intent typology is used to expand non-leaf intent IDs to include
     child nodes."""
 
-    global intent_typology
-
     expanded_intents = set()
 
     if intent_spec is None or intent_spec in ("*", "all", ""):
@@ -235,8 +233,6 @@ def validate_intent_specifier(intent_specifier: str) -> bool:
 def _expand_intent_specifier_leaves(intent_specifier: str) -> List[str]:
     """expand an intent specified into itself plus child nodes"""
 
-    global intent_typology
-
     intent_codes_to_lookup = [intent_specifier]
     with open(cas_data_path / "intent_skip.json") as skip_f:
         intent_leaves_to_skip = json.load(skip_f)
@@ -271,7 +267,6 @@ def get_intent_parts(intent_specifier: str) -> List[str]:
 def get_applicable_intents(blocked_spec: str | None = None) -> Set[str]:
     """return the set of intents configured in the service, minus those
     in block_spec (and its items' children)"""
-    global intents_active
 
     applicable_intents = set(intents_active)
 
@@ -291,8 +286,6 @@ def get_applicable_intents(blocked_spec: str | None = None) -> Set[str]:
 
 def get_intent_stubs(intent_code: str, text_only=True, conv_only=False) -> Set[Stub]:
     """retrieve a list of intent strings given an intent code (doesn't have to be a leaf)"""
-
-    global intent_typology
 
     if not validate_intent_specifier(intent_code):  # data sanitation before fs access
         raise ValueError("Not a valid intent code: " + intent_code)
@@ -324,7 +317,6 @@ def get_intent_stubs(intent_code: str, text_only=True, conv_only=False) -> Set[S
 def intent_to_detectors(intent_specifier: str) -> Set[str] | None:
     """return the set of detectors applicable to a single intent"""
 
-    global intent_detectors
     intent_parts = get_intent_parts(intent_specifier)
 
     detectors = None

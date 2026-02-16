@@ -197,13 +197,15 @@ class Evaluator:
             )
 
         for intent in intent_detector_groups:
+            evaluation_count = 0
             pass_rates = []
             intent_relevant_detectors = intent_detector_groups[intent]
             for detector_name in intent_relevant_detectors:
-                if detector_results[detector_name]["total_evaluated"] > 0:
+                total_evaluated = detector_results[detector_name]["total_evaluated"]
+                evaluation_count += total_evaluated
+                if total_evaluated > 0:
                     pass_rate = (
-                        detector_results[detector_name]["passed"]
-                        / detector_results[detector_name]["total_evaluated"]
+                        detector_results[detector_name]["passed"] / total_evaluated
                     )
                     pass_rates.append(pass_rate)
 
@@ -216,12 +218,14 @@ class Evaluator:
 
             # write intent log entry
             intent_log_entry = {
-                "entry_type": "eval intent",
+                "entry_type": "eval_intent",
                 "probe": self.probename,
                 "intent": intent,
                 "score": intent_score,
                 "aggregation": _config.reporting.group_aggregation_function,
-                "n": len(pass_rates),
+                "n_detectors": len(pass_rates),
+                "n_evaluations": evaluation_count,
+                "detectors_used": list(intent_relevant_detectors),
             }
 
             _config.transient.reportfile.write(json.dumps(intent_log_entry) + "\n")

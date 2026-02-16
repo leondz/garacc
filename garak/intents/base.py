@@ -80,3 +80,7 @@ class ConversationStub(Stub):
 
     def __hash__(self):
         return hash(str(self.intent) + str(repr(self._content)))
+
+    def from_textstub(self, t: TextStub):
+        self.intent = t.intent
+        self.content = garak.attempt.Conversation([garak.attempt.Message(t.content)])

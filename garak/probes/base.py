@@ -875,9 +875,11 @@ class IntentProbe(Probe):
         """Stubwise-expansion, stubs 1:*"""
         return {stub}
 
-    def _prompts_from_stub(self, stub: Stub) -> Set[Stub] | List[str]:
+    def _prompts_from_stub(
+        self, stub: Stub
+    ) -> List[str] | List[garak.attempt.Conversation]:
         """Stub to prompt transformation, stubs 1:* prompts"""
-        return {stub.content}
+        return [stub.content]
 
     def build_prompts(self):
         """In the most basic case, consume self.stubs and populate self.prompts"""

@@ -13,17 +13,6 @@ translated responses, which are then reverse-translated back to English for
 evaluation.
 
 This module uses garak's langservice infrastructure for translation.
-Configuration example for local translation models:
-```yaml
-run:
-  langproviders:
-    - language: "en,zh"
-      model_type: "local.LocalHFTranslator"
-      model_name: "Helsinki-NLP/opus-mt-zh-en"
-    - language: "zh,en"
-      model_type: "local.LocalHFTranslator"
-      model_name: "Helsinki-NLP/opus-mt-en-zh"
-```
 
 Relative paper:
 - https://arxiv.org/abs/2310.02446 - Multilingual Jailbreak Challenges in LLMs

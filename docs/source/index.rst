@@ -59,16 +59,15 @@ Check out the :doc:`usage` section for further information, including :doc:`inst
    generators
    harnesses
    interactive
-   langservice
    payloads
    probes
-   report
+   analyze
    _config
    _plugins
    cas
-   analyze
-   cas
-   intentservice
+   report
+   services.intentservice
+   services.langservice
 
 
 .. toctree::

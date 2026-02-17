@@ -6,7 +6,7 @@ import pytest
 
 import garak._plugins
 from garak.data import path as data_path
-from garak.intentservice import validate_intent_specifier
+from garak.services.intentservice import validate_intent_specifier
 
 CAS_PATH = data_path / "cas"
 
@@ -14,9 +14,7 @@ INTENT_DETECTORS_PATH = CAS_PATH / "intent_detectors.json"
 TRAIT_TYPOLOGY_PATH = CAS_PATH / "trait_typology.json"
 INTENT_SKIP_PATH = CAS_PATH / "intent_skip.json"
 
-DETECTOR_LIST = [
-    d for d, _ in garak._plugins.enumerate_plugins("detectors")
-]
+DETECTOR_LIST = [d for d, _ in garak._plugins.enumerate_plugins("detectors")]
 
 
 # would prefer to run tests on these before making their contents available -
@@ -29,6 +27,7 @@ with open(INTENT_DETECTORS_PATH, "r", encoding="utf-8") as idf:
 
 with open(INTENT_SKIP_PATH, "r", encoding="utf-8") as isf:
     INTENTS_TO_SKIP = json.load(isf)
+
 
 @pytest.mark.parametrize("trait_code", TRAIT_TYPOLOGY.keys())
 def test_intents_valid(trait_code):

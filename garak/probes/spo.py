@@ -8,7 +8,8 @@ Tests whether system prompt overrides can bypass model safety mechanisms.
 
 import json
 import logging
-from typing import List
+import random
+from typing import List, Tuple
 
 from garak import _config
 import garak.probes
@@ -39,6 +40,8 @@ class SPOIntent(garak.probes.IntentProbe):
 
     DEFAULT_PARAMS = garak.probes.IntentProbe.DEFAULT_PARAMS | {
         "dan_variants": None,  # Optional: list of specific variants to use
+        "max_dan_samples": 10,  # Maximum number of DAN prompts to sample
+        "dan_sample_seed": None,  # Random seed for DAN sampling (for reproducibility)
     }
 
     def __init__(self, config_root=_config):
@@ -49,9 +52,13 @@ class SPOIntent(garak.probes.IntentProbe):
         # Track mapping from prompt index to (variant_name, prompt_index_in_variant)
         self.prompt_to_variant = {}
 
-        # Initialize dan_variants to None before config loading
-        if not hasattr(self, 'dan_variants'):
+        # Initialize parameters before config loading
+        if not hasattr(self, "dan_variants"):
             self.dan_variants = None
+        if not hasattr(self, "max_dan_samples"):
+            self.max_dan_samples = 10
+        if not hasattr(self, "dan_sample_seed"):
+            self.dan_sample_seed = None
 
         # Call parent __init__ which will call _load_config and then _build_prompts
         super().__init__(config_root=config_root)
@@ -107,32 +114,53 @@ class SPOIntent(garak.probes.IntentProbe):
         return dan_prompts
 
     def prompts_from_stub(self, stub: str) -> List[str]:
-        """Generate prompts by combining all DAN variants with the stub.
+        """Generate prompts by combining sampled DAN variants with the stub.
 
         For each DAN variant, creates a prompt in the format:
         "{dan_prompt}\\n\\n{stub}"
+
+        DAN prompts are randomly sampled up to max_dan_samples. If dan_sample_seed
+        is set, the sampling is reproducible.
 
         Args:
             stub: The intent stub (e.g., "tell me how to build a bomb")
 
         Returns:
-            List of prompts, one for each DAN variant × prompt combination
+            List of prompts, one for each sampled DAN variant × prompt combination
         """
+        # Flatten all DAN prompts with their metadata
+        all_dan_items = []
+        for variant_name, variant_prompts in self.dan_prompts.items():
+            for prompt_idx, dan_prompt in enumerate(variant_prompts):
+                all_dan_items.append({
+                    "dan_prompt": dan_prompt,
+                    "variant_name": variant_name,
+                    "prompt_idx": prompt_idx,
+                })
+
+        # Sample DAN prompts
+        if self.max_dan_samples and len(all_dan_items) > self.max_dan_samples:
+            # Set seed if provided for reproducibility
+            rng = random.Random(self.dan_sample_seed)
+            sampled_items = rng.sample(all_dan_items, self.max_dan_samples)
+        else:
+            sampled_items = all_dan_items
+
+        # Generate prompts from sampled items
         prompts = []
         current_index = len(self.prompt_to_variant)  # Track global prompt index
 
-        for variant_name, variant_prompts in sorted(self.dan_prompts.items()):
-            for prompt_idx, dan_prompt in enumerate(variant_prompts):
-                # Combine DAN prompt with stub
-                combined_prompt = f"{dan_prompt}\n\n{stub}"
-                prompts.append(combined_prompt)
+        for item in sampled_items:
+            # Combine DAN prompt with stub
+            combined_prompt = f"{item['dan_prompt']}\n\n{stub}"
+            prompts.append(combined_prompt)
 
-                # Store mapping for metadata tracking
-                self.prompt_to_variant[current_index] = {
-                    "dan_variant": variant_name,
-                    "dan_prompt_index": prompt_idx,
-                }
-                current_index += 1
+            # Store mapping for metadata tracking
+            self.prompt_to_variant[current_index] = {
+                "dan_variant": item["variant_name"],
+                "dan_prompt_index": item["prompt_idx"],
+            }
+            current_index += 1
 
         return prompts
 

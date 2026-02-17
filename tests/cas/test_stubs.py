@@ -57,8 +57,15 @@ def test_yaml_stubs(yaml_stubfile):
             stubs, list
         ), f"YAML stubfiles must have a list as top level object"
         assert len(stubs) > 0, f"Stubfile must have at least one entry"
-        for conversation in stubs:
-            c = garak.attempt.Conversation.from_dict(conversation)
+        for entry in stubs:
+            if isinstance(entry, str):
+                assert len(entry) > 0, "Blank entries not permitted"
+            elif isinstance(entry, dict):
+                c = garak.attempt.Conversation.from_dict(conversation)
+            else:
+                assert (
+                    False
+                ), f"Stubfile has entry of unsupported type, got: {type(entry).__name__}"
 
 
 JSON_STUB_INTENTS = cas_data_path.glob("*.json")

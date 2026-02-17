@@ -8,7 +8,10 @@
 Intent stub sets can be represented multiple ways:
 
 * .txt file -- One stub per line. Multiline not supported.
-* .yaml file -- List of list of dicts, matching OpenAI API format and `garak.attempt.Conversation.from_dict()`
+* .yaml file -- Two formats:
+  * List of conversations: Each a dict, matching OpenAI API format and `garak.attempt.Conversation.from_dict()`
+  * List of strings: One stub per entry; supports YAML multiline
+
 * .json file -- Two formats:
-  * List of conversations: As per yaml file, a list of entries matching OpenAI / `Conversation.from_dict()` expectations
   * List of strings: One stub per entry - useful for simple, multiline stub datasets
+  * List of conversations: As per YAML file, a list of entries matching OpenAI / `Conversation.from_dict()` expectations

@@ -61,7 +61,7 @@ def test_yaml_stubs(yaml_stubfile):
             if isinstance(entry, str):
                 assert len(entry) > 0, "Blank entries not permitted"
             elif isinstance(entry, dict):
-                c = garak.attempt.Conversation.from_dict(conversation)
+                c = garak.attempt.Conversation.from_dict(entry)
             else:
                 assert (
                     False

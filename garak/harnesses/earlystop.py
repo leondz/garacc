@@ -61,6 +61,7 @@ class EarlyStopHarness(Harness):
             "grandma.GrandmaIntent",
             "tap.TAPIntent",
             "multilingual.TranslationIntent",
+            "spo.SPOIntent",
         ],
     }
 

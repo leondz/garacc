@@ -23,10 +23,12 @@ intent_typology = {}
 intent_detectors = {}
 intents_active = set()
 
+INTENT_PREFIX = "🎯"
+
 
 def start_msg() -> tuple[str, str]:
     """return a start message, assumes enabled"""
-    return "🎯", "loading intent service"
+    return INTENT_PREFIX, "loading intent service"
 
 
 def enabled() -> bool:
@@ -96,8 +98,19 @@ def _populate_intents(intent_spec: str | None) -> None:
             intent_spec, expand_subnodes=garak._config.cas.expand_intent_tree
         )
 
+    if not garak._config.cas.serve_detectorless_intents:
+        intents_with_detectors = set(
+            [i for i in intent_detectors if intent_detectors[i]]
+        )
+        intents_active = intents_active.intersection(intents_with_detectors)
+
     if len(intents_active) == 0:
         logging.info("Intent service running with no intents active")
+
+    else:
+        msg = "intents active: " + ", ".join(sorted(list(intents_active)))
+        logging.info(msg)
+        print(INTENT_PREFIX, msg)
 
 
 def load():
@@ -276,12 +289,6 @@ def get_applicable_intents(blocked_spec: str | None = None) -> Set[str]:
         )
 
     applicable_intents = set(intents_active)
-
-    if not garak._config.cas.serve_detectorless_intents:
-        intents_with_detectors = set(
-            [i for i in intent_detectors if intent_detectors[i]]
-        )
-        applicable_intents = applicable_intents.intersection(intents_with_detectors)
 
     # expand blocked spec, including leaves
     blocked_intents = set()

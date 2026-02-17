@@ -22,6 +22,7 @@ cas:
   intent_spec: S
   expand_intent_tree: True
   trust_code_stubs: False
+  serve_detectorless_intents: False
 
 plugins:
   target_type:

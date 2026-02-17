@@ -267,7 +267,8 @@ def get_intent_parts(intent_specifier: str) -> List[str]:
 
 def get_applicable_intents(blocked_spec: str | None = None) -> Set[str]:
     """return the set of intents configured in the service, minus those
-    in block_spec (and its items' children)"""
+    in block_spec (and its items' children), optionally minus those for
+    which there are no detectors configured"""
 
     if not is_loaded:
         raise GarakException(
@@ -275,6 +276,12 @@ def get_applicable_intents(blocked_spec: str | None = None) -> Set[str]:
         )
 
     applicable_intents = set(intents_active)
+
+    if not garak._config.cas.serve_detectorless_intents:
+        intents_with_detectors = set(
+            [i for i in intent_detectors if intent_detectors[i]]
+        )
+        applicable_intents = applicable_intents.intersection(intents_with_detectors)
 
     # expand blocked spec, including leaves
     blocked_intents = set()

@@ -169,6 +169,7 @@ CAS Config Items
 
 * ``intent_spec`` - Comma-separated list of intent codes / code prefixes to use with intent-based probes
 * ``expand_intent_tree`` - Flag for whether child intents should be included when parsing the intent spec
+* ``serve_detectorless_intents`` - Should the intent service provide intents for which there are no configured detectors?
 * ``trust_code_stubs`` - Execute code for stub generation, as well as use static data sources
 
 Bundled Quick Configs

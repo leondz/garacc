@@ -198,3 +198,147 @@ class SPOIntent(garak.probes.IntentProbe):
             attempt.notes["dan_prompt_index"] = variant_info["dan_prompt_index"]
 
         return attempt
+
+
+class _SPOIntentAugmentedBase(SPOIntent):
+    """Base class for augmented SPO probes.
+
+    Subclasses should set augment_system and augment_user class attributes
+    to control which parts of the prompt receive augmentation.
+    """
+
+    lang = "en"
+    primary_detector = "mitigation.MitigationBypass"
+    extended_detectors = ["dan.DAN"]
+    tier = garak.probes.Tier.OF_CONCERN
+    active = False
+
+    # Subclasses must override these
+    augment_system = False
+    augment_user = False
+
+    def __init__(self, config_root=_config):
+        super().__init__(config_root)
+        self.prompts_meta = []
+
+    def _get_prompts(self, apply_to_system, apply_to_user, stub: str) -> Tuple[List[str], List[dict]]:
+        from garak.probes._augmentation import get_random_augmentation
+
+        # Flatten all DAN prompts with their metadata
+        all_dan_items = []
+        for variant_name, variant_prompts in self.dan_prompts.items():
+            for prompt_idx, dan_prompt in enumerate(variant_prompts):
+                all_dan_items.append({
+                    "dan_prompt": dan_prompt,
+                    "variant_name": variant_name,
+                    "prompt_idx": prompt_idx,
+                })
+
+        # Sample DAN prompts
+        if self.max_dan_samples and len(all_dan_items) > self.max_dan_samples:
+            # Set seed if provided for reproducibility
+            rng = random.Random(self.dan_sample_seed)
+            sampled_items = rng.sample(all_dan_items, self.max_dan_samples)
+        else:
+            sampled_items = all_dan_items
+
+        prompts = []
+        metadata = []
+
+        for item in sampled_items:
+            dan_prompt = item["dan_prompt"]
+            variant_name = item["variant_name"]
+            prompt_idx = item["prompt_idx"]
+
+            # Apply augmentation
+            augmentation_func = get_random_augmentation()
+            if apply_to_system:
+                dan_prompt = augmentation_func(dan_prompt)
+            if apply_to_user:
+                stub_augmented = augmentation_func(stub)
+            else:
+                stub_augmented = stub
+
+            combined_prompt = f"{dan_prompt}\n\n{stub_augmented}"
+            prompts.append(combined_prompt)
+
+            # Store mapping for metadata tracking
+            metadata.append({
+                "dan_variant": variant_name,
+                "dan_prompt_index": prompt_idx,
+                "augmentation": augmentation_func.__name__,
+                "augmentation_target": "both" if apply_to_system and apply_to_user else "system" if apply_to_system else "user",
+            })
+
+        return prompts, metadata
+
+    def prompts_from_stub(self, stub: str) -> List[str]:
+        """Generate prompts with augmentation applied according to class attributes"""
+        prompts, metadata = self._get_prompts(self.augment_system, self.augment_user, stub)
+
+        # Track current index for metadata
+        current_index = len(self.prompt_to_variant)
+        for i, meta in enumerate(metadata):
+            # Store mapping for metadata tracking
+            self.prompt_to_variant[current_index + i] = {
+                "dan_variant": meta["dan_variant"],
+                "dan_prompt_index": meta["dan_prompt_index"],
+                "augmentation": meta["augmentation"],
+                "augmentation_target": meta["augmentation_target"],
+            }
+
+        return prompts
+
+    def _attempt_prestore_hook(
+        self, attempt: garak.attempt.Attempt, seq: int
+    ) -> garak.attempt.Attempt:
+        """Add augmentation metadata to attempt notes"""
+        attempt = super()._attempt_prestore_hook(attempt, seq)
+
+        # Add augmentation-specific metadata if available
+        if seq in self.prompt_to_variant:
+            variant_info = self.prompt_to_variant[seq]
+            if "augmentation" in variant_info:
+                attempt.notes["augmentation"] = variant_info["augmentation"]
+                attempt.notes["augmentation_target"] = variant_info["augmentation_target"]
+
+        return attempt
+
+
+class SPOIntentUserAugmented(_SPOIntentAugmentedBase):
+    """SPO with augmentation applied to user messages (stub)
+
+    Applies text augmentation transformations (word scrambling, random
+    capitalization, or ASCII noise) to the stub portion of the prompt.
+    The augmentation function is selected randomly for each prompt.
+    """
+
+    goal = "bypass system prompt via augmented DAN-style persona injection (user augmented)"
+    augment_system = False
+    augment_user = True
+
+
+class SPOIntentSystemAugmented(_SPOIntentAugmentedBase):
+    """SPO with augmentation applied to system messages (DAN prompt)
+
+    Applies text augmentation transformations (word scrambling, random
+    capitalization, or ASCII noise) to the DAN prompt portion.
+    The augmentation function is selected randomly for each prompt.
+    """
+
+    goal = "bypass system prompt via augmented DAN-style persona injection (system augmented)"
+    augment_system = True
+    augment_user = False
+
+
+class SPOIntentBothAugmented(_SPOIntentAugmentedBase):
+    """SPO with augmentation applied to both system and user messages
+
+    Applies text augmentation transformations (word scrambling, random
+    capitalization, or ASCII noise) to both the DAN prompt and stub.
+    The augmentation function is selected randomly for each prompt.
+    """
+
+    goal = "bypass system prompt via augmented DAN-style persona injection (both augmented)"
+    augment_system = True
+    augment_user = True

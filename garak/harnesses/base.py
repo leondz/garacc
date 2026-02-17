@@ -22,7 +22,6 @@ from garak import _config
 from garak import _plugins
 from garak.configurable import Configurable
 import garak.attempt
-import garak.intentservice
 import garak.probes.base
 
 
@@ -33,10 +32,10 @@ def _initialize_runtime_services():
 
     # TODO: this block may be gated in the future to ensure it is only run once. At this time
     # only one harness will execute per run so the output here is reasonable.
-    service_names = ["garak.langservice", "garak.intentservice"]
+    service_names = ["langservice", "intentservice"]
     for service_name in service_names:
         logging.info("service import: " + service_name)
-        service = importlib.import_module(service_name)
+        service = importlib.import_module(f"garak.services.{service_name}")
         try:
             if service.enabled():
                 symbol, msg = service.start_msg()
@@ -45,7 +44,7 @@ def _initialize_runtime_services():
                     print(f"{symbol} {msg}")
                 service.load()
         except GarakException as e:
-            logging.critical(f"❌ {service_name} setup failed! ❌", exc_info=e)
+            logging.critical("❌ %s setup failed!" % service_name, exc_info=e)
             raise e
 
 
@@ -190,8 +189,11 @@ class Harness(Configurable):
                         )
                     intents_observed.add(intent)
 
+                if intents_observed:
+                    from garak.services import intentservice
+
                 for intent_observed in intents_observed:
-                    detectors = garak.intentservice.intent_to_detectors(intent_observed)
+                    detectors = intentservice.intent_to_detectors(intent_observed)
                     if detectors is None:
                         logging.warning(
                             "No detectors specified for intent %s" % intent_observed

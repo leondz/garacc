@@ -140,13 +140,13 @@ class Probe(Configurable):
         self.reverse_langprovider = self._get_reverse_langprovider()
 
     def _get_langprovider(self):
-        from garak.langservice import get_langprovider
+        from garak.services.langservice import get_langprovider
 
         langprovider_instance = get_langprovider(self.lang)
         return langprovider_instance
 
     def _get_reverse_langprovider(self):
-        from garak.langservice import get_langprovider
+        from garak.services.langservice import get_langprovider
 
         langprovider_instance = get_langprovider(self.lang, reverse=True)
         return langprovider_instance
@@ -831,7 +831,7 @@ class IterativeProbe(Probe):
 class IntentProbe(Probe):
     """Probe implementing a technique that tests over a range of intents"""
 
-    import garak.intentservice
+    import garak.services.intentservice
 
     skip_root_intents = True
     blocked_intent_spec = ""
@@ -852,7 +852,7 @@ class IntentProbe(Probe):
     def _populate_intents(self) -> None:
         # work out which intents this probe will process
         # should be leaves
-        self.intents = garak.intentservice.get_applicable_intents(
+        self.intents = garak.services.intentservice.get_applicable_intents(
             blocked_spec=self.blocked_intent_spec
         )
 
@@ -865,7 +865,7 @@ class IntentProbe(Probe):
         for intent in self.intents:
             if self.skip_root_intents and len(intent) == 1:
                 continue
-            intent_stubs = garak.intentservice.get_intent_stubs(intent)
+            intent_stubs = garak.services.intentservice.get_intent_stubs(intent)
             for intent_stub in intent_stubs:
                 expanded_stubs = self._expand_stub(intent_stub)
                 self.stubs.extend(expanded_stubs)

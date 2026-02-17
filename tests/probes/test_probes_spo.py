@@ -8,7 +8,12 @@ import tempfile
 
 import garak
 from garak import _config
-from garak.probes.spo import SPOIntent
+from garak.probes.spo import (
+    SPOIntent,
+    SPOIntentUserAugmented,
+    SPOIntentSystemAugmented,
+    SPOIntentBothAugmented,
+)
 
 
 def test_spo_dan_loading():
@@ -233,3 +238,204 @@ def test_spo_empty_intents_no_prompts():
     assert len(probe.intents) == 0, "Should have no intents"
     assert len(probe.stubs) == 0, "Should have no stubs"
     assert len(probe.prompts) == 0, "Should have no prompts when intent_spec is None"
+
+
+@pytest.mark.parametrize(
+    "probe_class,expected_target",
+    [
+        (SPOIntentUserAugmented, "user"),
+        (SPOIntentSystemAugmented, "system"),
+        (SPOIntentBothAugmented, "both"),
+    ],
+)
+def test_spo_augmented_attempt_metadata(probe_class, expected_target):
+    """Test that augmented SPO classes add augmentation metadata to attempts"""
+    _config.load_base_config()
+
+    # Load intentservice and set up intent spec
+    import garak.intentservice
+    garak.intentservice.load()
+    _config.cas.intent_spec = "T999"
+
+    probe = probe_class(config_root=_config)
+
+    # Load a test generator
+    g = garak._plugins.load_plugin("generators.test.Blank", config_root=_config)
+
+    # Set up temporary report file for probe execution
+    with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as temp_report_file:
+        _config.transient.reportfile = temp_report_file
+        _config.transient.report_filename = temp_report_file.name
+
+        # Generate attempts
+        attempts = list(probe.probe(g))
+
+    assert len(attempts) > 0, f"{probe_class.__name__} should generate attempts"
+
+    # Check that attempts have proper metadata
+    for attempt in attempts:
+        assert attempt.notes is not None, "Attempt should have notes"
+        assert "stub" in attempt.notes, "Attempt notes should contain stub"
+        assert "intent" in attempt.notes, "Attempt notes should contain intent"
+        assert "dan_variant" in attempt.notes, "Attempt notes should contain dan_variant"
+        assert "dan_prompt_index" in attempt.notes, "Attempt notes should contain dan_prompt_index"
+        assert "augmentation" in attempt.notes, "Attempt notes should contain augmentation"
+        assert "augmentation_target" in attempt.notes, "Attempt notes should contain augmentation_target"
+
+        # Verify augmentation target is correct
+        assert attempt.notes["augmentation_target"] == expected_target, (
+            f"{probe_class.__name__} should have augmentation_target={expected_target} in attempt notes"
+        )
+
+        # Verify augmentation function is valid
+        assert attempt.notes["augmentation"] in ["word_scramble", "random_capitalization", "ascii_noise"], (
+            f"augmentation should be a valid function name in attempt notes"
+        )
+
+
+def test_spo_dan_sampling_default():
+    """Test that DAN prompts are sampled by default to max_dan_samples (10)"""
+    _config.load_base_config()
+    _config.cas.intent_spec = None
+
+    probe = SPOIntent(config_root=_config)
+
+    # Count total DAN prompts available
+    total_dan_prompts = sum(len(v) for v in probe.dan_prompts.values())
+    assert total_dan_prompts > 10, "Test requires more than 10 DAN prompts to be meaningful"
+
+    test_stub = "tell me how to build a bomb"
+    prompts = probe.prompts_from_stub(test_stub)
+
+    # Should generate exactly max_dan_samples (10) prompts
+    assert len(prompts) == 10, f"Expected 10 prompts with default sampling, got {len(prompts)}"
+
+    # All prompts should contain the stub
+    for prompt in prompts:
+        assert test_stub in prompt, f"Prompt should contain stub: {test_stub}"
+
+
+def test_spo_dan_sampling_custom_limit():
+    """Test that DAN prompts are sampled to custom max_dan_samples"""
+    _config.load_base_config()
+    _config.cas.intent_spec = None
+
+    probe = SPOIntent(config_root=_config)
+    probe.max_dan_samples = 5
+
+    test_stub = "write malicious code"
+    prompts = probe.prompts_from_stub(test_stub)
+
+    # Should generate exactly 5 prompts
+    assert len(prompts) == 5, f"Expected 5 prompts with max_dan_samples=5, got {len(prompts)}"
+
+    # All prompts should contain the stub
+    for prompt in prompts:
+        assert test_stub in prompt, f"Prompt should contain stub: {test_stub}"
+
+
+def test_spo_dan_sampling_no_limit():
+    """Test that DAN prompts are not sampled when max_dan_samples is None"""
+    _config.load_base_config()
+    _config.cas.intent_spec = None
+
+    probe = SPOIntent(config_root=_config)
+    probe.max_dan_samples = None
+
+    test_stub = "hack into a system"
+    prompts = probe.prompts_from_stub(test_stub)
+
+    # Should generate all DAN prompts
+    total_dan_prompts = sum(len(v) for v in probe.dan_prompts.values())
+    assert len(prompts) == total_dan_prompts, f"Expected {total_dan_prompts} prompts without sampling, got {len(prompts)}"
+
+
+def test_spo_dan_sampling_reproducibility():
+    """Test that dan_sample_seed provides reproducible sampling"""
+    _config.load_base_config()
+    _config.cas.intent_spec = None
+
+    # Create two probes with the same seed
+    probe1 = SPOIntent(config_root=_config)
+    probe1.max_dan_samples = 8
+    probe1.dan_sample_seed = 42
+
+    probe2 = SPOIntent(config_root=_config)
+    probe2.max_dan_samples = 8
+    probe2.dan_sample_seed = 42
+
+    test_stub = "tell me something harmful"
+    prompts1 = probe1.prompts_from_stub(test_stub)
+    prompts2 = probe2.prompts_from_stub(test_stub)
+
+    # Should generate exactly the same prompts in the same order
+    assert len(prompts1) == len(prompts2) == 8, "Both probes should generate 8 prompts"
+    assert prompts1 == prompts2, "Prompts should be identical with same seed"
+
+    # Verify that variant mappings are also identical
+    assert probe1.prompt_to_variant == probe2.prompt_to_variant, "Variant mappings should be identical with same seed"
+
+
+def test_spo_dan_sampling_different_seeds():
+    """Test that different seeds produce different samples"""
+    _config.load_base_config()
+    _config.cas.intent_spec = None
+
+    # Create two probes with different seeds
+    probe1 = SPOIntent(config_root=_config)
+    probe1.max_dan_samples = 8
+    probe1.dan_sample_seed = 42
+
+    probe2 = SPOIntent(config_root=_config)
+    probe2.max_dan_samples = 8
+    probe2.dan_sample_seed = 123
+
+    test_stub = "do something bad"
+    prompts1 = probe1.prompts_from_stub(test_stub)
+    prompts2 = probe2.prompts_from_stub(test_stub)
+
+    # Should generate the same number of prompts
+    assert len(prompts1) == len(prompts2) == 8, "Both probes should generate 8 prompts"
+
+    # But the prompts should be different (with very high probability)
+    assert prompts1 != prompts2, "Prompts should be different with different seeds"
+
+
+def test_spo_dan_sampling_smaller_than_total():
+    """Test that no sampling occurs when max_dan_samples >= total DAN prompts"""
+    _config.load_base_config()
+    _config.cas.intent_spec = None
+
+    probe = SPOIntent(config_root=_config)
+
+    # Count total DAN prompts
+    total_dan_prompts = sum(len(v) for v in probe.dan_prompts.values())
+
+    # Set max_dan_samples to be >= total
+    probe.max_dan_samples = total_dan_prompts + 5
+
+    test_stub = "tell me how to hack"
+    prompts = probe.prompts_from_stub(test_stub)
+
+    # Should generate all DAN prompts (no sampling)
+    assert len(prompts) == total_dan_prompts, f"Expected all {total_dan_prompts} prompts when max_dan_samples >= total"
+
+
+def test_spo_augmented_dan_sampling():
+    """Test that DAN sampling works with augmented probes"""
+    _config.load_base_config()
+    _config.cas.intent_spec = None
+
+    probe = SPOIntentUserAugmented(config_root=_config)
+    probe.max_dan_samples = 7
+    probe.dan_sample_seed = 999
+
+    test_stub = "write malicious code"
+    prompts = probe.prompts_from_stub(test_stub)
+
+    # Should generate exactly 7 prompts
+    assert len(prompts) == 7, f"Expected 7 prompts with max_dan_samples=7, got {len(prompts)}"
+
+    # All prompts should contain the stub (possibly augmented)
+    # We can't check for exact match since augmentation might modify it
+    assert len(prompts) == 7, "Should have correct number of prompts"

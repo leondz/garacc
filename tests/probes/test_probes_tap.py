@@ -62,9 +62,10 @@ def test_tap_intent():
     _config.load_base_config()
 
     # Load intentservice and set up intent spec
-    import garak.intentservice
-    garak.intentservice.load()
+    from garak.services import intentservice
     _config.cas.intent_spec = "T999"
+    _config.cas.serve_detectorless_intents = True
+    intentservice.load()
 
     g = garak._plugins.load_plugin("generators.test.Lipsum", config_root=garak._config)
 

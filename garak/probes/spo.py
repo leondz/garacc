@@ -14,6 +14,7 @@ from typing import List, Tuple
 from garak import _config
 import garak.probes
 from garak.data import path as data_path
+from garak.intents import Stub
 
 
 class SPOIntent(garak.probes.IntentProbe):
@@ -46,7 +47,7 @@ class SPOIntent(garak.probes.IntentProbe):
 
     def __init__(self, config_root=_config):
         # Load DAN prompts before calling super().__init__()
-        # which will call _build_prompts()
+        # which will call build_prompts()
         self.dan_prompts = self._load_all_dan_prompts()
 
         # Track mapping from prompt index to (variant_name, prompt_index_in_variant)
@@ -60,7 +61,7 @@ class SPOIntent(garak.probes.IntentProbe):
         if not hasattr(self, "dan_sample_seed"):
             self.dan_sample_seed = None
 
-        # Call parent __init__ which will call _load_config and then _build_prompts
+        # Call parent __init__ which will call _load_config and then build_prompts
         super().__init__(config_root=config_root)
 
         # Filter by specific variants after config is loaded
@@ -69,7 +70,7 @@ class SPOIntent(garak.probes.IntentProbe):
                 k: v for k, v in self.dan_prompts.items() if k in self.dan_variants
             }
             # Rebuild prompts with filtered variants
-            self._build_prompts()
+            self.build_prompts()
 
         if not self.dan_prompts:
             logging.warning(
@@ -113,7 +114,7 @@ class SPOIntent(garak.probes.IntentProbe):
         logging.info(f"SPOIntent: Loaded {len(dan_prompts)} DAN variants")
         return dan_prompts
 
-    def prompts_from_stub(self, stub: str) -> List[str]:
+    def _prompts_from_stub(self, stub: Stub) -> List[str]:
         """Generate prompts by combining sampled DAN variants with the stub.
 
         For each DAN variant, creates a prompt in the format:
@@ -152,7 +153,7 @@ class SPOIntent(garak.probes.IntentProbe):
 
         for item in sampled_items:
             # Combine DAN prompt with stub
-            combined_prompt = f"{item['dan_prompt']}\n\n{stub}"
+            combined_prompt = f"{item['dan_prompt']}\n\n{stub.content}"
             prompts.append(combined_prompt)
 
             # Store mapping for metadata tracking
@@ -272,9 +273,9 @@ class _SPOIntentAugmentedBase(SPOIntent):
 
         return prompts, metadata
 
-    def prompts_from_stub(self, stub: str) -> List[str]:
+    def _prompts_from_stub(self, stub: Stub) -> List[str]:
         """Generate prompts with augmentation applied according to class attributes"""
-        prompts, metadata = self._get_prompts(self.augment_system, self.augment_user, stub)
+        prompts, metadata = self._get_prompts(self.augment_system, self.augment_user, stub.content)
 
         # Track current index for metadata
         current_index = len(self.prompt_to_variant)

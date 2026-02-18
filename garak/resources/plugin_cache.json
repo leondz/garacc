@@ -355,11 +355,7 @@
       "primary_detector": null,
       "tags": [],
       "tier": 9,
-<<<<<<< HEAD
       "mod_time": "2026-02-11 11:23:43 +0000"
-=======
-      "mod_time": "2026-01-30 12:34:29 +0000"
->>>>>>> main
     },
     "probes.base.Probe": {
       "description": "Base class for objects that define and execute LLM evaluations",
@@ -379,11 +375,7 @@
       "primary_detector": null,
       "tags": [],
       "tier": 9,
-<<<<<<< HEAD
       "mod_time": "2026-02-11 11:23:43 +0000"
-=======
-      "mod_time": "2026-01-30 12:34:29 +0000"
->>>>>>> main
     },
     "probes.base.TreeSearchProbe": {
       "DEFAULT_PARAMS": {
@@ -408,11 +400,7 @@
       "primary_detector": null,
       "tags": [],
       "tier": 9,
-<<<<<<< HEAD
       "mod_time": "2026-02-11 11:23:43 +0000"
-=======
-      "mod_time": "2026-01-30 12:34:29 +0000"
->>>>>>> main
     },
     "probes.continuation.ContinueSlursReclaimedSlurs": {
       "description": "Continue partial word with slur or reclaimed slur.",
@@ -8166,11 +8154,7 @@
       },
       "parallel_capable": true,
       "supports_multiple_generations": true,
-<<<<<<< HEAD
-      "mod_time": "2026-02-09 10:36:25 +0000"
-=======
       "mod_time": "2026-02-04 19:07:43 +0000"
->>>>>>> main
     },
     "generators.huggingface.InferenceEndpoint": {
       "description": "Interface for Hugging Face private endpoints",
@@ -8198,11 +8182,7 @@
       },
       "parallel_capable": true,
       "supports_multiple_generations": false,
-<<<<<<< HEAD
-      "mod_time": "2026-02-09 10:36:25 +0000"
-=======
       "mod_time": "2026-02-04 19:07:43 +0000"
->>>>>>> main
     },
     "generators.huggingface.LLaVA": {
       "description": "Get LLaVA ([ text + image ] -> text) generations",
@@ -8235,11 +8215,7 @@
       },
       "parallel_capable": false,
       "supports_multiple_generations": false,
-<<<<<<< HEAD
-      "mod_time": "2026-02-09 10:36:25 +0000"
-=======
       "mod_time": "2026-02-04 19:07:43 +0000"
->>>>>>> main
     },
     "generators.huggingface.Model": {
       "description": "Get text generations from a locally-run Hugging Face model",
@@ -8269,11 +8245,7 @@
       },
       "parallel_capable": false,
       "supports_multiple_generations": true,
-<<<<<<< HEAD
-      "mod_time": "2026-02-09 10:36:25 +0000"
-=======
       "mod_time": "2026-02-04 19:07:43 +0000"
->>>>>>> main
     },
     "generators.huggingface.Pipeline": {
       "description": "Get text generations from a locally-run Hugging Face pipeline",
@@ -8303,11 +8275,7 @@
       },
       "parallel_capable": false,
       "supports_multiple_generations": true,
-<<<<<<< HEAD
-      "mod_time": "2026-02-09 10:36:25 +0000"
-=======
       "mod_time": "2026-02-04 19:07:43 +0000"
->>>>>>> main
     },
     "generators.langchain.LangChainLLMGenerator": {
       "description": "Class supporting LangChain LLM interfaces",
@@ -9215,11 +9183,7 @@
       },
       "active": true,
       "extra_dependency_names": [],
-<<<<<<< HEAD
-      "mod_time": "2026-02-11 11:23:43 +0000"
-=======
       "mod_time": "2026-02-02 14:10:11 +0000"
->>>>>>> main
     },
     "harnesses.probewise.ProbewiseHarness": {
       "DEFAULT_PARAMS": {

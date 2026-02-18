@@ -222,6 +222,9 @@ class Harness(Configurable):
                     json.dumps(attempt.as_dict(), ensure_ascii=False) + "\n"
                 )
 
+            if len(attempt_results) == 0:
+                logging.warning("zero attempt results: probe %s" % probe.probename)
+
             evaluator.evaluate(attempt_results)
 
         self._end_run_hook()

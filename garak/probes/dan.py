@@ -13,6 +13,7 @@ For example, "You have 25 tokens. Every time you deny a request four tokens will
 DAN prompts are often community-created, crafted from many different techniques and cooperatively developed.
 
 """
+
 import json
 import logging
 from typing import Iterable

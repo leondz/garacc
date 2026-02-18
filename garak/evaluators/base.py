@@ -7,8 +7,7 @@ from collections import defaultdict
 import json
 import logging
 from pathlib import Path
-import statistics
-from typing import Iterable
+from typing import Iterable, List
 
 from colorama import Fore, Style
 
@@ -247,8 +246,14 @@ class Evaluator:
             )
         return zscore, zrating_symbol
 
-    def print_results_wide(self, detector_name, passes, evals, messages=list()):
+    def print_results_wide(
+        self, detector_name, passes, evals, messages: List | None = None
+    ):
         """Print the evaluator's summary"""
+
+        if messages is None:
+            messages = []
+
         zscore = None
         failrate = 0.0
         if evals:
@@ -290,8 +295,14 @@ class Evaluator:
                 except:
                     pass
 
-    def print_results_narrow(self, detector_name, passes, evals, messages=list()):
+    def print_results_narrow(
+        self, detector_name, passes, evals, messages: List | None = None
+    ):
         """Print the evaluator's summary"""
+
+        if messages is None:
+            messages = []
+
         failrate = 0.0
         if evals:
             outcome = (

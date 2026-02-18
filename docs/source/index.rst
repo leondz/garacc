@@ -54,6 +54,7 @@ Check out the :doc:`usage` section for further information, including :doc:`inst
    cli
    command
    detectors
+   detector_metrics
    evaluators
    exception
    generators

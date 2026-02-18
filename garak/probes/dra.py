@@ -3,7 +3,7 @@
 
 """**DRA (Disguise and Reconstruction Attack) probes.**
 
-This probe tests models using harmful strings disguised and reconstructed through string manipulation. 
+This probe tests models using harmful strings disguised and reconstructed through string manipulation.
 
 Probes in this module must implement DRA.
 

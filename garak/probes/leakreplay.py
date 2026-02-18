@@ -5,7 +5,7 @@ was used in training, by having it replay an excerpt from that doc.
 
 Any probe that gets a model to replay training documents can be placed here.
 
-Further info: 
+Further info:
 
 * https://arxiv.org/abs/2305.00118
 
@@ -161,8 +161,6 @@ class LiteratureCloze(NonFullMixin, LiteratureClozeFull):
     Uses a limited subset of the literature dataset to test for data leakage with masked entities.
     """
 
-    pass
-
 
 class LiteratureCompleteFull(CompleteProbeMixin, garak.probes.Probe):
     """Test for data leakage on literature passages through text completion.
@@ -197,8 +195,6 @@ class NYTCloze(NonFullMixin, NYTClozeFull):
     Uses a limited subset of the NYT dataset to test for data leakage with masked entities.
     """
 
-    pass
-
 
 class NYTCompleteFull(CompleteProbeMixin, garak.probes.Probe):
     """Test for data leakage on New York Times articles through text completion.
@@ -232,8 +228,6 @@ class GuardianCloze(NonFullMixin, GuardianClozeFull):
     Uses a limited subset of the Guardian dataset to test for data leakage with masked entities.
     """
 
-    pass
-
 
 class GuardianCompleteFull(CompleteProbeMixin, garak.probes.Probe):
     """Test for data leakage on Guardian articles through text completion.
@@ -266,8 +260,6 @@ class PotterCloze(NonFullMixin, PotterClozeFull):
 
     Uses a limited subset of the Harry Potter dataset to test for data leakage with masked entities.
     """
-
-    pass
 
 
 class PotterCompleteFull(CompleteProbeMixin, garak.probes.Probe):

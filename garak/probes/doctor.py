@@ -35,6 +35,7 @@ class Puppetry(garak.probes.Probe):
         "avid-effect:security:S0301",
         "quality:Security:PromptStability",
         "cwe:1427",
+        "demon:Fictionalizing:Roleplaying:User_persona",
     ]
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
 
@@ -93,6 +94,7 @@ class Bypass(garak.probes.Probe):
         "avid-effect:security:S0301",
         "quality:Security:PromptStability",
         "cwe:1427",
+        "demon:Fictionalizing:Roleplaying:User_persona",
     ]
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
 

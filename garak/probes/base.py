@@ -157,10 +157,10 @@ class Probe(Configurable):
         systematic transformation of attempts"""
         return attempt
 
-    def _generator_precall_hook(self, generator, attempt=None):
+    def _generator_precall_hook(self, generator, attempt=None) -> None:
         """function to be overloaded if a probe wants to take actions between
         attempt generation and posing prompts to the model"""
-        pass
+        return
 
     def _buff_hook(
         self, attempts: Iterable[garak.attempt.Attempt]
@@ -302,11 +302,6 @@ class Probe(Configurable):
         this_attempt.outputs = self.generator.generate(
             this_attempt.prompt, generations_this_call=self.generations
         )
-        if len(this_attempt.outputs) != self.generations:
-            raise garak.exception.BadGeneratorException(
-                "Generator did not return the requested number of responses (asked for %i got %i). supports_multiple_generations may be set incorrectly."
-                % (self.generations, len(this_attempt.outputs))
-            )
         if self.post_buff_hook:
             this_attempt = self._postprocess_buff(this_attempt)
         this_attempt = self._postprocess_hook(this_attempt)

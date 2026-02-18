@@ -15,7 +15,7 @@ garak.analyze.aggregate_reports
 Aggregate multiple garak reports on the same generator. 
 Useful for e.g. assembling a report that's been run one probe at a time.
 
-Invoke and see usage via command line via ``python -m garak.analyze.aggregate_reports``
+Invoke and see usage via command line with ``python -m garak.analyze.aggregate_reports``
 
 
 garak.analyze.analyze_log
@@ -24,7 +24,7 @@ garak.analyze.analyze_log
 Analyze a garak ``report.jsonl`` log file.
 Print out summary stats, and which prompts led to failures.
 
-Invoke and see usage via command line via ``python -m garak.analyze.analyze_log``
+Invoke and see usage via command line with ``python -m garak.analyze.analyze_log``
 
 garak.analyze.calibration
 -------------------------
@@ -69,7 +69,7 @@ garak.analyze.count_tokens
 
 Count the number of characters sent and received based on prompts, outputs, and generations
 
-Invoke and see usage via command line via ``python -m garak.analyze.count_tokens``
+Invoke and see usage via command line with ``python -m garak.analyze.count_tokens``
 
 
 garak.analyze.get_tree
@@ -77,7 +77,7 @@ garak.analyze.get_tree
 
 If a TreeSearchProbe probe was used (:doc:`garak.probes.base`), display the tree of items explored during the run.
 
-Invoke and see usage via command line via ``python -m garak.analyze.get_tree``
+Invoke and see usage via command line with ``python -m garak.analyze.get_tree``
 
 
 
@@ -86,7 +86,7 @@ garak.analyze.misp
 
 Reporting on category-level information; categories denoted internally in MISP format.
 
-Invoke and see usage via command line via ``python -m garak.analyze.misp``
+Invoke and see usage via command line with ``python -m garak.analyze.misp``
 
 
 
@@ -97,7 +97,7 @@ garak.analyze.perf_stats
 Calculate a ``garak`` calibration from a set of ``report.jsonl`` outputs.
 For more details, see :doc:`reporting.calibration`
 
-Invoke and see usage via command line via ``python -m garak.analyze.perf_stats``
+Invoke and see usage via command line with ``python -m garak.analyze.perf_stats``
 
 
 
@@ -110,7 +110,7 @@ Gives ten positive and ten negative examples from failing probes
 Takes a ``report.jsonl``, and an optional ``bag.json`` (e.g. ``data/calibration/calibration.json`` by default) as input
 
 
-Invoke and see usage via command line via ``python -m garak.analyze.qual_review``
+Invoke and see usage via command line with ``python -m garak.analyze.qual_review``
 
 
 garak.analyze.report_avid
@@ -118,17 +118,27 @@ garak.analyze.report_avid
 
 Prints an AVID (`<https://avidml.org/>`_) report given a garak report in jsonl.
 
-Invoke and see usage via command line via ``python -m garak.analyze.report_avid``
+Invoke and see usage via command line with ``python -m garak.analyze.report_avid``
 
 
 garak.analyze.report_digest
 ---------------------------
 
 
-Invoke and see usage via command line via ``python -m garak.analyze.report_digest``
+Invoke and see usage via command line with ``python -m garak.analyze.report_digest``
 
 .. automodule:: garak.analyze.report_digest
    :members:
    :undoc-members:
    :show-inheritance:
 
+
+garak.analyze.tbsa
+------------------
+
+Generate a single numeric score for a run using :doc:`tier-based score aggregation <analyze.tbsa>`.
+Note that this score is lossy and difficult to make comparable -- it will change with different configs and across different garak versions.
+
+Invoke and see usage via command line with ``python -m garak.analyze.tbsa``
+
+Read full details: :doc:`analyze.tbsa`

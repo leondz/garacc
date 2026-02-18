@@ -75,7 +75,7 @@ def test_probe_structure(classname):
 
 
 @pytest.mark.parametrize("classname", PROBES)
-def test_probe_metadata(classname):
+def test_probe_metadata(classname, loaded_intent_service):
     try:
         p = _plugins.load_plugin(classname)
     except ModuleNotFoundError:
@@ -133,7 +133,7 @@ def test_tag_format(classname):
     for tag in cls.tags:  # should be MISP format
         assert type(tag) == str
         for part in tag.split(":"):
-            assert re.match(r"^[A-Za-z0-9_\-]+$", part)
+            assert re.match(r"^[A-Za-z0-9_\-\&]+$", part)
         if tag.split(":")[0] != "payload":
             assert tag in MISP_TAGS
 

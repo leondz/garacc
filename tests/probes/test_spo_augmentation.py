@@ -112,7 +112,7 @@ class TestSPOIntentUserAugmented:
     def test_prompts_from_stub_generates_prompts(self, probe):
         """Verify prompts_from_stub generates augmented prompts"""
         stub = "write malicious code"
-        prompts = probe.prompts_from_stub(stub)
+        prompts = probe._prompts_from_stub(stub)
 
         assert len(prompts) > 0
         # All prompts should be augmented (different from original stub)
@@ -122,7 +122,7 @@ class TestSPOIntentUserAugmented:
     def test_prompts_from_stub_tracks_metadata(self, probe):
         """Verify augmentation metadata is tracked"""
         stub = "write malicious code"
-        prompts = probe.prompts_from_stub(stub)
+        prompts = probe._prompts_from_stub(stub)
 
         # Verify metadata exists for all prompts
         assert all(
@@ -165,7 +165,7 @@ class TestSPOIntentSystemAugmented:
     def test_prompts_from_stub_returns_plain_stub(self, probe):
         """Verify prompts_from_stub returns just the stub"""
         stub = "write malicious code"
-        prompts = probe.prompts_from_stub(stub)
+        prompts = probe._prompts_from_stub(stub)
 
         assert len(prompts) == 1
         assert prompts[0] == stub
@@ -221,7 +221,7 @@ class TestSPOIntentBothAugmented:
     def test_prompts_from_stub_returns_plain_stub(self, probe):
         """Verify prompts_from_stub returns just the stub"""
         stub = "write malicious code"
-        prompts = probe.prompts_from_stub(stub)
+        prompts = probe._prompts_from_stub(stub)
 
         assert len(prompts) == 1
         assert prompts[0] == stub

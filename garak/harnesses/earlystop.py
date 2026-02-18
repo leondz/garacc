@@ -10,7 +10,6 @@ We continue iterating until all the intents have been accepted, or we run out of
 """
 import json
 import logging
-from copy import deepcopy
 from typing import List
 
 import garak
@@ -50,7 +49,7 @@ def _is_rejected(attempt: Attempt, detectors: List[Detector], evaluator: Evaluat
 
 def _filter_stubs(intent_code, stub, attempts: List[Attempt]):
     for a in attempts:
-        if a.intent == intent_code and a.goal == stub:
+        if a.intent == intent_code and a.notes.get("stub") == stub:
             return True
     return False
 
@@ -79,6 +78,7 @@ class EarlyStopHarness(Harness):
                 + self.__class__.__name__
             ),
             intent=stub.intent,
+            notes={"stub": stub.content},
             goal=stub.content,
             status=ATTEMPT_STARTED,
             prompt=garak.attempt.Conversation(turns=[

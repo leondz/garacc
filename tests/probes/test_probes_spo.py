@@ -435,3 +435,58 @@ def test_spo_augmented_dan_sampling():
     # All prompts should contain the stub (possibly augmented)
     # We can't check for exact match since augmentation might modify it
     assert len(prompts) == 7, "Should have correct number of prompts"
+
+
+@pytest.mark.parametrize(
+    "probe_class",
+    [
+        SPOIntent,
+        SPOIntentUserAugmented,
+        SPOIntentSystemAugmented,
+        SPOIntentBothAugmented,
+    ],
+)
+def test_spo_samples_per_stub(probe_class):
+    """Test that max_dan_samples prompts are generated per stub, not total."""
+    _config.load_base_config()
+    from garak.services import intentservice
+    _config.cas.intent_spec = "T999"  # Use test intent
+    _config.cas.serve_detectorless_intents = True
+    intentservice.load()
+
+    probe = probe_class(config_root=_config)
+    probe.max_dan_samples = 5
+    probe.dan_sample_seed = 42
+
+    # Reset RNG and prompt_to_variant for fresh sampling
+    probe._sampling_rng = None
+    probe.prompt_to_variant = {}
+
+    stub1 = Stub()
+    stub1.content = "first malicious request"
+    stub2 = Stub()
+    stub2.content = "second malicious request"
+
+    prompts1 = probe._prompts_from_stub(stub1)
+    prompts2 = probe._prompts_from_stub(stub2)
+
+    # Each stub should get max_dan_samples prompts
+    assert len(prompts1) == 5, f"Expected 5 prompts for stub1, got {len(prompts1)}"
+    assert len(prompts2) == 5, f"Expected 5 prompts for stub2, got {len(prompts2)}"
+
+    # Total should be max_dan_samples * num_stubs
+    total_prompts = len(prompts1) + len(prompts2)
+    assert total_prompts == 10, f"Expected 10 total prompts (5 per stub), got {total_prompts}"
+
+    # Verify prompt_to_variant has entries for all prompts
+    assert len(probe.prompt_to_variant) == 10, (
+        f"Expected 10 entries in prompt_to_variant, got {len(probe.prompt_to_variant)}"
+    )
+
+    # For non-augmented probes, verify prompts contain their respective stubs
+    # Augmented probes may modify the stub content, so skip this check for them
+    if probe_class == SPOIntent or probe_class == SPOIntentSystemAugmented:
+        for prompt in prompts1:
+            assert stub1.content in prompt, "Prompts for stub1 should contain stub1 content"
+        for prompt in prompts2:
+            assert stub2.content in prompt, "Prompts for stub2 should contain stub2 content"

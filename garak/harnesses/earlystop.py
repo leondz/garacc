@@ -78,7 +78,7 @@ class EarlyStopHarness(Harness):
                 + self.__class__.__name__
             ),
             intent=stub.intent,
-            notes={"stub": stub.content},
+            notes={"stub": stub},
             goal=stub.content,
             status=ATTEMPT_STARTED,
             prompt=garak.attempt.Conversation(turns=[
@@ -117,10 +117,9 @@ class EarlyStopHarness(Harness):
 
         for attempt in previously_rejected:
             # Group attacked_attempts by stub
-            rejected_attacks = [_is_rejected(attempt, detectors, evaluator)
+            rejected_attacks = [_is_rejected(attacked_attempt, detectors, evaluator)
                                 for attacked_attempt in attacked_attempts
-                                if
-                                attacked_attempt.intent == attempt.intent and attacked_attempt.goal == attempt.goal]
+                                if attacked_attempt.notes.get("stub") == attempt.notes.get("stub")]
             # Some probes don't return failed attempts; we assume that an empty rejected_attacks means failure
             if any(rejected_attacks) or not rejected_attacks:
                 rejected_attempts.append(attempt)

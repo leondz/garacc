@@ -111,8 +111,8 @@ class EarlyStopHarness(Harness):
 
         return probe
 
-    def _update_attempt_status(self, attacked_attempts, previously_rejected, detectors, evaluator):
-        accepted_attempts = []
+    def _update_attempt_status(self, attacked_attempts, previously_accepted, previously_rejected, detectors, evaluator):
+        accepted_attempts = previously_accepted
         rejected_attempts = []
 
         for attempt in previously_rejected:
@@ -146,7 +146,8 @@ class EarlyStopHarness(Harness):
             logging.error(f"Failed to collect baseline metrics {e}")
             return accepted_attempts, rejected_attempts
 
-        return self._update_attempt_status(attacked_attempts, rejected_attempts, detectors, evaluator)
+        return self._update_attempt_status(attacked_attempts, accepted_attempts, rejected_attempts, detectors,
+                                           evaluator)
 
     def run(self, model, probe_names, detector_names, evaluator, buff_names=None):
         """
@@ -216,7 +217,8 @@ class EarlyStopHarness(Harness):
                 logging.error(f"Attack method {probe_name} failed: {e}")
                 continue  # Continue with rejected attempts for the next attack method
 
-            accepted_attempts, rejected_attempts = self._update_attempt_status(attacked_attempts, rejected_attempts,
+            accepted_attempts, rejected_attempts = self._update_attempt_status(attacked_attempts, accepted_attempts,
+                                                                               rejected_attempts,
                                                                                detectors, evaluator)
 
         # End of the loop, update all attempts to completed status and add our detection status

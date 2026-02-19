@@ -42,6 +42,7 @@ def _is_rejected(attempt: Attempt, detectors: List[Detector], evaluator: Evaluat
                    for score in detector_scores]
 
     # Save this intermediary attempt, no matter the outcome
+    attempt.status = ATTEMPT_COMPLETE
     _config.transient.reportfile.write(json.dumps(attempt.as_dict(), ensure_ascii=False) + "\n")
 
     return any(evaluations)

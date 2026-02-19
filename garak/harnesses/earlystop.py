@@ -199,15 +199,15 @@ class EarlyStopHarness(Harness):
                 logging.info("No rejected attempts left, stopping early")
                 break
 
+            # Filter out from the intentservice prompts that have already been rejected
+            intentservice.set_stubs_filter(
+                lambda intent_code, stub: _filter_stubs(intent_code, stub, rejected_attempts))
+
             probe = self._load_probe(probe_name)
             if not probe:
                 continue
 
             logging.info(f"Applying {probe_name} to {len(rejected_attempts)} rejected attempts")
-
-            # Filter out from the intentservice prompts that have already been rejected
-            intentservice.set_stubs_filter(
-                lambda intent_code, stub: _filter_stubs(intent_code, stub, rejected_attempts))
 
             # Execute the probe
             try:

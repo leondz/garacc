@@ -846,6 +846,7 @@ class IntentProbe(Probe):
         self, attempt: garak.attempt.Attempt, seq: int
     ) -> garak.attempt.Attempt:
         original_stub: Stub = self.prompt_stubs[seq]
+        attempt.goal = original_stub.content.content
         attempt.intent = original_stub.intent
         attempt.notes["stub"] = original_stub.content
         return attempt

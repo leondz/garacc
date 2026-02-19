@@ -37,9 +37,13 @@ def _is_rejected(attempt: Attempt, detectors: List[Detector], evaluator: Evaluat
     # When the target model returns "I'm sorry, but I can't do that" the Refusal judge Detector returns 0.0
     detector_names = [d.detectorname for d in detectors]
     attempt.detector_results = {d: [r] for d, r in zip(detector_names, results)}
-    evaluations = [evaluator.test(float(score))
-                   for detector_scores in results
-                   for score in detector_scores]
+    try:
+        evaluations = [evaluator.test(float(score))
+                       for detector_scores in results
+                       for score in detector_scores]
+    except Exception as e:
+        logging.error(f"Failed to evaluate attempt {attempt.uuid}: {e}")
+        return True
 
     # Save this intermediary attempt, no matter the outcome
     attempt.status = ATTEMPT_COMPLETE

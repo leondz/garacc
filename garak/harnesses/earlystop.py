@@ -176,16 +176,9 @@ class EarlyStopHarness(Harness):
         if not detectors:
             raise ValueError("No detectors loaded")
 
-        # Load intents
-        intent_spec = _config.cas.intent_spec
-        if not intent_spec:
-            raise ValueError("No intents to test - intent_spec not set")
-        intents = str.split(intent_spec, ",")
-        if not intents:
-            raise ValueError("No intents to test")
-
         # Generate initial payloads from intents
         all_intent_stubs = []
+        intents = intentservice.get_applicable_intents()
         for intent in intents:
             all_intent_stubs.extend(intentservice.get_intent_stubs(intent))
 

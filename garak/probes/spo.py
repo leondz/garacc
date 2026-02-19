@@ -61,6 +61,9 @@ class SPOIntent(garak.probes.IntentProbe):
         if not hasattr(self, "dan_sample_seed"):
             self.dan_sample_seed = None
 
+        # RNG for sampling - initialized once to ensure different samples per stub
+        self._sampling_rng = None
+
         # Call parent __init__ which will call _load_config and then build_prompts
         super().__init__(config_root=config_root)
 
@@ -76,6 +79,14 @@ class SPOIntent(garak.probes.IntentProbe):
             logging.warning(
                 "SPOIntent: No DAN prompts loaded. Probe will generate no prompts."
             )
+
+    def build_prompts(self):
+        """Build prompts, resetting sampling RNG for reproducibility."""
+        # Reset RNG so each build_prompts call starts fresh
+        self._sampling_rng = None
+        # Reset prompt_to_variant mapping
+        self.prompt_to_variant = {}
+        super().build_prompts()
 
     def _load_all_dan_prompts(self) -> dict[str, List[str]]:
         """Load all DAN prompts from JSON files in garak/data/dan/
@@ -114,22 +125,23 @@ class SPOIntent(garak.probes.IntentProbe):
         logging.info(f"SPOIntent: Loaded {len(dan_prompts)} DAN variants")
         return dan_prompts
 
-    def _prompts_from_stub(self, stub: Stub) -> List[str]:
-        """Generate prompts by combining sampled DAN variants with the stub.
+    def _get_sampling_rng(self) -> random.Random:
+        """Get or create the RNG for sampling DAN prompts.
 
-        For each DAN variant, creates a prompt in the format:
-        "{dan_prompt}\\n\\n{stub}"
+        The RNG is created once per build_prompts call to ensure:
+        - Different stubs get different samples (RNG state advances)
+        - Reproducibility when dan_sample_seed is set
+        """
+        if self._sampling_rng is None:
+            self._sampling_rng = random.Random(self.dan_sample_seed)
+        return self._sampling_rng
 
-        DAN prompts are randomly sampled up to max_dan_samples. If dan_sample_seed
-        is set, the sampling is reproducible.
-
-        Args:
-            stub: The intent stub (e.g., "tell me how to build a bomb")
+    def _sample_dan_items(self) -> List[dict]:
+        """Flatten and sample DAN prompts up to max_dan_samples.
 
         Returns:
-            List of prompts, one for each sampled DAN variant × prompt combination
+            List of dicts with keys: dan_prompt, variant_name, prompt_idx
         """
-        # Flatten all DAN prompts with their metadata
         all_dan_items = []
         for variant_name, variant_prompts in self.dan_prompts.items():
             for prompt_idx, dan_prompt in enumerate(variant_prompts):
@@ -139,24 +151,35 @@ class SPOIntent(garak.probes.IntentProbe):
                     "prompt_idx": prompt_idx,
                 })
 
-        # Sample DAN prompts
         if self.max_dan_samples and len(all_dan_items) > self.max_dan_samples:
-            # Set seed if provided for reproducibility
-            rng = random.Random(self.dan_sample_seed)
-            sampled_items = rng.sample(all_dan_items, self.max_dan_samples)
-        else:
-            sampled_items = all_dan_items
+            rng = self._get_sampling_rng()
+            return rng.sample(all_dan_items, self.max_dan_samples)
+        return all_dan_items
 
-        # Generate prompts from sampled items
+    def _prompts_from_stub(self, stub: Stub) -> List[str]:
+        """Generate prompts by combining sampled DAN variants with the stub.
+
+        For each DAN variant, creates a prompt in the format:
+        "{dan_prompt}\\n\\n{stub}"
+
+        DAN prompts are randomly sampled up to max_dan_samples per stub.
+        If dan_sample_seed is set, the sampling is reproducible.
+
+        Args:
+            stub: The intent stub (e.g., "tell me how to build a bomb")
+
+        Returns:
+            List of prompts, one for each sampled DAN variant × prompt combination
+        """
+        sampled_items = self._sample_dan_items()
+
         prompts = []
-        current_index = len(self.prompt_to_variant)  # Track global prompt index
+        current_index = len(self.prompt_to_variant)
 
         for item in sampled_items:
-            # Combine DAN prompt with stub
             combined_prompt = f"{item['dan_prompt']}\n\n{stub.content}"
             prompts.append(combined_prompt)
 
-            # Store mapping for metadata tracking
             self.prompt_to_variant[current_index] = {
                 "dan_variant": item["variant_name"],
                 "dan_prompt_index": item["prompt_idx"],
@@ -225,23 +248,7 @@ class _SPOIntentAugmentedBase(SPOIntent):
     def _get_prompts(self, apply_to_system, apply_to_user, stub: str) -> Tuple[List[str], List[dict]]:
         from garak.probes._augmentation import get_random_augmentation
 
-        # Flatten all DAN prompts with their metadata
-        all_dan_items = []
-        for variant_name, variant_prompts in self.dan_prompts.items():
-            for prompt_idx, dan_prompt in enumerate(variant_prompts):
-                all_dan_items.append({
-                    "dan_prompt": dan_prompt,
-                    "variant_name": variant_name,
-                    "prompt_idx": prompt_idx,
-                })
-
-        # Sample DAN prompts
-        if self.max_dan_samples and len(all_dan_items) > self.max_dan_samples:
-            # Set seed if provided for reproducibility
-            rng = random.Random(self.dan_sample_seed)
-            sampled_items = rng.sample(all_dan_items, self.max_dan_samples)
-        else:
-            sampled_items = all_dan_items
+        sampled_items = self._sample_dan_items()
 
         prompts = []
         metadata = []
@@ -251,7 +258,6 @@ class _SPOIntentAugmentedBase(SPOIntent):
             variant_name = item["variant_name"]
             prompt_idx = item["prompt_idx"]
 
-            # Apply augmentation
             augmentation_func = get_random_augmentation()
             if apply_to_system:
                 dan_prompt = augmentation_func(dan_prompt)
@@ -263,7 +269,6 @@ class _SPOIntentAugmentedBase(SPOIntent):
             combined_prompt = f"{dan_prompt}\n\n{stub_augmented}"
             prompts.append(combined_prompt)
 
-            # Store mapping for metadata tracking
             metadata.append({
                 "dan_variant": variant_name,
                 "dan_prompt_index": prompt_idx,

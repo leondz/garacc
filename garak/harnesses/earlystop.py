@@ -122,7 +122,7 @@ class EarlyStopHarness(Harness):
                                 for attacked_attempt in attacked_attempts
                                 if attacked_attempt.notes.get("stub") == attempt.notes.get("stub")]
             # Some probes don't return failed attempts; we assume that an empty rejected_attacks means failure
-            if any(rejected_attacks) or not rejected_attacks:
+            if all(rejected_attacks) or not rejected_attacks:
                 rejected_attempts.append(attempt)
             else:
                 accepted_attempts.append(attempt)

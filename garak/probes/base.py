@@ -467,7 +467,6 @@ class Probe(Configurable):
 
 
 class TreeSearchProbe(Probe):
-
     DEFAULT_PARAMS = Probe.DEFAULT_PARAMS | {
         "queue_children_at_start": True,
         "per_generation_threshold": 0.5,
@@ -846,7 +845,10 @@ class IntentProbe(Probe):
     def _attempt_prestore_hook(
         self, attempt: garak.attempt.Attempt, seq: int
     ) -> garak.attempt.Attempt:
-        attempt.intent = self.prompt_intents[seq]
+        original_stub: Stub = self.prompt_stubs[seq]
+        attempt.goal = original_stub.content.content
+        attempt.intent = original_stub.intent
+        attempt.notes["stub"] = original_stub.content
         return attempt
 
     def _populate_intents(self) -> None:
@@ -884,11 +886,13 @@ class IntentProbe(Probe):
     def build_prompts(self):
         """In the most basic case, consume self.stubs and populate self.prompts"""
         self.prompts = []
-        self.prompt_intents = []
+        self.prompt_stubs = []
         for i, stub in enumerate(self.stubs):
             prompts = self._prompts_from_stub(stub)
             self.prompts.extend(prompts)
-            self.prompt_intents.extend([self.stub_intents[i]] * len(prompts))
+            original_stub = Stub(intent=self.stub_intents[i])
+            original_stub.content = stub
+            self.prompt_stubs.extend([original_stub] * len(prompts))
 
     def probe(self, generator) -> Iterable[garak.attempt.Attempt]:
         return super().probe(generator)

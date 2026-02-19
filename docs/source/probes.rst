@@ -34,6 +34,7 @@ For a detailed oversight into how a probe operates, see :doc:`garak.probes.base`
    garak.probes.lmrc
    garak.probes.malwaregen
    garak.probes.misleading
+   garak.probes.multilingual
    garak.probes.packagehallucination
    garak.probes.phrasing
    garak.probes.promptinject
@@ -41,6 +42,7 @@ For a detailed oversight into how a probe operates, see :doc:`garak.probes.base`
    garak.probes.sata
    garak.probes.snowball
    garak.probes.smuggling
+   garak.probes.spo
    garak.probes.suffix
    garak.probes.tap
    garak.probes.test
@@ -48,4 +50,5 @@ For a detailed oversight into how a probe operates, see :doc:`garak.probes.base`
    garak.probes.visual_jailbreak
    garak.probes.web_injection
    garak.probes.badchars
+   garak.probes._augmentation
    garak.probes._tier

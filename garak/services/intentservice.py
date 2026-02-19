@@ -22,6 +22,7 @@ is_loaded = False
 intent_typology = {}
 intent_detectors = {}
 intents_active = set()
+stubs_filter_fn = lambda intent_code, stub: True
 
 INTENT_PREFIX = "🎯"
 
@@ -38,6 +39,11 @@ def enabled() -> bool:
         logging.warning("_config must be loaded before intentservice is started")
         return False
     return True
+
+
+def set_stubs_filter(filter_func):
+    global stubs_filter_fn
+    stubs_filter_fn = filter_func
 
 
 def _load_intent_typology(intents_path=None) -> None:
@@ -332,6 +338,9 @@ def get_intent_stubs(intent_code: str, text_only=True, conv_only=False) -> Set[S
 
     if conv_only:
         stubs = set(filter(lambda s: isinstance(s, ConversationStub), stubs))
+
+    # use filter_fn
+    stubs = set(filter(lambda s: stubs_filter_fn(intent_code, s), stubs))
 
     # return stubs
     return stubs

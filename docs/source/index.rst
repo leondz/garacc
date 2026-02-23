@@ -38,13 +38,11 @@ Check out the :doc:`usage` section for further information, including :doc:`inst
    configurable
    cliref
    reporting
-   translation
-   ascii_smuggling
    faster
    FAQ <https://github.com/NVIDIA/garak/blob/main/FAQ.md>
 
 .. toctree::
-   :caption: Reference
+   :caption: Code Reference
    :maxdepth: 1
    :hidden:
 
@@ -68,6 +66,15 @@ Check out the :doc:`usage` section for further information, including :doc:`inst
    cas
    analyze
 
+.. toctree:: 
+   :caption: Technologies
+   :maxdepth: 1
+   :hidden:
+
+   detector_metrics
+   translation
+   ascii_smuggling
+   analyze.tbsa
 
 .. toctree::
    :caption: Extending and Contributing

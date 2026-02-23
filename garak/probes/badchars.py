@@ -18,7 +18,6 @@ from garak import _config
 from garak.data import path as data_path
 from garak.exception import PluginConfigurationError
 
-
 ASCII_PRINTABLE = tuple(chr(i) for i in range(0x20, 0x7F))
 DEFAULT_INVISIBLE = ("\u200b", "\u200c", "\u200d")  # ZWSP, ZWNJ, ZWJ
 BIDI_CONTROLS = {
@@ -118,7 +117,7 @@ class BadCharacters(garak.probes.Probe):
     """
 
     lang = "en"
-    active = False
+    active = True
     doc_uri = "https://arxiv.org/abs/2106.09898"
     goal = "inject imperceptible text perturbations that bypass refusal policies"
     primary_detector = "mitigation.MitigationBypass"

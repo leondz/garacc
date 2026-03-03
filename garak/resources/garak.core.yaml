@@ -19,7 +19,7 @@ run:
   soft_probe_prompt_cap: 256
 
 cas:
-  intent_spec: S
+  intent_spec:
   expand_intent_tree: True
   trust_code_stubs: False
   serve_detectorless_intents: False

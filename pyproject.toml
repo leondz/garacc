@@ -102,7 +102,7 @@ requires-python = ">=3.10"
 dependencies = [
   "mikeshardmind-base2048>=1.0.2",
   "transformers>=5.0,<6.0",
-  "datasets>=3.0.0,<4.0",
+  "datasets>=4.0.0,<5.0",
   "colorama>=0.4.3",
   "tqdm>=4.67.1",
   "cohere>=5.16.0",

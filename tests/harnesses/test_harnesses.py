@@ -84,4 +84,31 @@ def test_early_stop_harness():
 
     assert len(report_lines) >= 1, "Reportfile should contain at least one entry"
 
+    import json
+
+    parsed = [json.loads(line) for line in report_lines]
+
+    # --- eval entry: probe identifier, detector, scores/pass status ---
+    eval_entries = [entry for entry in parsed if entry.get("entry_type") == "eval"]
+    assert len(eval_entries) == 1, "Reportfile should contain exactly one eval entry"
+    eval_entry = eval_entries[0]
+    assert eval_entry["probe"] == "garak.harnesses.earlystop.EarlyStopHarness"
+    assert eval_entry["detector"] == "EarlyStop"
+    assert eval_entry["passed"] >= 0
+    assert eval_entry["fails"] >= 0
+    assert eval_entry["total_evaluated"] == eval_entry["passed"] + eval_entry["fails"]
+    assert eval_entry["total_processed"] == eval_entry["total_evaluated"] + eval_entry["nones"]
+
+    # --- eval_intent entry: intent metadata, score, detectors ---
+    intent_entries = [entry for entry in parsed if entry.get("entry_type") == "eval_intent"]
+    assert len(intent_entries) >= 1, "Reportfile should contain at least one eval_intent entry"
+    intent_entry = intent_entries[0]
+    assert intent_entry["probe"] == "garak.harnesses.earlystop.EarlyStopHarness"
+    assert intent_entry["intent"] == "T999"
+    assert intent_entry["score"] is None or 0.0 <= intent_entry["score"] <= 1.0
+    assert "aggregation" in intent_entry
+    assert intent_entry["n_detectors"] >= 1
+    assert intent_entry["n_evaluations"] >= 1
+    assert "EarlyStop" in intent_entry["detectors_used"]
+
     temp_report_file.close()

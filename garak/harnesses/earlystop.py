@@ -228,6 +228,9 @@ class EarlyStopHarness(Harness):
             attempt.status = ATTEMPT_COMPLETE
             _config.transient.reportfile.write(json.dumps(attempt.as_dict(), ensure_ascii=False) + "\n")
 
+        all_final_attempts = rejected_attempts + accepted_attempts
+        evaluator.evaluate(all_final_attempts)
+
         self._end_run_hook()
         logging.info(
             f"Early stopping harness completed: {len(accepted_attempts)} accepted, {len(rejected_attempts)} rejected")

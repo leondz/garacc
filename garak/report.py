@@ -68,12 +68,16 @@ class Report:
 
         # preprocess
         for i in range(len(evals)):
-            module_name, plugin_class_name = evals[i]["probe"].split(".")
-            mod = importlib.import_module(f"garak.probes.{module_name}")
-
+            probe_name = evals[i]["probe"]
+            parts = probe_name.rsplit(".", 1)
+            module_name, plugin_class_name = (parts[0], parts[1]) if len(parts) == 2 else (parts[0], parts[0])
+            try:
+                mod = importlib.import_module(f"garak.probes.{module_name}")
+                plugin_instance = getattr(mod, plugin_class_name)()
+                evals[i]["probe_tags"] = plugin_instance.tags
+            except Exception:
+                evals[i]["probe_tags"] = []
             evals[i]["probe"] = f"{module_name}.{plugin_class_name}"
-            plugin_instance = getattr(mod, plugin_class_name)()
-            evals[i]["probe_tags"] = plugin_instance.tags
 
         self.evaluations = pd.DataFrame.from_dict(evals)
         self.evaluations["score"] = np.where(

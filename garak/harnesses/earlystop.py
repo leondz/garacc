@@ -52,6 +52,39 @@ def _is_rejected(attempt: Attempt, detectors: List[Detector], evaluator: Evaluat
     return any(evaluations)
 
 
+def _is_typology_stub(stub: Stub) -> bool:
+    """Check if a stub was generated from the typology name/description
+    rather than being a real test prompt."""
+    intent_details = intentservice.intent_typology.get(stub.intent, {})
+    typology_content = intent_details.get("descr") or intent_details.get("name")
+    return stub.content == typology_content
+
+
+def _filter_typology_stubs(stubs: List[Stub]) -> List[Stub]:
+    """Remove typology-derived stubs from intents that also have real stubs.
+
+    Typology stubs are short labels like "fraud" or "hatespeech" generated
+    from the intent typology name/description. They pollute the pipeline
+    when mixed with actual attack prompts from txt/json/yaml sources.
+    If an intent only has typology stubs, they are kept. It's debatable
+    whether we want to keep these stubs derived from typology only, but it's
+    a really unlikely case for this harness anyway, so I leaned keep."""
+    # Group stubs by intent
+    by_intent = {}
+    for stub in stubs:
+        by_intent.setdefault(stub.intent, []).append(stub)
+
+    result = []
+    for intent, intent_stubs in by_intent.items():
+        typology = [s for s in intent_stubs if _is_typology_stub(s)]
+        real = [s for s in intent_stubs if not _is_typology_stub(s)]
+        if real:
+            result.extend(real)
+        else:
+            result.extend(typology)
+    return result
+
+
 def _filter_stubs(intent_code, stub, attempts: List[Attempt]):
     for a in attempts:
         if a.intent == intent_code and a.notes.get("stub") == stub:
@@ -178,9 +211,11 @@ class EarlyStopHarness(Harness):
 
         # Generate initial payloads from intents
         all_intent_stubs = []
-        intents = intentservice.get_applicable_intents()
-        for intent in intents:
-            all_intent_stubs.extend(intentservice.get_intent_stubs(intent))
+        intent_codes = intentservice.get_applicable_intents()
+        for intent_code in intent_codes:
+            all_intent_stubs.extend(intentservice.get_intent_stubs(intent_code))
+
+        all_intent_stubs = _filter_typology_stubs(all_intent_stubs)
 
         if not all_intent_stubs:
             logging.warning("No intent stubs generated, nothing to test")

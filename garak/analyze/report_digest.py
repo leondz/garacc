@@ -90,6 +90,19 @@ def _report_header_content(report_path, init, setup, payloads, config=_config) -
     return header_content
 
 
+def _split_probe_name(probe_name: str) -> tuple:
+    """Split a probe name into (module, class) parts.
+
+    Standard probes use 'module.Class' format. Non-standard names
+    (e.g. 'garak.harnesses.earlystop.EarlyStopHarness') are split
+    on the last dot so they still produce a valid (module, class) pair.
+    """
+    parts = probe_name.rsplit(".", 1)
+    if len(parts) == 2:
+        return parts[0], parts[1]
+    return parts[0], parts[0]
+
+
 def _init_populate_result_db(evals, taxonomy=None):
 
     conn = sqlite3.connect(":memory:")
@@ -111,15 +124,17 @@ def _init_populate_result_db(evals, taxonomy=None):
 
     for eval in evals:
         eval["probe"] = eval["probe"].replace("probes.", "")
-        pm, pc = eval["probe"].split(".")
+        pm, pc = _split_probe_name(eval["probe"])
         detector = eval["detector"].replace("detector.", "")
         passes = eval["passed"]
         instances = eval["total_evaluated"]
         score = passes / instances if instances else 0
         groups = []
         if taxonomy is not None:
-            # get the probe tags
-            tags = garak._plugins.PluginCache.plugin_info(f"probes.{pm}.{pc}")["tags"]
+            try:
+                tags = garak._plugins.PluginCache.plugin_info(f"probes.{pm}.{pc}")["tags"]
+            except Exception:
+                tags = []
             for tag in tags:
                 if tag.split(":")[0] == taxonomy:
                     groups.append(":".join(tag.split(":")[1:]))
@@ -179,11 +194,15 @@ def _get_group_info(probe_group, group_score, taxonomy, config=_config) -> dict:
     probe_group_name = probe_group
     if taxonomy is None:
         probe_module = re.sub("[^0-9A-Za-z_]", "", probe_group)
-        m = importlib.import_module(f"garak.probes.{probe_module}")
-        group_doc = markdown.markdown(plugin_docstring_to_description(m.__doc__))
-        group_link = (
-            f"https://reference.garak.ai/en/latest/garak.probes.{probe_group}.html"
-        )
+        try:
+            m = importlib.import_module(f"garak.probes.{probe_module}")
+            group_doc = markdown.markdown(plugin_docstring_to_description(m.__doc__))
+            group_link = (
+                f"https://reference.garak.ai/en/latest/garak.probes.{probe_group}.html"
+            )
+        except (ImportError, ModuleNotFoundError):
+            group_doc = f"Results from {probe_group}"
+            group_link = ""
     elif probe_group != "other":
         probe_group_name = f"{taxonomy}:{probe_group}"
         if probe_group_name in tag_descriptions:
@@ -213,10 +232,16 @@ def _get_probe_result_summaries(cursor, probe_group) -> List[tuple]:
 
 def _get_probe_info(probe_module, probe_class, absolute_score) -> dict:
     probe_classpath = f"probes.{probe_module}.{probe_class}"
-    probe_plugin_info = garak._plugins.PluginCache.plugin_info(probe_classpath)
-    probe_description = probe_plugin_info["description"]
-    probe_tags = probe_plugin_info["tags"]
     probe_plugin_name = f"{probe_module}.{probe_class}"
+    try:
+        probe_plugin_info = garak._plugins.PluginCache.plugin_info(probe_classpath)
+        probe_description = probe_plugin_info["description"]
+        probe_tags = probe_plugin_info["tags"]
+        probe_tier = probe_plugin_info["tier"]
+    except Exception:
+        probe_description = probe_plugin_name
+        probe_tags = []
+        probe_tier = None
     return {
         "probe_name": probe_plugin_name,
         "probe_score": absolute_score,
@@ -224,7 +249,7 @@ def _get_probe_info(probe_module, probe_class, absolute_score) -> dict:
             absolute_score, garak.analyze.ABSOLUTE_DEFCON_BOUNDS
         ),
         "probe_descr": html.escape(probe_description),
-        "probe_tier": probe_plugin_info["tier"],
+        "probe_tier": probe_tier,
         "probe_tags": probe_tags,
     }
 
@@ -241,11 +266,18 @@ def _get_probe_detector_details(
 ) -> dict:
     calibration_used = False
     detector = re.sub(r"[^0-9A-Za-z_.]", "", detector)
-    detector_module, detector_class = detector.split(".")
-    detector_cache_entry = garak._plugins.PluginCache.plugin_info(
-        f"detectors.{detector_module}.{detector_class}"
-    )
-    detector_description = detector_cache_entry["description"]
+    det_parts = detector.rsplit(".", 1)
+    if len(det_parts) == 2:
+        detector_module, detector_class = det_parts
+    else:
+        detector_module = detector_class = det_parts[0]
+    try:
+        detector_cache_entry = garak._plugins.PluginCache.plugin_info(
+            f"detectors.{detector_module}.{detector_class}"
+        )
+        detector_description = detector_cache_entry["description"]
+    except Exception:
+        detector_description = detector
 
     zscore = calibration.get_z_score(
         probe_module,

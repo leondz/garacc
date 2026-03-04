@@ -164,6 +164,14 @@ class Evaluator:
             attempts
         )  # iterable is preferred but we select them by idx later
 
+        ## Fix: reset self.probename = "" at the top of each evaluate() call.
+        # This preserves the within-batch guard (first non-empty
+        # probe_classname in a batch wins) while allowing it to refresh
+        # correctly between separate evaluate() calls. Both the probewise
+        # flow (called once per probe) and the early-stop flow (called once
+        # at the end) work correctly.
+        self.probename = ""
+
         intent_detector_groups = defaultdict(set)
 
         detectors_to_eval = set()

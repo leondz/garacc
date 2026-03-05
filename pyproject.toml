@@ -1,10 +1,10 @@
 [build-system]
-requires = ["flit_core >=3.11,<4"]
-build-backend = "flit_core.buildapi"
+requires = ["flit-scm>=1.7.0,<2"]
+build-backend = "flit_scm:buildapi"
 
 [project]
 name = "garak"
-version = "0.14.1.pre1"
+dynamic = ["version"]
 authors = [
   { name = "Leon Derczynski", email="lderczynski@nvidia.com" },
   { name = "Subho Majumdar", email="subho@vijil.ai" },
@@ -33,7 +33,7 @@ authors = [
   { name = "Zoe Nolan" },
   { name = "Harsh Raj" },
   { name = "Shine-afk" },
-  { name = "Rafael Sandroni" },  
+  { name = "Rafael Sandroni" },
   { name = "Eric Hacker" },
   { name = "Blessed Uyo" },
   { name = "Ikko Eltociear Ashimine" },
@@ -183,6 +183,11 @@ exclude = [
   "tests/",
   "doc/source/html/",
 ]
+
+[tool.setuptools_scm]
+write_to = "garak/_version.py"
+local_scheme = "no-local-version"
+version_scheme = "no-guess-dev"
 
 [tool.black]
 line-length = 88

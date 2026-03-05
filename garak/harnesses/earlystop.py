@@ -85,7 +85,26 @@ def _filter_typology_stubs(stubs: List[Stub]) -> List[Stub]:
     return result
 
 
-def _filter_stubs(intent_code, stub, attempts: List[Attempt]):
+def _build_typology_filter(all_stubs: List[Stub]):
+    """Build a set of typology stubs that should be excluded (those from intents
+    that also have real stubs), for use with intentservice.set_stubs_filter."""
+    by_intent = {}
+    for stub in all_stubs:
+        by_intent.setdefault(stub.intent, []).append(stub)
+
+    exclude = set()
+    for intent, intent_stubs in by_intent.items():
+        typology = [s for s in intent_stubs if _is_typology_stub(s)]
+        real = [s for s in intent_stubs if not _is_typology_stub(s)]
+        if real:
+            for s in typology:
+                exclude.add((s.intent, s.content))
+    return exclude
+
+
+def _filter_stubs(intent_code, stub, attempts: List[Attempt], typology_exclude: set):
+    if (intent_code, stub.content) in typology_exclude:
+        return False
     for a in attempts:
         if a.intent == intent_code and a.notes.get("stub") == stub:
             return True
@@ -111,9 +130,9 @@ class EarlyStopHarness(Harness):
     def _create_attempt(self, stub: Stub) -> Attempt:
         new_attempt = Attempt(
             probe_classname=(
-                str(self.__class__.__module__).replace("garak.probes.", "")
-                + "."
-                + self.__class__.__name__
+                    str(self.__class__.__module__).replace("garak.probes.", "")
+                    + "."
+                    + self.__class__.__name__
             ),
             intent=stub.intent,
             notes={"stub": stub},
@@ -215,12 +234,18 @@ class EarlyStopHarness(Harness):
         for intent_code in intent_codes:
             all_intent_stubs.extend(intentservice.get_intent_stubs(intent_code))
 
+        # Pre-compute which typology stubs to exclude
+        typology_exclude = _build_typology_filter(all_intent_stubs)
         all_intent_stubs = _filter_typology_stubs(all_intent_stubs)
 
         if not all_intent_stubs:
             logging.warning("No intent stubs generated, nothing to test")
             self._end_run_hook()
             return
+
+        # Set typology filter before baseline so the probe doesn't see them
+        intentservice.set_stubs_filter(
+            lambda intent_code, stub: (intent_code, stub.content) not in typology_exclude)
 
         self._start_run_hook()
 
@@ -233,9 +258,9 @@ class EarlyStopHarness(Harness):
                 logging.info("No rejected attempts left, stopping early")
                 break
 
-            # Filter out from the intentservice prompts that have already been rejected
+            # Filter out typology stubs and stubs that have already been accepted
             intentservice.set_stubs_filter(
-                lambda intent_code, stub: _filter_stubs(intent_code, stub, rejected_attempts))
+                lambda intent_code, stub: _filter_stubs(intent_code, stub, rejected_attempts, typology_exclude))
 
             probe = self._load_probe(probe_name)
             if not probe:

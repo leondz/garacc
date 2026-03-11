@@ -48,6 +48,12 @@ def probe_pre_req(classname, request):
     if os.path.exists(local_config_path) is False:
         pytest.skip("Local config file does not exist, skipping test.")
     _config.load_config(run_config_filename=local_config_path)
+
+    # IntentProbe subclasses need the intent service loaded
+    import garak.services.intentservice
+
+    if not garak.services.intentservice.is_loaded:
+        garak.services.intentservice.load()
     # detectors run by probes write to the report file
     temp_report_file = tempfile.NamedTemporaryFile(
         mode="w+", delete=False, encoding="utf-8"
@@ -289,8 +295,11 @@ def test_probe_prompt_translation(classname, mocker):
 
     probe_instance = _plugins.load_plugin(classname)
 
-    if probe_instance.lang != "en" or classname == "probes.tap.PAIR":
+    if probe_instance.lang != "en":
         pytest.skip("Probe does not engage with language provision")
+
+    if classname in ("probes.tap.PAIR", "probes.tap.TAPIntent") and openai_api_key_missing:
+        pytest.skip("Probe requires OpenAI API key for attack generation")
 
     generator_instance = _plugins.load_plugin("generators.test.Repeat")
 

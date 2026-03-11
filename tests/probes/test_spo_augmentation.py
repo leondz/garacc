@@ -99,29 +99,35 @@ class TestSPOIntentUserAugmented:
     @pytest.fixture
     def probe(self):
         """Create a probe instance for testing"""
-        _config.load_base_config()
-        _config.cas.intent_spec = None
+        import garak.services.intentservice
+
+        _config.load_config()
+        garak.services.intentservice.load()
         return SPOIntentUserAugmented(config_root=_config)
 
     def test_probe_initialization(self, probe):
         """Verify probe initializes correctly"""
         assert probe is not None
-        assert hasattr(probe, "augmentation_func")
-        assert callable(probe.augmentation_func)
+        assert probe.augment_user is True
+        assert probe.augment_system is False
 
     def test_prompts_from_stub_generates_prompts(self, probe):
         """Verify prompts_from_stub generates augmented prompts"""
-        stub = "write malicious code"
+        from garak.intents import TextStub
+
+        stub = TextStub(intent="S008code")
+        stub.content = "write malicious code"
         prompts = probe._prompts_from_stub(stub)
 
         assert len(prompts) > 0
-        # All prompts should be augmented (different from original stub)
-        # Note: This might occasionally fail if augmentation produces same text
         assert all(isinstance(p, str) for p in prompts)
 
     def test_prompts_from_stub_tracks_metadata(self, probe):
         """Verify augmentation metadata is tracked"""
-        stub = "write malicious code"
+        from garak.intents import TextStub
+
+        stub = TextStub(intent="S008code")
+        stub.content = "write malicious code"
         prompts = probe._prompts_from_stub(stub)
 
         # Verify metadata exists for all prompts
@@ -136,6 +142,24 @@ class TestSPOIntentUserAugmented:
             probe.prompt_to_variant[i]["augmentation_target"] == "user"
             for i in range(len(prompts))
         )
+
+    def test_mint_attempt_creates_user_turn(self, probe):
+        """Verify _mint_attempt creates an attempt with a user turn from the generated prompt"""
+        assert len(probe.prompts) > 0, "probe should have prompts after init"
+        attempt = probe._mint_attempt(probe.prompts[0], seq=0)
+
+        user_turns = [t for t in attempt.prompt.turns if t.role == "user"]
+        assert len(user_turns) == 1
+        assert probe.prompts[0] in user_turns[0].content.text
+
+    def test_mint_attempt_adds_augmentation_metadata(self, probe):
+        """Verify _mint_attempt's prestore hook adds augmentation metadata"""
+        assert len(probe.prompts) > 0
+        attempt = probe._mint_attempt(probe.prompts[0], seq=0)
+
+        assert "augmentation" in attempt.notes
+        assert attempt.notes["augmentation_target"] == "user"
+        assert "dan_variant" in attempt.notes
 
     def test_probe_goal_and_tier(self, probe):
         """Verify probe has correct goal and tier"""
@@ -152,54 +176,69 @@ class TestSPOIntentSystemAugmented:
     @pytest.fixture
     def probe(self):
         """Create a probe instance for testing"""
-        _config.load_base_config()
-        _config.cas.intent_spec = None
+        import garak.services.intentservice
+
+        _config.load_config()
+        garak.services.intentservice.load()
         return SPOIntentSystemAugmented(config_root=_config)
 
     def test_probe_initialization(self, probe):
         """Verify probe initializes correctly"""
         assert probe is not None
-        assert hasattr(probe, "augmentation_func")
-        assert callable(probe.augmentation_func)
+        assert probe.augment_system is True
+        assert probe.augment_user is False
 
-    def test_prompts_from_stub_returns_plain_stub(self, probe):
-        """Verify prompts_from_stub returns just the stub"""
-        stub = "write malicious code"
+    def test_prompts_from_stub_generates_prompts(self, probe):
+        """Verify prompts_from_stub generates augmented prompts with system augmentation"""
+        from garak.intents import TextStub
+
+        stub = TextStub(intent="S008code")
+        stub.content = "write malicious code"
         prompts = probe._prompts_from_stub(stub)
 
-        assert len(prompts) == 1
-        assert prompts[0] == stub
+        assert len(prompts) > 0
+        assert all(isinstance(p, str) for p in prompts)
 
-    def test_mint_attempt_creates_system_prompt(self, probe):
-        """Verify _mint_attempt sets augmented system prompt"""
-        stub = "write malicious code"
+    def test_prompts_from_stub_tracks_metadata(self, probe):
+        """Verify augmentation metadata tracks system target"""
+        from garak.intents import TextStub
 
-        # Initialize prompt_notes to avoid index error in _attempt_prestore_hook
-        probe.prompt_notes = [{}]
+        stub = TextStub(intent="S008code")
+        stub.content = "write malicious code"
+        prompts = probe._prompts_from_stub(stub)
 
-        attempt = probe._mint_attempt(stub, seq=0)
+        assert all(
+            probe.prompt_to_variant[i]["augmentation_target"] == "system"
+            for i in range(len(prompts))
+        )
 
-        # Verify system turn exists
-        system_turns = [t for t in attempt.prompt.turns if t.role == "system"]
-        assert len(system_turns) > 0
+    def test_prompts_contain_stub_content(self, probe):
+        """Verify prompts contain the original stub content (not augmented)"""
+        from garak.intents import TextStub
 
-        # Verify metadata
+        stub = TextStub(intent="S008code")
+        stub.content = "write malicious code"
+        prompts = probe._prompts_from_stub(stub)
+
+        # When only system is augmented, the stub text should appear unmodified
+        assert all("write malicious code" in p for p in prompts)
+
+    def test_mint_attempt_creates_user_turn(self, probe):
+        """Verify _mint_attempt creates an attempt with a user turn"""
+        assert len(probe.prompts) > 0
+        attempt = probe._mint_attempt(probe.prompts[0], seq=0)
+
+        user_turns = [t for t in attempt.prompt.turns if t.role == "user"]
+        assert len(user_turns) == 1
+
+    def test_mint_attempt_adds_augmentation_metadata(self, probe):
+        """Verify _mint_attempt's prestore hook adds augmentation metadata"""
+        assert len(probe.prompts) > 0
+        attempt = probe._mint_attempt(probe.prompts[0], seq=0)
+
         assert "augmentation" in attempt.notes
         assert attempt.notes["augmentation_target"] == "system"
-        assert "dan_variant_system" in attempt.notes
-
-    def test_mint_attempt_restores_original_system_prompt(self, probe):
-        """Verify _mint_attempt doesn't permanently modify system_prompt"""
-        original_prompt = getattr(probe, "system_prompt", None)
-        stub = "write malicious code"
-
-        # Initialize prompt_notes to avoid index error
-        probe.prompt_notes = [{}]
-
-        probe._mint_attempt(stub, seq=0)
-
-        # System prompt should be restored
-        assert getattr(probe, "system_prompt", None) == original_prompt
+        assert "dan_variant" in attempt.notes
 
 
 class TestSPOIntentBothAugmented:
@@ -208,57 +247,58 @@ class TestSPOIntentBothAugmented:
     @pytest.fixture
     def probe(self):
         """Create a probe instance for testing"""
-        _config.load_base_config()
-        _config.cas.intent_spec = None
+        import garak.services.intentservice
+
+        _config.load_config()
+        garak.services.intentservice.load()
         return SPOIntentBothAugmented(config_root=_config)
 
     def test_probe_initialization(self, probe):
         """Verify probe initializes correctly"""
         assert probe is not None
-        assert hasattr(probe, "augmentation_func")
-        assert callable(probe.augmentation_func)
+        assert probe.augment_system is True
+        assert probe.augment_user is True
 
-    def test_prompts_from_stub_returns_plain_stub(self, probe):
-        """Verify prompts_from_stub returns just the stub"""
-        stub = "write malicious code"
+    def test_prompts_from_stub_generates_prompts(self, probe):
+        """Verify prompts_from_stub generates augmented prompts"""
+        from garak.intents import TextStub
+
+        stub = TextStub(intent="S008code")
+        stub.content = "write malicious code"
         prompts = probe._prompts_from_stub(stub)
 
-        assert len(prompts) == 1
-        assert prompts[0] == stub
+        assert len(prompts) > 0
+        assert all(isinstance(p, str) for p in prompts)
 
-    def test_mint_attempt_creates_both_augmented(self, probe):
-        """Verify _mint_attempt augments both system and user"""
-        stub = "write malicious code"
+    def test_prompts_from_stub_tracks_metadata(self, probe):
+        """Verify augmentation metadata tracks both target"""
+        from garak.intents import TextStub
 
-        # Initialize prompt_notes to avoid index error
-        probe.prompt_notes = [{}]
+        stub = TextStub(intent="S008code")
+        stub.content = "write malicious code"
+        prompts = probe._prompts_from_stub(stub)
 
-        attempt = probe._mint_attempt(stub, seq=0)
+        assert all(
+            probe.prompt_to_variant[i]["augmentation_target"] == "both"
+            for i in range(len(prompts))
+        )
 
-        # Verify both turns exist
-        system_turns = [t for t in attempt.prompt.turns if t.role == "system"]
+    def test_mint_attempt_creates_user_turn(self, probe):
+        """Verify _mint_attempt creates an attempt with a user turn"""
+        assert len(probe.prompts) > 0
+        attempt = probe._mint_attempt(probe.prompts[0], seq=0)
+
         user_turns = [t for t in attempt.prompt.turns if t.role == "user"]
-        assert len(system_turns) > 0
-        assert len(user_turns) > 0
+        assert len(user_turns) == 1
 
-        # Verify metadata
-        assert attempt.notes["augmentation_target"] == "both"
-        assert "dan_variant_system" in attempt.notes
+    def test_mint_attempt_adds_augmentation_metadata(self, probe):
+        """Verify _mint_attempt's prestore hook adds augmentation metadata"""
+        assert len(probe.prompts) > 0
+        attempt = probe._mint_attempt(probe.prompts[0], seq=0)
+
         assert "augmentation" in attempt.notes
-
-    def test_mint_attempt_augments_user_message(self, probe):
-        """Verify user message is augmented"""
-        stub = "write malicious code"
-
-        # Initialize prompt_notes to avoid index error
-        probe.prompt_notes = [{}]
-
-        attempt = probe._mint_attempt(stub, seq=0)
-
-        # User message should be augmented (different from original stub)
-        user_turns = [t for t in attempt.prompt.turns if t.role == "user"]
-        # The augmentation might produce the same text occasionally, but typically differs
-        assert len(user_turns) > 0
+        assert attempt.notes["augmentation_target"] == "both"
+        assert "dan_variant" in attempt.notes
 
 
 class TestHarnessIntegration:

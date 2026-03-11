@@ -887,12 +887,14 @@ class IntentProbe(Probe):
         """In the most basic case, consume self.stubs and populate self.prompts"""
         self.prompts = []
         self.prompt_stubs = []
+        self.prompt_intents = []
         for i, stub in enumerate(self.stubs):
             prompts = self._prompts_from_stub(stub)
             self.prompts.extend(prompts)
             original_stub = Stub(intent=self.stub_intents[i])
             original_stub.content = stub
             self.prompt_stubs.extend([original_stub] * len(prompts))
+            self.prompt_intents.extend([self.stub_intents[i]] * len(prompts))
 
     def probe(self, generator) -> Iterable[garak.attempt.Attempt]:
         return super().probe(generator)

@@ -145,7 +145,19 @@ class TestSPOIntentUserAugmented:
 
     def test_mint_attempt_creates_user_turn(self, probe):
         """Verify _mint_attempt creates an attempt with a user turn from the generated prompt"""
-        assert len(probe.prompts) > 0, "probe should have prompts after init"
+        from garak.intents import TextStub
+
+        stub = TextStub(intent="S008code")
+        stub.content = "write malicious code"
+        prompts = probe._prompts_from_stub(stub)
+        assert len(prompts) > 0, "probe should have prompts from stub"
+        probe.prompts = prompts
+        # Set up prompt_stubs for _attempt_prestore_hook
+        from garak.intents import Stub
+        original_stub = Stub(intent="S008code")
+        original_stub.content = stub
+        probe.prompt_stubs = [original_stub] * len(prompts)
+
         attempt = probe._mint_attempt(probe.prompts[0], seq=0)
 
         user_turns = [t for t in attempt.prompt.turns if t.role == "user"]
@@ -154,7 +166,17 @@ class TestSPOIntentUserAugmented:
 
     def test_mint_attempt_adds_augmentation_metadata(self, probe):
         """Verify _mint_attempt's prestore hook adds augmentation metadata"""
-        assert len(probe.prompts) > 0
+        from garak.intents import TextStub, Stub
+
+        stub = TextStub(intent="S008code")
+        stub.content = "write malicious code"
+        prompts = probe._prompts_from_stub(stub)
+        assert len(prompts) > 0
+        probe.prompts = prompts
+        original_stub = Stub(intent="S008code")
+        original_stub.content = stub
+        probe.prompt_stubs = [original_stub] * len(prompts)
+
         attempt = probe._mint_attempt(probe.prompts[0], seq=0)
 
         assert "augmentation" in attempt.notes
@@ -225,7 +247,17 @@ class TestSPOIntentSystemAugmented:
 
     def test_mint_attempt_creates_user_turn(self, probe):
         """Verify _mint_attempt creates an attempt with a user turn"""
-        assert len(probe.prompts) > 0
+        from garak.intents import TextStub, Stub
+
+        stub = TextStub(intent="S008code")
+        stub.content = "write malicious code"
+        prompts = probe._prompts_from_stub(stub)
+        assert len(prompts) > 0
+        probe.prompts = prompts
+        original_stub = Stub(intent="S008code")
+        original_stub.content = stub
+        probe.prompt_stubs = [original_stub] * len(prompts)
+
         attempt = probe._mint_attempt(probe.prompts[0], seq=0)
 
         user_turns = [t for t in attempt.prompt.turns if t.role == "user"]
@@ -233,7 +265,17 @@ class TestSPOIntentSystemAugmented:
 
     def test_mint_attempt_adds_augmentation_metadata(self, probe):
         """Verify _mint_attempt's prestore hook adds augmentation metadata"""
-        assert len(probe.prompts) > 0
+        from garak.intents import TextStub, Stub
+
+        stub = TextStub(intent="S008code")
+        stub.content = "write malicious code"
+        prompts = probe._prompts_from_stub(stub)
+        assert len(prompts) > 0
+        probe.prompts = prompts
+        original_stub = Stub(intent="S008code")
+        original_stub.content = stub
+        probe.prompt_stubs = [original_stub] * len(prompts)
+
         attempt = probe._mint_attempt(probe.prompts[0], seq=0)
 
         assert "augmentation" in attempt.notes
@@ -285,7 +327,17 @@ class TestSPOIntentBothAugmented:
 
     def test_mint_attempt_creates_user_turn(self, probe):
         """Verify _mint_attempt creates an attempt with a user turn"""
-        assert len(probe.prompts) > 0
+        from garak.intents import TextStub, Stub
+
+        stub = TextStub(intent="S008code")
+        stub.content = "write malicious code"
+        prompts = probe._prompts_from_stub(stub)
+        assert len(prompts) > 0
+        probe.prompts = prompts
+        original_stub = Stub(intent="S008code")
+        original_stub.content = stub
+        probe.prompt_stubs = [original_stub] * len(prompts)
+
         attempt = probe._mint_attempt(probe.prompts[0], seq=0)
 
         user_turns = [t for t in attempt.prompt.turns if t.role == "user"]
@@ -293,7 +345,17 @@ class TestSPOIntentBothAugmented:
 
     def test_mint_attempt_adds_augmentation_metadata(self, probe):
         """Verify _mint_attempt's prestore hook adds augmentation metadata"""
-        assert len(probe.prompts) > 0
+        from garak.intents import TextStub, Stub
+
+        stub = TextStub(intent="S008code")
+        stub.content = "write malicious code"
+        prompts = probe._prompts_from_stub(stub)
+        assert len(prompts) > 0
+        probe.prompts = prompts
+        original_stub = Stub(intent="S008code")
+        original_stub.content = stub
+        probe.prompt_stubs = [original_stub] * len(prompts)
+
         attempt = probe._mint_attempt(probe.prompts[0], seq=0)
 
         assert "augmentation" in attempt.notes

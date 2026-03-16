@@ -205,7 +205,7 @@ def main(argv=None) -> None:
                             * generations_requested
                         ):
                             add_note(
-                                f"Eval entry for {_probename} {_detectorname} indicates {r['total']} instances but there were {attempt_status_2_per_probe[_probename]} status:2 attempts (generations={generations_requested})"
+                                f"Eval entry for {_probename} {_detectorname} indicates {total_attempts_processed} instances but there were {attempt_status_2_per_probe[_probename]} status:2 attempts (generations={generations_requested})"
                             )
 
                         if r["passed"] > r["total_evaluated"]:

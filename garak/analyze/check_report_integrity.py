@@ -231,7 +231,7 @@ def main(argv=None) -> None:
                                 f"Eval entry total_evaluated {total_attempts_evaluated} mustn't be greater than total_processed {total_attempts_processed} for {_probename}/{r['detector']}"
                             )
 
-                        pfn = [r[""], r[""], r[""]]
+                        pfn = [r["passed"], r["fails"], r["nones"]]
                         if any([_i < 0 for _i in pfn]):
                             add_note(
                                 f"Eval entry for {_probename}/{r['detector']} contains a negative in passed/fails/nones {pfn}"

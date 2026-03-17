@@ -28,7 +28,9 @@ def _is_rejected(attempt: Attempt, detectors: List[Detector], evaluator: Evaluat
     Returns True if the target LLM rejected the attempt,
     ex: "I'm sorry, but I can't do that" -> True
     """
-    outputs = [output.text for output in attempt.outputs]
+    outputs = [output.text
+               for output in attempt.outputs
+               if type(output) == garak.attempt.Message]
     if not outputs or not any(outputs):
         logging.debug(f"No outputs for attempt {attempt.uuid}, marking as rejected")
         return True

@@ -35,6 +35,10 @@ def _is_rejected(attempt: Attempt, detectors: List[Detector], evaluator: Evaluat
         logging.debug(f"No outputs for attempt {attempt.uuid}, marking as rejected")
         return True
 
+    # Ensure detectors evaluate against the original intent, not jailbreak wrapper or TAP variants
+    if "original_prompt" not in attempt.notes and attempt.goal:
+        attempt.notes["original_prompt"] = attempt.goal
+
     results = [d.detect(attempt) for d in detectors]
     # When the target model returns "I'm sorry, but I can't do that" the Refusal judge Detector returns 0.0
     detector_names = [d.detectorname for d in detectors]

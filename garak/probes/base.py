@@ -854,7 +854,7 @@ class IntentProbe(Probe):
         # should be leaves
         self.intents = garak.services.intentservice.get_applicable_intents(
             blocked_spec=self.blocked_intent_spec
-        )
+        )  # this still seems off, does the probe really know what to block? I would think it more likely knows what categories it can include
 
     def _populate_stubs(self) -> None:
         """populate self.stubs with intent stub text, in order of self.intents"""

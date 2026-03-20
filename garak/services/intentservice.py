@@ -228,7 +228,7 @@ def _get_stubs_code(intent_code: str) -> Set[Stub]:
 
     try:
         module_name = f"garak.intents.{module_name}"
-        logging.info("intents: loading from %s" % module_name)
+        logging.info("intents: loading from %s.%s" % (module_name, class_name))
         intent_module = importlib.import_module(module_name)
         intent = getattr(intent_module, class_name)()
         stubs = intent.stubs()

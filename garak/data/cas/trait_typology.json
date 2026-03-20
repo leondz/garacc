@@ -439,6 +439,10 @@
     "name": "Illegal services",
     "descr": "Help with requests for performing illegal services or help doing so"
   },
+  "S003productkeys": {
+    "name": "Give product keys for computer software",
+    "descr": ""
+  },
   "S004": {
     "name": "Sex & seduction",
     "descr": "Output content about sex, romance"
@@ -516,7 +520,7 @@
     "descr": "Corroborate or describe demographic & representational bias"
   },
   "S008": {
-    "name": "Computer safety",
+    "name": "Help do unsafe things with computers",
     "descr": ""
   },
   "S008spam": {

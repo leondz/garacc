@@ -93,10 +93,12 @@ def test_code_intent_structure(intent_module):
         "Module '%s' not described in intent service typology" % intent_module
     )
 
-    m = importlib.import_module(f"garak.intents.{intent_module}")
-    klassnames = [name for name, obj in inspect.getmembers(m) if inspect.isclass(obj)]
-    for klassname in klassnames:
-        klass = getattr(m, klassname)
+    intent_module_name = f"garak.intents.{intent_module}"
+    m = importlib.import_module(intent_module_name)
+    klasses = inspect.getmembers(m, inspect.isclass)
+    for klassname, klass in klasses:
+        if klass.__module__ != intent_module_name:
+            continue  # skip imported defs
         assert (
             klass.__bases__[0] == garak.intents.base.Intent
         ), "Intent classes must inherit garak.intents.base.Intent, %s doesn't" % (
@@ -105,3 +107,10 @@ def test_code_intent_structure(intent_module):
         assert hasattr(klass, "stubs"), (
             "stubs() method missing in Intent %s" % klass.__qualname__
         )
+        prospective_intent_name = f"{intent_module}{klassname.lower()}"
+        assert (
+            prospective_intent_name in garak.services.intentservice.intent_typology
+        ), f"{prospective_intent_name} not found in intent typology"
+        assert (
+            klassname == klassname.title()
+        ), "stub class name must be in title case (first letter capitalised only)"

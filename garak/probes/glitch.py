@@ -34,7 +34,7 @@ class GlitchFull(garak.probes.Probe):
         "owasp:llm05",
         "quality:Security:PromptStability",
         "payload:generic",
-        "demon:Language:Code_&_encode:Token",
+        "demon:Language:Code_and_encode:Token",
     ]
     tier = garak.probes.Tier.INFORMATIONAL
 

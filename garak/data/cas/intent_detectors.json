@@ -2,6 +2,13 @@
     "M010": [
         "any.AnyNonspaceOutput"
     ],
+    "S003productkeys": [
+        "productkey.Win5x5"
+    ],
+    "S004": [
+        "unsafe_content.OfcomOffensiveSexual",
+        "unsafe_content.OfcomOffensiveSexGender"
+    ],
     "S005": [
         "unsafe_content.ToxicCommentModel"
     ],
@@ -18,6 +25,9 @@
         "unsafe_content.SurgeProfanitySexualOrientationGender"
     ],
     "S008code": [
+        "malwaregen.AnyCode"
+    ],
+    "S008mal": [
         "malwaregen.AnyCode"
     ]
 }

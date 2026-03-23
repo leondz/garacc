@@ -68,21 +68,34 @@ def _expand_intent_spec(
     expanded_intents = set()
 
     if intent_spec is None or intent_spec in ("*", "all", ""):
-        expanded_intents = set(
-            [
-                non_top_intent
-                for non_top_intent in intent_typology.keys()
-                if len(non_top_intent) >= 4
-            ]
-        )
+        expanded_intents.update(intent_typology.keys())
     else:
         for intent_prefix in intent_spec.split(","):
             if expand_subnodes:
-                expanded_intents.update(_expand_intent_specifier_leaves(intent_prefix))
+                expanded_intents.update(
+                    _expand_intent_specifier_children(intent_prefix)
+                )
             else:
                 expanded_intents.update({intent_prefix})
 
     return expanded_intents
+
+
+def _expand_intent_specifier_children(intent_specifier: str) -> Set[str]:
+    """expand an intent specified into itself plus child nodes"""
+
+    intent_codes_to_lookup = set([intent_specifier])
+    with open(cas_data_path / "intent_skip.json") as skip_f:
+        intents_to_skip = json.load(skip_f)
+
+    # expand intent codes
+    if len(intent_specifier) <= 4:
+        for code in intent_typology.keys():
+            if code.startswith(intent_specifier):
+                if code not in intents_to_skip:
+                    intent_codes_to_lookup.add(code)
+
+    return intent_codes_to_lookup
 
 
 def _populate_intents(intent_spec: str | None) -> None:
@@ -99,10 +112,11 @@ def _populate_intents(intent_spec: str | None) -> None:
         )
 
     if not garak._config.cas.serve_detectorless_intents:
-        intents_with_detectors = set(
-            [i for i in intent_detectors if intent_detectors[i]]
-        )
-        intents_active = intents_active.intersection(intents_with_detectors)
+        detectorless_intents = set()
+        for intent_code in intents_active:
+            if intent_to_detectors(intent_code, override_loaded_check=True) is None:
+                detectorless_intents.add(intent_code)
+        intents_active.difference_update(detectorless_intents)
 
     if len(intents_active) == 0:
         logging.info("Intent service running with no intents active")
@@ -244,23 +258,6 @@ def validate_intent_specifier(intent_specifier: str) -> bool:
     return re.fullmatch("[CTMS]([0-9]{3}([a-z]+)?)?", intent_specifier) is not None
 
 
-def _expand_intent_specifier_leaves(intent_specifier: str) -> List[str]:
-    """expand an intent specified into itself plus child nodes"""
-
-    intent_codes_to_lookup = [intent_specifier]
-    with open(cas_data_path / "intent_skip.json") as skip_f:
-        intent_leaves_to_skip = json.load(skip_f)
-
-    # expand intent codes
-    if len(intent_specifier) <= 4:
-        for code in intent_typology.keys():
-            if code.startswith(intent_specifier) and len(code) > 4:
-                if code not in intent_leaves_to_skip:
-                    intent_codes_to_lookup.append(code)
-
-    return intent_codes_to_lookup
-
-
 def get_intent_parts(intent_specifier: str) -> List[str]:
     """separate an intent specifier into its consituent parts:
 
@@ -316,8 +313,6 @@ def get_intent_stubs(intent_code: str, text_only=True, conv_only=False) -> Set[S
     if not intent_code in intent_typology:
         raise ValueError("Intent code not in loaded typology: " + intent_code)
 
-    # intent_codes_to_lookup = _expand_intent_specifier_leaves(intent_specifier)
-
     stubs = set()
     # retrieve intent stubs
     stubs.update(_get_stubs_typology(intent_code))
@@ -337,10 +332,12 @@ def get_intent_stubs(intent_code: str, text_only=True, conv_only=False) -> Set[S
     return stubs
 
 
-def intent_to_detectors(intent_specifier: str) -> Set[str] | None:
+def intent_to_detectors(
+    intent_specifier: str, override_loaded_check=False
+) -> Set[str] | None:
     """return the set of detectors applicable to a single intent"""
 
-    if not is_loaded:
+    if not is_loaded and not override_loaded_check:
         raise GarakException("intent_to_detectors called on non-loaded intentservice")
 
     intent_parts = get_intent_parts(intent_specifier)

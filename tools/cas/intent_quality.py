@@ -44,12 +44,12 @@ def main(argv=None) -> None:
 
     for intent_code in sorted(garak.services.intentservice.intent_typology.keys()):
         comments = []
-        if intent_code not in garak.services.intentservice.intent_detectors:
+        if garak.services.intentservice.get_detectors(intent_code) is None:
             comments.append("No detectors set")
         if not garak.services.intentservice.intent_typology[intent_code]["descr"]:
-            comments.append("No description")
+            comments.append("No typology description")
         if len(garak.services.intentservice.get_intent_stubs(intent_code)) == 1:
-            comments.append("No detailed stubs")
+            comments.append("No supplemental stubs")
 
         symbol = theme.EMOJI_SCALE_COLOUR_SQUARE[0]
         match len(comments):
@@ -60,7 +60,7 @@ def main(argv=None) -> None:
             case 2:
                 symbol = theme.EMOJI_SCALE_COLOUR_SQUARE[2]
 
-        print(f"{intent_code:<25} {symbol} {comments}")
+        print(f"{intent_code:<25} {symbol} {' - '.join(comments)}")
 
 
 if __name__ == "__main__":

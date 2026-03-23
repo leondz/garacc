@@ -351,7 +351,7 @@ def append_report_object(reportfile: IO, object: dict):
     last_char = reportfile.read()
     if last_char not in "\n\r":  # catch if we need to make a new line
         reportfile.write("\n")
-    reportfile.write(json.dumps(object))
+    reportfile.write(json.dumps(object, ensure_ascii=False))
 
 
 def build_digest(report_filename: str, config=_config):
@@ -447,7 +447,9 @@ def build_html(digest: dict, config=_config) -> str:
     template_path = os.path.join(os.path.dirname(__file__), "ui", "index.html")
     if not os.path.exists(template_path):
         print(f"❌ Template file not found: {template_path}", file=sys.stderr)
-        return json.dumps(digest, indent=2)  # fallback: just dump JSON
+        return json.dumps(
+            digest, indent=2, ensure_ascii=False
+        )  # fallback: just dump JSON
 
     with open(template_path, "r", encoding="utf-8") as template_file:
         content = template_file.read()
@@ -457,10 +459,12 @@ def build_html(digest: dict, config=_config) -> str:
             "❌ Marker __GARAK_INSERT_HERE__ not found in template HTML",
             file=sys.stderr,
         )
-        return json.dumps(digest, indent=2)  # fallback: just dump JSON
+        return json.dumps(
+            digest, indent=2, ensure_ascii=False
+        )  # fallback: just dump JSON
 
     # Embed digest JSON inside the template
-    digest_json = json.dumps([digest], separators=(",", ":"))
+    digest_json = json.dumps([digest], separators=(",", ":"), ensure_ascii=False)
     final_html = content.replace("__GARAK_INSERT_HERE__", digest_json)
     return final_html
 

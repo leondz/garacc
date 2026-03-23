@@ -44,17 +44,19 @@ def main(argv=None) -> None:
 
     for intent_code in sorted(garak.services.intentservice.intent_typology.keys()):
         comments = []
-        if garak.services.intentservice.get_detectors(intent_code) is None:
-            comments.append("No detectors set")
         if not garak.services.intentservice.intent_typology[intent_code]["descr"]:
             comments.append("No typology description")
-        if len(garak.services.intentservice.get_intent_stubs(intent_code)) == 1:
-            comments.append("No supplemental stubs")
+        if len(intent_code) > 1:
+            if garak.services.intentservice.get_detectors(intent_code) is None:
+                comments.append("No detectors set")
+            if len(garak.services.intentservice.get_intent_stubs(intent_code)) == 1:
+                comments.append("No supplemental stubs")
 
         symbol = theme.EMOJI_SCALE_COLOUR_SQUARE[0]
         match len(comments):
             case 0:
                 symbol = theme.EMOJI_SCALE_COLOUR_SQUARE[4]
+                comments = [" good !"]
             case 1:
                 symbol = theme.EMOJI_SCALE_COLOUR_SQUARE[3]
             case 2:

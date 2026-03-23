@@ -45,7 +45,7 @@ def main(argv=None) -> None:
     for intent_code in sorted(garak.services.intentservice.intent_typology.keys()):
         comments = []
         if not garak.services.intentservice.intent_typology[intent_code]["descr"]:
-            comments.append("No typology description")
+            comments.append("No typology descr/stub")
         if len(intent_code) > 1:
             if garak.services.intentservice.get_detectors(intent_code) is None:
                 comments.append("No detectors set")

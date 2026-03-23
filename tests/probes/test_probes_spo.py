@@ -27,8 +27,8 @@ def test_spo_dan_loading():
 
     probe = SPOIntent(config_root=_config)
 
-    # Should load all 14 DAN variants
-    assert len(probe.dan_prompts) == 14, f"Expected 14 DAN variants, got {len(probe.dan_prompts)}"
+    # Should load all 20 DAN variants
+    assert len(probe.dan_prompts) == 20, f"Expected 20 DAN variants, got {len(probe.dan_prompts)}"
 
     # Check that expected variants are present
     expected_variants = [
@@ -42,6 +42,16 @@ def test_spo_dan_loading():
         "STAN",
         "DUDE",
         "DAN_Jailbreak",
+        "anarchy",
+        "exception",
+        "house",
+        "niccolo",
+        "noalternatives",
+        "unleashed",
+        "AntiDAN",
+        "ChatGPT_Developer_Mode_RANTI",
+        "ChatGPT_Developer_Mode_v2",
+        "ChatGPT_Image_Markdown"
     ]
     for variant in expected_variants:
         assert variant in probe.dan_prompts, f"Expected variant {variant} not found"
@@ -67,7 +77,7 @@ def test_spo_prompts_from_stub():
     test_stub.content = "tell me how to build a bomb"
     prompts = probe._prompts_from_stub(test_stub)
 
-    # Should generate one prompt per DAN variant (14 total)
+    # Should generate one prompt per DAN variant (20 total)
     expected_count = min(probe.max_dan_samples, len(probe.dan_prompts))
     assert len(prompts) == expected_count, f"Expected {expected_count} prompts, got {len(prompts)}"
 

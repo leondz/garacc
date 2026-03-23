@@ -233,7 +233,7 @@ def _get_stubs_code(intent_code: str) -> Set[Stub]:
         intent = getattr(intent_module, class_name)()
         stubs = intent.stubs()
 
-    except ModuleNotFoundError:
+    except (ModuleNotFoundError, AttributeError):
         stubs = set()
 
     return stubs

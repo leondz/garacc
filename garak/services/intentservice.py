@@ -114,7 +114,7 @@ def _populate_intents(intent_spec: str | None) -> None:
     if not garak._config.cas.serve_detectorless_intents:
         detectorless_intents = set()
         for intent_code in intents_active:
-            if intent_to_detectors(intent_code, override_loaded_check=True) is None:
+            if get_detectors(intent_code, override_loaded_check=True) is None:
                 detectorless_intents.add(intent_code)
         intents_active.difference_update(detectorless_intents)
 
@@ -332,7 +332,7 @@ def get_intent_stubs(intent_code: str, text_only=True, conv_only=False) -> Set[S
     return stubs
 
 
-def intent_to_detectors(
+def get_detectors(
     intent_specifier: str, override_loaded_check=False
 ) -> Set[str] | None:
     """return the set of detectors applicable to a single intent"""

@@ -193,7 +193,7 @@ class Harness(Configurable):
                     from garak.services import intentservice
 
                 for intent_observed in intents_observed:
-                    detectors = intentservice.intent_to_detectors(intent_observed)
+                    detectors = intentservice.get_detectors(intent_observed)
                     if detectors is None:
                         logging.warning(
                             "No detectors specified for intent %s" % intent_observed

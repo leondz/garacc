@@ -34,9 +34,7 @@ def test_intents_valid(trait_code):
     assert validate_intent_specifier(trait_code)
     entry = TRAIT_TYPOLOGY[trait_code]
     assert entry.get("name") is not None
-    assert entry.get("descr") is not None
     assert isinstance(entry["name"], str)
-    assert isinstance(entry["descr"], str)
     assert len(entry["name"]) > 0
 
 

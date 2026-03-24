@@ -142,7 +142,7 @@ def _get_stubs_typology(intent_code: str) -> Set[Stub]:
     # return the descr of a given typology point, or if empty/absent, the name
     intent_details = intent_typology.get(intent_code, {})
 
-    raw_stub = intent_details.get("descr")
+    raw_stub = intent_details.get("default_stub")
     if not raw_stub:
         raw_stub = intent_details.get("name")
 

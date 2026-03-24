@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-""" Conduct a variety of checks and tests to assess the integrity of a garak report.jsonl file """
+"""Conduct a variety of checks and tests to assess the quality of a garak report.jsonl file"""
 
 """
 inventory of tests:
@@ -34,12 +34,22 @@ from typing import Set
 
 notes = []
 
+HI_PRIO_PIP = "🔸"
+LO_PRIO_PIP = "🔹"
 
-def add_note(note: str) -> None:
+
+def add_note(note: str, high_priority: bool = True) -> None:
+    # high_priority - the default - is used for indications the report is invalid/malformed
+
     global notes
+
+    if len(notes) == 0:
+        print(f"Key: {HI_PRIO_PIP}=high priority {LO_PRIO_PIP}=low priority")
+
     notes.append(note)
+    pip = HI_PRIO_PIP if high_priority else LO_PRIO_PIP
     try:
-        print("🔹", note)
+        print(pip, note)
     except BrokenPipeError:
         pass
 
@@ -73,8 +83,8 @@ def main(argv=None) -> None:
     )
 
     p = argparse.ArgumentParser(
-        prog="python -m garak.analyze.aggregate_reports",
-        description="Check integrity of a garak report.jsonl file",
+        prog="python -m garak.analyze.check_report_quality",
+        description="Check quality of a garak report.jsonl file",
         epilog="See https://github.com/NVIDIA/garak",
         allow_abbrev=False,
     )
@@ -105,7 +115,8 @@ def main(argv=None) -> None:
     garak_version = garak._config.version
     if _is_dev_version(garak_version):
         add_note(
-            f"Check running in a development garak version {garak_version}, implementation will depend on branch+commit"
+            f"Check running in a development garak version {garak_version}, implementation will depend on branch+commit",
+            high_priority=False,
         )
 
     with open(a.report_path, encoding="utf-8") as reportfile:
@@ -120,11 +131,13 @@ def main(argv=None) -> None:
                     report_garak_version = r["_config.version"]
                     if _is_dev_version(report_garak_version):
                         add_note(
-                            f"Report generated under a development garak version {report_garak_version}, implementation will depend on branch+commit"
+                            f"Report generated under a development garak version {report_garak_version}, implementation will depend on branch+commit",
+                            high_priority=False,
                         )
                     if report_garak_version != garak_version:
                         add_note(
-                            f"Current and report garak version mismatch, {garak_version} vs. {report_garak_version}"
+                            f"Current and report garak version mismatch, {garak_version} vs. {report_garak_version}",
+                            high_priority=False,
                         )
                     configured_probe_spec = r["plugins.probe_spec"]
                     probes_requested, __rejected = garak._config.parse_plugin_spec(
@@ -151,7 +164,8 @@ def main(argv=None) -> None:
                     _delta = _now - _start
                     if _delta.days > 180:
                         add_note(
-                            f"Run is old ({_delta.days} days), calibration may have shifted"
+                            f"Run is old ({_delta.days} days), calibration may have shifted",
+                            high_priority=False,
                         )
 
                 case "attempt":
@@ -189,7 +203,7 @@ def main(argv=None) -> None:
 
                         case _:
                             add_note(
-                                f"Attempt uuid {_attempt_uuid} seq {_attempt_seq} found with unexpected status:{_status}"
+                                f"Attempt uuid {_attempt_uuid} seq {_attempt_seq} found with unexpected status: {_status}"
                             )
 
                 case "eval":
@@ -263,7 +277,8 @@ def main(argv=None) -> None:
                     digest_exists = True
                     if r["meta"]["garak_version"] != report_garak_version:
                         add_note(
-                            f'Digest was written with a different garak version ({r["meta"]["garak_version"]}) from the run ({report_garak_version})'
+                            f'Digest was written with a different garak version ({r["meta"]["garak_version"]}) from the run ({report_garak_version})',
+                            high_priority=False,
                         )
                     probes_in_digest = set()
 
@@ -283,7 +298,8 @@ def main(argv=None) -> None:
                                     )
                                 except KeyError:
                                     add_note(
-                                        f"Missing 'relative_score' entry in digest for {probename} {detectorname}, old version?"
+                                        f"Missing 'relative_score' entry in digest for {probename} {detectorname}, old version?",
+                                        high_priority=False,
                                     )
 
                     _z_score_floats = filter(
@@ -291,7 +307,8 @@ def main(argv=None) -> None:
                     )
                     if not len(list(_z_score_floats)):
                         add_note(
-                            "No Z-scores/relative scores found. Maybe deliberate, maybe calibration broken"
+                            "No Z-scores/relative scores found. Maybe deliberate, maybe calibration broken",
+                            high_priority=False,
                         )
 
                     probes_in_digest.remove("_summary")

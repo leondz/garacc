@@ -181,3 +181,4 @@ logs/
 garak-report/.yarn/
 
 .yarn
+.claude

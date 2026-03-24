@@ -12,7 +12,7 @@ from garak.services import intentservice
 
 
 def test_translation_intent_prompts_from_stub():
-    """Test that prompts_from_stub returns stub unchanged"""
+    """Test that prompts_from_stub returns DAN jailbreak + stub combined prompts"""
     _config.load_base_config()
 
     # Set up intent spec
@@ -30,8 +30,13 @@ def test_translation_intent_prompts_from_stub():
     result = probe._prompts_from_stub(test_stub)
 
     assert isinstance(result, list)
-    assert len(result) == 1
-    assert result[0] == test_stub.content
+    # Should have multiple prompts (one per sampled DAN variant)
+    assert len(result) > 0
+    # Each prompt should contain the stub text (combined with DAN jailbreak)
+    for prompt in result:
+        assert test_stub.content in prompt
+        # Prompt should be longer than just the stub (DAN text prepended)
+        assert len(prompt) > len(test_stub.content)
 
 
 def test_translation_intent_with_intent_service():
@@ -54,11 +59,16 @@ def test_translation_intent_with_intent_service():
     # Verify that stubs were populated
     assert len(probe.stubs) > 0, "Should have populated stubs from intents"
 
-    # Verify that prompts were built
+    # Verify that prompts were built (multiple per stub due to DAN variants)
     assert len(probe.prompts) > 0, "Should have built prompts from stubs"
+    assert len(probe.prompts) >= len(probe.stubs), \
+        "Should have at least as many prompts as stubs (DAN variants multiply them)"
 
     # Verify prompts are strings (before translation)
     assert all(isinstance(p, str) for p in probe.prompts), "Prompts should be strings"
+
+    # Verify DAN prompts were loaded
+    assert len(probe.dan_prompts) > 0, "Should have loaded DAN prompts"
 
 
 def test_translation_intent_probe():

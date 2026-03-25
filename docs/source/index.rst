@@ -64,8 +64,7 @@ Check out the :doc:`usage` section for further information, including :doc:`inst
    _plugins
    cas
    report
-   services.intentservice
-   services.langservice
+   services
 
 .. toctree:: 
    :caption: Technologies

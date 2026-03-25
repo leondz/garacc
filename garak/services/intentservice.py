@@ -1,7 +1,31 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Retrieval of intents and intent stubs."""
+"""Retrieval of intents and intent stubs.
+
+The intent service manages everything related to initialisation and enumeration of intents.
+Intents are potential traits or failure modes of a target.
+They could be things like 'produce hate speech', 'generate malware', or 'reveal training recipe'.
+Each intent has on or more "stubs", which are prototypical requests.
+Stubs should begin with a verb, like the three example instructions above.
+
+See also: :doc:`intents.base` for more on ``Intent`` and ``Stub``.
+
+The intent service is responsible for tasks such as:
+
+- loading the intent typology
+- selecting intents to be passed to other classes
+- managing the set of intents active within a run
+- supplying stubs for probes
+
+The service loads at garak startup, and based on the active configuration, identifies a set of intents that may be provided to requesting code. 
+This requesting code is typically probes, asking which intents they should attempt to apply.
+
+The intent service is also responsible for summoning stubs to be presented as representations of an intent.
+These can come from the intent typology, from text, from YAML or JSON (both of which support single-line and conversational stubs), and in code. The entry point for this stub assembly is :py:meth:`get_intent_stubs`.
+
+To check the quality of the intents present in the system, see ``tools.cas.intent_quality``.
+"""
 
 import importlib
 import json
@@ -99,7 +123,7 @@ def _expand_intent_specifier_children(intent_specifier: str) -> Set[str]:
 
 
 def _populate_intents(intent_spec: str | None) -> None:
-    """set the service's intents according to an intent spec and the
+    """set the active intents according to an intent spec and the
     loaded typology."""
 
     global intents_active
@@ -151,6 +175,7 @@ def _get_stubs_typology(intent_code: str) -> Set[Stub]:
 
 
 def _glob_stubs(intent_code: str, suffix_expr: str):
+    """find filenames for text stub files"""
     stub_glob = set()
     stub_glob.update(stub_dir.glob(f"{intent_code}.{suffix_expr}"))
     stub_glob.update(stub_dir.glob(f"{intent_code}_*.{suffix_expr}"))
@@ -202,6 +227,7 @@ def _get_stubs_json(intent_code: str) -> Set[Stub]:
 
 
 def _get_stubs_yaml(intent_code: str) -> Set[Stub]:
+    """get stubs of prompts or conversations, in yaml format"""
 
     # openai api format conversations
 

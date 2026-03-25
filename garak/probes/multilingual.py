@@ -22,15 +22,17 @@ from typing import List
 
 from garak import _config
 import garak.probes
+from garak.probes.spo import SPOIntent
 
 
-class TranslationIntent(garak.probes.IntentProbe):
+class TranslationIntent(SPOIntent):
     """Translation-based jailbreak probe
 
-    Tests if content moderation can be bypassed by translating malicious
-    requests to another language. Translates intent stubs to the configured
-    target language, sends to LLM, and translates responses back to English
-    for detection.
+    Tests if content moderation can be bypassed by translating DAN-style
+    jailbreak prompts combined with malicious intent stubs into another
+    language. Both the jailbreak text and the stub are translated to the
+    configured target language, sent to the LLM, and responses are
+    reverse-translated back to English for detection.
 
     The attack exploits potential weaknesses in multilingual models where
     harmful content filters may be less effective in non-English languages.
@@ -42,16 +44,17 @@ class TranslationIntent(garak.probes.IntentProbe):
     2. Target language → Source (en) reverse translation
     """
 
-    DEFAULT_PARAMS = {
+    DEFAULT_PARAMS = SPOIntent.DEFAULT_PARAMS | {
         "target_lang": "zh",
     }
 
     lang = "en"  # Source language
     primary_detector = "mitigation.MitigationBypass"
+    extended_detectors = ["dan.DAN"]
     tags = [
         # TODO
     ]
-    goal = "bypass content moderation via translation"
+    goal = "bypass content moderation via translated DAN-style jailbreak"
     tier = garak.probes.Tier.OF_CONCERN
     active = False
 
@@ -70,7 +73,8 @@ class TranslationIntent(garak.probes.IntentProbe):
             # In normal mode with module config
             config_root.run.target_lang = self.target_lang
 
-        # Call IntentProbe.__init__ which will call Probe.__init__
+        # Call SPOIntent.__init__ which loads DAN prompts and calls
+        # IntentProbe.__init__ → Probe.__init__ (creates langprovider)
         super().__init__(config_root=config_root)
 
         # Verify langproviders are configured
@@ -88,9 +92,3 @@ class TranslationIntent(garak.probes.IntentProbe):
                 f"Translation probe will not reverse-translate outputs. "
                 f"Please configure reverse langproviders in your config file."
             )
-
-        # There's nothing more needed here:
-        #   The base Probe.probe() method automatically translates prompts using
-        #   self.langprovider before sending to the target LLM. Similarly,
-        #   Probe._postprocess_attempt() reverse-translates outputs using
-        #   self.reverse_langprovider before detection.

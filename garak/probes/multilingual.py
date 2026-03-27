@@ -57,6 +57,7 @@ class TranslationIntent(SPOIntent):
     goal = "bypass content moderation via translated DAN-style jailbreak"
     tier = garak.probes.Tier.OF_CONCERN
     active = False
+    parallelisable_attempts = False  # This might cause OOM issues when loading up LocalHFTranslator multiple times
 
     def __init__(self, config_root=_config):
         # We need to set target_lang in config BEFORE calling super().__init__()

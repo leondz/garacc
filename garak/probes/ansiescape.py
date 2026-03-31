@@ -117,7 +117,7 @@ class AnsiRawTokenizerHF(garak.probes.Probe):
     """
 
     lang = "*"
-    tags = ["owasp:llm05"]
+    tags = ["owasp:llm05", "demon:Language:Code_and_encode:Token"]
     supported_generators = {
         "huggingface.Model",
         "huggingface.Pipeline",

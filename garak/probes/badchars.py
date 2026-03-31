@@ -125,6 +125,7 @@ class BadCharacters(garak.probes.Probe):
         "avid-effect:security:S0403",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Language:Code_and_encode:Token",
     ]
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
 

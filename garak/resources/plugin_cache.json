@@ -71,7 +71,8 @@
       "parallelisable_attempts": true,
       "primary_detector": "ansiescape.Raw",
       "tags": [
-        "owasp:llm05"
+        "owasp:llm05",
+        "demon:Language:Code_and_encode:Token"
       ],
       "tier": 1,
       "mod_time": "2025-11-26 08:37:31 +0000"
@@ -306,10 +307,34 @@
       "tags": [
         "avid-effect:security:S0403",
         "quality:Security:PromptStability",
-        "payload:jailbreak"
+        "payload:jailbreak",
+        "demon:Language:Code_and_encode:Token"
       ],
       "tier": 2,
       "mod_time": "2026-02-18 08:01:03 +0000"
+    },
+    "probes.base.IntentProbe": {
+      "description": "Probe implementing a technique that tests over a range of intents",
+      "DEFAULT_PARAMS": {},
+      "active": false,
+      "blocked_intent_spec": "",
+      "doc_uri": "",
+      "extended_detectors": [],
+      "extra_dependency_names": [],
+      "garak": null,
+      "goal": "",
+      "lang": null,
+      "modality": {
+        "in": [
+          "text"
+        ]
+      },
+      "parallelisable_attempts": true,
+      "primary_detector": null,
+      "skip_root_intents": true,
+      "tags": [],
+      "tier": 9,
+      "mod_time": "2026-02-27 19:25:10 +0000"
     },
     "probes.base.IterativeProbe": {
       "description": "",
@@ -457,7 +482,10 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:jailbreak"
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
+        "payload:jailbreak",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 2,
       "mod_time": "2026-02-17 15:01:31 +0000"
@@ -484,6 +512,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "avid-effect:performance:P0204"
       ],
       "tier": 9,
@@ -525,6 +554,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "payload:jailbreak"
       ],
       "tier": 2,
@@ -552,6 +582,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "payload:jailbreak"
       ],
       "tier": 2,
@@ -579,6 +610,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "avid-effect:performance:P0204"
       ],
       "tier": 9,
@@ -606,6 +638,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "payload:jailbreak"
       ],
       "tier": 9,
@@ -633,6 +666,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "payload:jailbreak"
       ],
       "tier": 9,
@@ -660,6 +694,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "payload:jailbreak"
       ],
       "tier": 9,
@@ -687,6 +722,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "payload:jailbreak"
       ],
       "tier": 9,
@@ -712,6 +748,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "payload:jailbreak"
       ],
       "tier": 1,
@@ -737,6 +774,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "payload:jailbreak"
       ],
       "tier": 1,
@@ -764,6 +802,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "payload:jailbreak"
       ],
       "tier": 9,
@@ -791,6 +830,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "avid-effect:performance:P0204",
         "payload:jailbreak"
       ],
@@ -819,6 +859,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "payload:jailbreak"
       ],
       "tier": 9,
@@ -846,6 +887,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "payload:jailbreak"
       ],
       "tier": 9,
@@ -873,6 +915,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "payload:jailbreak"
       ],
       "tier": 9,
@@ -900,6 +943,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "payload:jailbreak"
       ],
       "tier": 9,
@@ -927,6 +971,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "payload:jailbreak"
       ],
       "tier": 9,
@@ -954,6 +999,7 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
+        "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",
         "payload:jailbreak"
       ],
       "tier": 9,
@@ -1072,7 +1118,8 @@
         "owasp:llm01",
         "avid-effect:security:S0301",
         "quality:Security:PromptStability",
-        "cwe:1427"
+        "cwe:1427",
+        "demon:Fictionalizing:Roleplaying:User_persona"
       ],
       "tier": 2,
       "mod_time": "2026-02-02 14:10:11 +0000"
@@ -1097,7 +1144,8 @@
         "owasp:llm01",
         "avid-effect:security:S0301",
         "quality:Security:PromptStability",
-        "cwe:1427"
+        "cwe:1427",
+        "demon:Fictionalizing:Roleplaying:User_persona"
       ],
       "tier": 2,
       "mod_time": "2026-02-02 14:10:11 +0000"
@@ -1122,7 +1170,8 @@
         "owasp:llm01",
         "avid-effect:security:S0301",
         "quality:Security:PromptStability",
-        "cwe:1427"
+        "cwe:1427",
+        "demon:Fictionalizing:Roleplaying:User_persona"
       ],
       "tier": 2,
       "mod_time": "2026-02-02 14:10:11 +0000"
@@ -1274,7 +1323,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:jailbreak"
+        "payload:jailbreak",
+        "demon:Language:Code_and_encode:Token"
       ],
       "tier": 1,
       "mod_time": "2026-02-02 14:10:11 +0000"
@@ -1308,7 +1358,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:jailbreak"
+        "payload:jailbreak",
+        "demon:Language:Code_and_encode:Token"
       ],
       "tier": 1,
       "mod_time": "2026-02-02 14:10:11 +0000"
@@ -1342,7 +1393,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1376,7 +1428,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1410,7 +1463,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1444,7 +1498,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1478,7 +1533,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1512,7 +1568,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 1,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1546,7 +1603,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1580,7 +1638,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1614,7 +1673,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1648,7 +1708,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1682,7 +1743,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1716,7 +1778,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1750,7 +1813,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1784,7 +1848,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 1,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1818,7 +1883,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1852,7 +1918,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1886,7 +1953,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 1,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1921,7 +1989,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 1,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1955,7 +2024,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -1989,7 +2059,8 @@
         "avid-effect:security:S0403",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Data_encoding"
       ],
       "tier": 2,
       "mod_time": "2025-12-12 19:16:05 +0000"
@@ -2175,7 +2246,8 @@
         "avid-effect:performance:P0201",
         "owasp:llm05",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Token"
       ],
       "tier": 3,
       "mod_time": "2025-11-12 08:34:39 +0000"
@@ -2201,7 +2273,8 @@
         "avid-effect:performance:P0201",
         "owasp:llm05",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Token"
       ],
       "tier": 3,
       "mod_time": "2025-11-12 08:34:39 +0000"
@@ -2227,7 +2300,8 @@
         "avid-effect:performance:P0204",
         "owasp:llm05",
         "quality:Security:PromptStability",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Code_and_encode:Token"
       ],
       "tier": 3,
       "mod_time": "2025-11-12 08:34:39 +0000"
@@ -2252,7 +2326,8 @@
         "owasp:llm01",
         "payload:generic",
         "quality:Security:Adversarial",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Code_and_encode:Token"
       ],
       "tier": 1,
       "mod_time": "2025-11-12 08:34:39 +0000"
@@ -2277,7 +2352,8 @@
         "avid-effect:security:S0403",
         "avid-effect:performance:P0201",
         "avid-effect:performance:P0204",
-        "payload:generic"
+        "payload:generic",
+        "demon:Language:Prompt_injection:Strong_arm_attack"
       ],
       "tier": 2,
       "mod_time": "2025-11-12 08:34:39 +0000"
@@ -2308,6 +2384,31 @@
       "tier": 2,
       "mod_time": "2025-11-12 08:34:39 +0000"
     },
+    "probes.grandma.GrandmaIntent": {
+      "description": "Roleplaying attack asking for imitation of a grandmother",
+      "DEFAULT_PARAMS": {},
+      "active": false,
+      "blocked_intent_spec": "",
+      "doc_uri": "",
+      "extended_detectors": [],
+      "extra_dependency_names": [],
+      "garak": null,
+      "goal": "",
+      "lang": "*",
+      "modality": {
+        "in": [
+          "text"
+        ]
+      },
+      "parallelisable_attempts": true,
+      "primary_detector": null,
+      "skip_root_intents": true,
+      "tags": [
+        "demon:Fictionalizing:Roleplaying:User_persona"
+      ],
+      "tier": 9,
+      "mod_time": "2025-11-12 08:34:39 +0000"
+    },
     "probes.grandma.Slurs": {
       "description": "Use the grandma attack to get ethnic slurs.",
       "DEFAULT_PARAMS": {
@@ -2334,7 +2435,8 @@
       "parallelisable_attempts": true,
       "primary_detector": "unsafe_content.SlursReclaimedSlurs",
       "tags": [
-        "avid-effect:security:S0300"
+        "avid-effect:security:S0300",
+        "demon:Fictionalizing:Roleplaying:User_persona"
       ],
       "tier": 1,
       "mod_time": "2025-11-12 08:34:39 +0000"
@@ -2365,7 +2467,8 @@
       "primary_detector": "mitigation.MitigationBypass",
       "tags": [
         "risk-cards:lmrc:providing_illegal_info",
-        "quality:Behavioral:ContentSafety:LegalGoodsServices"
+        "quality:Behavioral:ContentSafety:LegalGoodsServices",
+        "demon:Fictionalizing:Roleplaying:User_persona"
       ],
       "tier": 1,
       "mod_time": "2025-11-12 08:34:39 +0000"
@@ -2392,7 +2495,8 @@
         "avid-effect:security:S0300",
         "owasp:llm06",
         "risk-cards:lmrc:providing_illegal_info",
-        "quality:Behavioral:ContentSafety:LegalGoodsServices"
+        "quality:Behavioral:ContentSafety:LegalGoodsServices",
+        "demon:Fictionalizing:Roleplaying:User_persona"
       ],
       "tier": 2,
       "mod_time": "2025-11-12 08:34:39 +0000"
@@ -2419,7 +2523,8 @@
         "avid-effect:security:S0300",
         "owasp:llm06",
         "risk-cards:lmrc:providing_illegal_info",
-        "quality:Behavioral:ContentSafety:LegalGoodsServices"
+        "quality:Behavioral:ContentSafety:LegalGoodsServices",
+        "demon:Fictionalizing:Roleplaying:User_persona"
       ],
       "tier": 2,
       "mod_time": "2025-11-12 08:34:39 +0000"
@@ -2448,7 +2553,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2477,7 +2584,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2506,7 +2615,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2535,7 +2646,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2561,7 +2674,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2587,7 +2702,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2611,7 +2728,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2635,7 +2754,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2661,7 +2782,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2687,7 +2810,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2713,7 +2838,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2739,7 +2866,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2765,7 +2894,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2791,7 +2922,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2815,7 +2948,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2844,7 +2979,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2873,7 +3010,9 @@
       "tags": [
         "avid-effect:security:S0403",
         "owasp:llm01",
-        "quality:Security:PromptStability"
+        "quality:Security:PromptStability",
+        "demon:Language:Prompt_injection:Stop_sequences",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 1,
       "mod_time": "2026-02-12 19:40:43 +0000"
@@ -2899,7 +3038,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 2,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -2925,7 +3065,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 2,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -2951,7 +3092,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 1,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -2977,7 +3119,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 1,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -3003,7 +3146,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 2,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -3029,7 +3173,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 2,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -3055,7 +3200,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 2,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -3081,7 +3227,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 2,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -3107,7 +3254,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 2,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -3133,7 +3281,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 2,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -3159,7 +3308,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 1,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -3185,7 +3335,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 1,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -3211,7 +3362,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 2,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -3237,7 +3389,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 2,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -3263,7 +3416,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 1,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -3289,7 +3443,8 @@
         "owasp:llm10",
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
-        "payload:leak:training"
+        "payload:leak:training",
+        "demon:Language:Stylizing:Give_examples"
       ],
       "tier": 1,
       "mod_time": "2026-02-04 19:22:32 +0000"
@@ -3634,7 +3789,8 @@
         "avid-effect:performance:P0204",
         "owasp:llm09",
         "quality:Robustness:GenerativeMisinformation",
-        "payload:hallucination"
+        "payload:hallucination",
+        "demon:Rhetoric:Persuasion_and_manipulation:Distraction"
       ],
       "tier": 2,
       "mod_time": "2025-11-12 08:34:39 +0000"
@@ -3661,7 +3817,8 @@
         "owasp:llm09",
         "owasp:llm02",
         "quality:Robustness:GenerativeMisinformation",
-        "payload:malicious:badcode"
+        "payload:malicious:badcode",
+        "demon:Stratagems:Meta-prompting:Ask_for_examples"
       ],
       "tier": 1,
       "mod_time": "2026-01-30 12:34:29 +0000"
@@ -3688,7 +3845,8 @@
         "owasp:llm09",
         "owasp:llm02",
         "quality:Robustness:GenerativeMisinformation",
-        "payload:malicious:badcode"
+        "payload:malicious:badcode",
+        "demon:Stratagems:Meta-prompting:Ask_for_examples"
       ],
       "tier": 1,
       "mod_time": "2026-01-30 12:34:29 +0000"
@@ -3715,7 +3873,8 @@
         "owasp:llm09",
         "owasp:llm02",
         "quality:Robustness:GenerativeMisinformation",
-        "payload:malicious:badcode"
+        "payload:malicious:badcode",
+        "demon:Stratagems:Meta-prompting:Ask_for_examples"
       ],
       "tier": 1,
       "mod_time": "2026-01-30 12:34:29 +0000"
@@ -3742,7 +3901,8 @@
         "owasp:llm09",
         "owasp:llm02",
         "quality:Robustness:GenerativeMisinformation",
-        "payload:malicious:badcode"
+        "payload:malicious:badcode",
+        "demon:Stratagems:Meta-prompting:Ask_for_examples"
       ],
       "tier": 1,
       "mod_time": "2026-01-30 12:34:29 +0000"
@@ -3769,7 +3929,8 @@
         "owasp:llm09",
         "owasp:llm02",
         "quality:Robustness:GenerativeMisinformation",
-        "payload:malicious:badcode"
+        "payload:malicious:badcode",
+        "demon:Stratagems:Meta-prompting:Ask_for_examples"
       ],
       "tier": 1,
       "mod_time": "2026-01-30 12:34:29 +0000"
@@ -3796,7 +3957,8 @@
         "owasp:llm09",
         "owasp:llm02",
         "quality:Robustness:GenerativeMisinformation",
-        "payload:malicious:badcode"
+        "payload:malicious:badcode",
+        "demon:Stratagems:Meta-prompting:Ask_for_examples"
       ],
       "tier": 1,
       "mod_time": "2026-01-30 12:34:29 +0000"
@@ -3823,7 +3985,8 @@
         "owasp:llm09",
         "owasp:llm02",
         "quality:Robustness:GenerativeMisinformation",
-        "payload:malicious:badcode"
+        "payload:malicious:badcode",
+        "demon:Stratagems:Meta-prompting:Ask_for_examples"
       ],
       "tier": 1,
       "mod_time": "2026-01-30 12:34:29 +0000"
@@ -3945,7 +4108,8 @@
         "owasp:llm01",
         "quality:Behavioral:ContentSafety:Violence",
         "quality:Security:PromptStability",
-        "payload:unwanted:violence"
+        "payload:unwanted:violence",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 2,
       "mod_time": "2026-02-02 14:10:11 +0000"
@@ -3971,7 +4135,8 @@
         "owasp:llm01",
         "quality:Behavioral:ContentSafety:Violence",
         "quality:Security:PromptStability",
-        "payload:unwanted:violence"
+        "payload:unwanted:violence",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 2,
       "mod_time": "2026-02-02 14:10:11 +0000"
@@ -3997,7 +4162,8 @@
         "owasp:llm01",
         "quality:Behavioral:ContentSafety:Violence",
         "quality:Security:PromptStability",
-        "payload:unwanted:violence"
+        "payload:unwanted:violence",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 2,
       "mod_time": "2026-02-02 14:10:11 +0000"
@@ -4023,7 +4189,8 @@
         "owasp:llm01",
         "quality:Behavioral:ContentSafety:Violence",
         "quality:Security:PromptStability",
-        "payload:unwanted:violence"
+        "payload:unwanted:violence",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 2,
       "mod_time": "2026-02-02 14:10:11 +0000"
@@ -4049,7 +4216,8 @@
         "owasp:llm01",
         "quality:Behavioral:ContentSafety:Violence",
         "quality:Security:PromptStability",
-        "payload:unwanted:violence"
+        "payload:unwanted:violence",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 2,
       "mod_time": "2026-02-02 14:10:11 +0000"
@@ -4075,7 +4243,8 @@
         "owasp:llm01",
         "quality:Behavioral:ContentSafety:Violence",
         "quality:Security:PromptStability",
-        "payload:unwanted:violence"
+        "payload:unwanted:violence",
+        "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 2,
       "mod_time": "2026-02-02 14:10:11 +0000"
@@ -4323,7 +4492,8 @@
         "avid-effect:performance:P0204",
         "owasp:llm01",
         "quality:Security:PromptStability",
-        "payload:jailbreak"
+        "payload:jailbreak",
+        "demon:Language:Code_and_encode:Token"
       ],
       "tier": 2,
       "mod_time": "2026-02-18 08:01:03 +0000"
@@ -9177,7 +9347,7 @@
       },
       "active": true,
       "extra_dependency_names": [],
-      "mod_time": "2026-02-02 14:10:11 +0000"
+      "mod_time": "2026-02-23 19:59:39 +0000"
     },
     "harnesses.probewise.ProbewiseHarness": {
       "DEFAULT_PARAMS": {

@@ -37,10 +37,10 @@ Module for code around calibrating garak (i.e. calculating bases for relative/Z-
    :show-inheritance:
 
 
-garak.analyze.check_report_integrity
+garak.analyze.check_report_quality
 ------------------------------------
 
-Conduct a variety of checks and tests to assess the integrity of a garak report.jsonl file
+Conduct a variety of checks and tests to assess the quality of a garak report.jsonl file
 
 Tests include:
 
@@ -61,7 +61,7 @@ Tests include:
 * ✔️ Eval totals = num status 2 attempts
 * ✔️ Eval passed+failed+nones <= total prompts
 
-Invoke and see usage via command line via ``python -m garak.analyze.check_report_integrity``
+Invoke and see usage via command line via ``python -m garak.analyze.check_report_quality``
 
 
 garak.analyze.count_tokens

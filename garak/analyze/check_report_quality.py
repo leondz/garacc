@@ -311,7 +311,7 @@ def main(argv=None) -> None:
                             high_priority=False,
                         )
 
-                    probes_in_digest.remove("_summary")
+                    probes_in_digest.discard("_summary")
                     if probes_in_digest != probes_requested:
                         _compare_sets(
                             probes_requested,

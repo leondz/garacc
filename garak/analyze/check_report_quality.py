@@ -213,13 +213,19 @@ def main(argv=None) -> None:
                         probes_found_in_evals.add(_probename)
                         total_attempts_processed = r["total_processed"]
                         total_attempts_evaluated = r["total_evaluated"]
-                        if (
-                            total_attempts_processed
-                            != attempt_status_2_per_probe[_probename]
+                        attempt_status_2_expected = (
+                            attempt_status_2_per_probe[_probename]
                             * generations_requested
-                        ):
+                        )
+                        if total_attempts_processed < attempt_status_2_expected:
+
                             add_note(
-                                f"Eval entry for {_probename} {_detectorname} indicates {total_attempts_processed} instances but there were {attempt_status_2_per_probe[_probename]} status:2 attempts (generations={generations_requested})"
+                                f"Eval entry for {_probename} {_detectorname} indicates {total_attempts_processed} instances but there were fewer ({attempt_status_2_per_probe[_probename]}) status:2 attempts (generations={generations_requested})",
+                            )
+                        if total_attempts_processed > attempt_status_2_expected:
+                            add_note(
+                                f"Eval entry for {_probename} {_detectorname} indicates {total_attempts_processed} instances but there more ({attempt_status_2_per_probe[_probename]}) status:2 attempts (generations={generations_requested})",
+                                high_priority=False,
                             )
 
                         if r["passed"] > r["total_evaluated"]:

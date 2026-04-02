@@ -211,20 +211,20 @@ def main(argv=None) -> None:
                         _probename = r["probe"]
                         _detectorname = r["detector"]
                         probes_found_in_evals.add(_probename)
-                        total_attempts_processed = r["total_processed"]
-                        total_attempts_evaluated = r["total_evaluated"]
-                        attempt_status_2_expected = (
+                        total_responses_processed = r["total_processed"]
+                        total_responses_evaluated = r["total_evaluated"]
+                        responses_expected = (
                             attempt_status_2_per_probe[_probename]
                             * generations_requested
                         )
-                        if total_attempts_processed < attempt_status_2_expected:
+                        if total_responses_processed < responses_expected:
 
                             add_note(
-                                f"Eval entry for {_probename} {_detectorname} indicates {total_attempts_processed} instances but there were fewer ({attempt_status_2_per_probe[_probename]}) status:2 attempts (generations={generations_requested})",
+                                f"Eval entry for {_probename} {_detectorname} indicates {total_responses_processed} instances but there were fewer ({attempt_status_2_per_probe[_probename]}) status:2 attempt responses (generations={generations_requested})",
                             )
-                        if total_attempts_processed > attempt_status_2_expected:
+                        if total_responses_processed > responses_expected:
                             add_note(
-                                f"Eval entry for {_probename} {_detectorname} indicates {total_attempts_processed} instances but there more ({attempt_status_2_per_probe[_probename]}) status:2 attempts (generations={generations_requested})",
+                                f"Eval entry for {_probename} {_detectorname} indicates {total_responses_processed} instances but there more ({attempt_status_2_per_probe[_probename]}) status:2 attempt responses (generations={generations_requested})",
                                 high_priority=False,
                             )
 
@@ -233,22 +233,22 @@ def main(argv=None) -> None:
                                 f"More passing results than instances for {_probename} eval with {r['detector']}"
                                 + repr(r)
                             )
-                        if r["passed"] + r["fails"] != total_attempts_evaluated:
+                        if r["passed"] + r["fails"] != total_responses_evaluated:
                             add_note(
-                                f"Eval entry total_evaluated {total_attempts_evaluated} doesn't match sum of passed {r['passed']} and fails {r['fails']} for {_probename}/{r['detector']}"
+                                f"Eval entry total_evaluated {total_responses_evaluated} doesn't match sum of passed {r['passed']} and fails {r['fails']} for {_probename}/{r['detector']}"
                             )
 
                         if (
-                            total_attempts_evaluated + r["nones"]
-                            != total_attempts_processed
+                            total_responses_evaluated + r["nones"]
+                            != total_responses_processed
                         ):
                             add_note(
-                                f"Eval entry total_processed {total_attempts_processed} doesn't match sum of evaluated {total_attempts_evaluated} and nones {r['nones']} for {_probename}/{r['detector']}"
+                                f"Eval entry total_processed {total_responses_processed} doesn't match sum of evaluated {total_responses_evaluated} and nones {r['nones']} for {_probename}/{r['detector']}"
                             )
 
-                        if total_attempts_evaluated > total_attempts_processed:
+                        if total_responses_evaluated > total_responses_processed:
                             add_note(
-                                f"Eval entry total_evaluated {total_attempts_evaluated} mustn't be greater than total_processed {total_attempts_processed} for {_probename}/{r['detector']}"
+                                f"Eval entry total_evaluated {total_responses_evaluated} mustn't be greater than total_processed {total_responses_processed} for {_probename}/{r['detector']}"
                             )
 
                         pfn = [r["passed"], r["fails"], r["nones"]]

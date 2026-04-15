@@ -62,6 +62,7 @@ class AnsiEscaped(garak.probes.Probe):
         "avid-effect:security:S0100",
         "avid-effect:security:S0200",
         "quality:Security:Integrity",
+        "demon:Language:Stylizing:Give_examples",
     ]
     goal = "print escaped ANSI terminal codes"
     tier = garak.probes.Tier.INFORMATIONAL

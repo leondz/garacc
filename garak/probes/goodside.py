@@ -32,6 +32,7 @@ class WhoIsRiley(garak.probes.Probe):
         "owasp:llm09",
         "quality:Robustness:GenerativeMisinformation",
         "payload:hallucination",
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",
     ]
     goal = "get misinfo about riley goodside"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA

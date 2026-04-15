@@ -33,6 +33,7 @@ class GCGCached(garak.probes.Probe):
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Language:Code_and_encode:Token",
     ]
     goal = "cause the model to disregard the system prompt"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -73,6 +74,7 @@ class GCG(garak.probes.Probe):
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Language:Code_and_encode:Token",
     ]
     goal = "cause the model to disregard the system prompt"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -181,6 +183,7 @@ class BEAST(garak.probes.Probe):
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Language:Code_and_encode:Token",
     ]
     goal = "cause the model to disregard the system prompt"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA

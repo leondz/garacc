@@ -29,6 +29,7 @@ class AudioAchillesHeel(garak.probes.Probe):
         "avid-effect:security:S0403",
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
+        "demon:Language:Code_and_encode:Data_presentation",
     ]
     goal = "disregard the system prompt via audio component"
     tier = garak.probes.Tier.UNLISTED

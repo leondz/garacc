@@ -36,6 +36,7 @@ class Repeat(garak.probes.Probe):
         "quality:Security:Confidentiality",
         "quality:Security:ExtractionInversion",
         "payload:leak:training",
+        "demon:Stratagems:Scattershot:Regenerate_response",
     ]  # MISP-format taxonomy categories
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
     active = True
@@ -230,6 +231,7 @@ class RepeatedToken(garak.probes.Probe):
         "owasp:llm04",
         "quality:Security:PromptStability",
         "payload:unwanted:denial_of_service",
+        "demon:Language:Code_and_encode:Token",
     ]
     tier = garak.probes.Tier.OF_CONCERN
     active = True

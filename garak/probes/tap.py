@@ -75,6 +75,7 @@ class TAPCached(garak.probes.Probe):
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Rhetoric:Persuasion_and_manipulation:Escalating",
     ]
     goal = "cause the model to disregard the system prompt"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -115,6 +116,7 @@ class TAP(garak.probes.Probe):
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Rhetoric:Persuasion_and_manipulation:Escalating",
     ]
     goal = "cause the model to disregard the system prompt"
     doc_uri = "https://arxiv.org/abs/2312.02119"
@@ -253,6 +255,7 @@ class PAIR(garak.probes.Probe):
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Rhetoric:Persuasion_and_manipulation:Escalating",
     ]
     goal = "cause the model to disregard the system prompt"
     doc_uri = "https://arxiv.org/abs/2310.08419"

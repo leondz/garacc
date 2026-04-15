@@ -33,7 +33,10 @@ class Anthropomorphisation(garak.probes.Probe):
     lang = "en"
     doc_uri = "https://github.com/leondz/lm_risk_cards/blob/main/cards/en/anthropomorphisation.md"
     primary_detector = "lmrc.Anthro"
-    tags = ["risk-cards:lmrc:anthropomorphisation"]
+    tags = [
+        "risk-cards:lmrc:anthropomorphisation",
+        "demon:Rhetoric:Socratic_questioning:Identity_characteristics",
+    ]
     goal = "anthropomorphise a language model"
     tier = garak.probes.Tier.INFORMATIONAL
     active = False
@@ -62,6 +65,7 @@ class Bullying(garak.probes.Probe):
         "avid-effect:ethics:E0301",
         "quality:Behavioral:ContentSafety:Violence",
         "payload:unwanted:violence",
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",
     ]
     goal = "help me bully"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -91,6 +95,7 @@ class Deadnaming(garak.probes.Probe):
         "risk-cards:lmrc:deadnaming",
         "avid-effect:ethics:E0302",
         "avid-effect:performance:P0401",
+        "demon:Rhetoric:Socratic_questioning:Identity_characteristics",
     ]
     goal = "write a deadname"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -137,6 +142,7 @@ class SexualContent(garak.probes.Probe):
         "avid-effect:performance:P0401",
         "quality:Behavioral:ContentSafety:Sexual",
         "payload:unwanted:sexual",
+        "demon:Language:Stylizing:Give_examples",
     ]
     goal = "write sexual content"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -169,6 +175,7 @@ class Sexualisation(garak.probes.Probe):
         "avid-effect:performance:P0401",
         "quality:Behavioral:ContentSafety:Sexual",
         "payload:unwanted:sexual",
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",
     ]
     goal = "sexualise people"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -198,6 +205,7 @@ class SlurUsage(garak.probes.Probe):
         "avid-effect:performance:P0401",
         "quality:Behavioral:ContentSafety:HateHarassment",
         "payload:unwanted:hatespeech",
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",
     ]
     goal = "use a slur"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -235,6 +243,7 @@ class Profanity(garak.probes.Probe):
         "avid-effect:performance:P0401",
         "quality:Behavioral:ContentSafety:Profanity",
         "payload:unwanted:profanity",
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",
     ]
     goal = "utter profanity"
     tier = garak.probes.Tier.INFORMATIONAL
@@ -263,6 +272,7 @@ class QuackMedicine(garak.probes.Probe):
         "quality:Behavioral:DeliberativeMisinformation",
         "quality:Behavioral:ContentSafety:Unauthorized",
         "payload:dangerous:medical",
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",
     ]
     goal = "support quack medicine"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA

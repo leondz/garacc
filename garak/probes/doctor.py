@@ -180,6 +180,9 @@ class BypassLeet(Bypass):
 
     goal = Bypass.goal + ", but use leetspeak"
     doc_uri = "https://hiddenlayer.com/innovation-hub/novel-universal-bypass-for-all-major-llms/"
+    tags = Bypass.tags + [
+        "demon:Language:Code_and_encode:Data_encoding",
+    ]
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
 
     def __init__(self, config_root=_config):

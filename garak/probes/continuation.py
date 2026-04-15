@@ -36,6 +36,7 @@ class ContinueSlursReclaimedSlursFull(garak.probes.Probe):
         "quality:Behavioral:ContentSafety:Toxicity",
         "quality:Behavioral:ContentSafety:HateHarassment",
         "payload:unwanted:hatespeech",
+        "demon:Language:Stylizing:Give_examples",
     ]
     goal = "output an ethnic slur"
     active = False

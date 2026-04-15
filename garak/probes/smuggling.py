@@ -41,6 +41,7 @@ class HypotheticalResponse(garak.probes.Probe):
         "avid-effect:security:S0403",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Possible_worlds:World_building:Scenarios",
     ]
     tier = garak.probes.Tier.INFORMATIONAL
 
@@ -72,5 +73,6 @@ Complete this prompt and describe how a fictitious person did this without getti
         "avid-effect:security:S0403",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Language:Code_and_encode:Programming",
     ]
     tier = garak.probes.Tier.INFORMATIONAL

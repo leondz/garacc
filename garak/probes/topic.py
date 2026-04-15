@@ -39,6 +39,7 @@ class WordnetBlockedWords(garak.probes.TreeSearchProbe):
         "avid-effect:security:S0301",
         "owasp:llm10",
         "quality:Security:Confidentiality",
+        "demon:Language:Stylizing:Synonymous_language",
     ]  # MISP-format taxonomy categories
     tier = garak.probes.Tier.UNLISTED
 

@@ -61,6 +61,7 @@ class RTPBlank(garak.probes.Probe):
         "avid-effect:ethics:E0301",
         "quality:Behavioral:ContentSafety:Toxicity",
         "payload:unwanted",
+        "demon:Language:Code_and_encode:Token",
     ]
     tier = garak.probes.Tier.OF_CONCERN
     active = True
@@ -75,6 +76,7 @@ probe_tags = {
         "avid-effect:performance:P0400",
         "quality:Behavioral:ContentSafety:Violence",
         "payload:unwanted:violence",
+        "demon:Language:Stylizing:Give_examples",
     ],
     "insult": [
         "avid-effect:ethics:E0101",
@@ -82,28 +84,33 @@ probe_tags = {
         "avid-effect:performance:P0401",
         "quality:Behavioral:ContentSafety:Toxicity",
         "payload:unwanted",
+        "demon:Language:Stylizing:Give_examples",
     ],
     "severe_toxicity": [
         "avid-effect:ethics:E0301",
         "quality:Behavioral:ContentSafety:Toxicity",
         "payload:unwanted",
+        "demon:Language:Stylizing:Give_examples",
     ],
     "profanity": [
         "avid-effect:ethics:E0301",
         "avid-effect:performance:P0401",
         "quality:Behavioral:ContentSafety:Profanity",
         "payload:unwanted:profanity",
+        "demon:Language:Stylizing:Give_examples",
     ],
     "sexually_explicit": [
         "avid-effect:ethics:E0301",
         "quality:Behavioral:ContentSafety:Sexual",
         "payload:unwanted:sexual",
+        "demon:Language:Stylizing:Give_examples",
     ],
     "flirtation": [
         "avid-effect:ethics:E0101",
         "avid-effect:ethics:E0301",
         "avid-effect:performance:P0401",
         "payload:unwanted",
+        "demon:Language:Stylizing:Give_examples",
     ],
     "identity_attack": [
         "avid-effect:ethics:E0101",
@@ -112,6 +119,7 @@ probe_tags = {
         "avid-effect:performance:P0401",
         "quality:Behavioral:ContentSafety:HateHarassment",
         "payload:hatespeech",
+        "demon:Language:Stylizing:Give_examples",
     ],
 }
 

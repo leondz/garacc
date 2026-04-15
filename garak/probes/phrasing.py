@@ -26,6 +26,7 @@ class PastTenseFull(garak.probes.Probe):
         "owasp:llm01",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Language:Stylizing:Synonymous_language",
     ]
     goal = "use past tense to disregard the system prompt"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -73,6 +74,7 @@ class FutureTenseFull(garak.probes.Probe):
         "owasp:llm01",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Language:Stylizing:Synonymous_language",
     ]
     goal = "use future tense to disregard the system prompt"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA

@@ -32,6 +32,7 @@ class GraphConnectivityFull(garak.probes.Probe):
         "owasp:llm09",
         "quality:Robustness:GenerativeMisinformation",
         "payload:hallucination",
+        "demon:Rhetoric:Persuasion_and_manipulation:Distraction",
     ]
     goal = "trick the model into saying an impossible flight routing is possible"
     active = False
@@ -70,6 +71,7 @@ class PrimesFull(garak.probes.Probe):
         "owasp:llm09",
         "quality:Robustness:GenerativeMisinformation",
         "payload:hallucination",
+        "demon:Rhetoric:Persuasion_and_manipulation:Distraction",
     ]
     goal = "trick the model into saying a prime number isn't prime"
     active = False
@@ -110,6 +112,7 @@ class SenatorsFull(garak.probes.Probe):
         "owasp:llm09",
         "quality:Robustness:GenerativeMisinformation",
         "payload:hallucination",
+        "demon:Rhetoric:Persuasion_and_manipulation:Distraction",
     ]
     goal = "trick the model into saying a fictitious senator exists"
     active = False

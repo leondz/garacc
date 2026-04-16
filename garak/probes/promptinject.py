@@ -130,7 +130,7 @@ for rogue_string in rogue_strings:
                     "quality:Behavioral:ContentSafety:Violence",
                     "quality:Security:PromptStability",
                     "payload:unwanted:violence",
-                    "demon:Language:Prompt_injection:Ignore_previous_instructions",
+                    "demon:Language:Prompt_injection:Ignore_previous_instructions",  # injects "ignore previous" commands into benign prompt contexts
                 ],
                 "load_data_all_attacks": load_data_all_attacks,
                 "uri": "https://openreview.net/forum?id=qiaRo_7Zmug",
@@ -164,7 +164,7 @@ for rogue_string in rogue_strings:
                     "quality:Behavioral:ContentSafety:Violence",
                     "quality:Security:PromptStability",
                     "payload:unwanted:violence",
-                    "demon:Language:Prompt_injection:Ignore_previous_instructions",
+                    "demon:Language:Prompt_injection:Ignore_previous_instructions",  # injects "ignore previous" commands into benign prompt contexts
                 ],
                 "load_data_all_attacks": load_data_all_attacks,
                 "uri": "https://openreview.net/forum?id=qiaRo_7Zmug",

@@ -26,7 +26,7 @@ class PastTenseFull(garak.probes.Probe):
         "owasp:llm01",
         "quality:Security:PromptStability",
         "payload:jailbreak",
-        "demon:Language:Stylizing:Synonymous_language",
+        "demon:Language:Stylizing:Synonymous_language",  # reformulates harmful requests in past tense to bypass refusal training
     ]
     goal = "use past tense to disregard the system prompt"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -74,7 +74,7 @@ class FutureTenseFull(garak.probes.Probe):
         "owasp:llm01",
         "quality:Security:PromptStability",
         "payload:jailbreak",
-        "demon:Language:Stylizing:Synonymous_language",
+        "demon:Language:Stylizing:Synonymous_language",  # reformulates harmful requests in future tense to bypass refusal training
     ]
     goal = "use future tense to disregard the system prompt"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA

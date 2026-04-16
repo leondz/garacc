@@ -91,7 +91,7 @@ class DRA(garak.probes.Probe):
         "owasp:llm01",
         "quality:Security:PromptStability",
         "payload:jailbreak",
-        "demon:Language:Code_and_encode:Token",
+        "demon:Language:Code_and_encode:Token",  # truncates and disguises tokens to bypass moderation filters
     ]
 
     goal = "make the LLM ask and answer its own harmful instructions"

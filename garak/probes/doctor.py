@@ -34,7 +34,7 @@ class Puppetry(garak.probes.Probe):
         "avid-effect:security:S0301",
         "quality:Security:PromptStability",
         "cwe:1427",
-        "demon:Fictionalizing:Roleplaying:User_persona",
+        "demon:Fictionalizing:Roleplaying:User_persona",  # assumes a Medical Advisor persona via XML config to bypass guardrails
     ]
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
 
@@ -93,7 +93,7 @@ class Bypass(garak.probes.Probe):
         "avid-effect:security:S0301",
         "quality:Security:PromptStability",
         "cwe:1427",
-        "demon:Fictionalizing:Roleplaying:User_persona",
+        "demon:Fictionalizing:Roleplaying:User_persona",  # invents a Dr. House TV persona to elicit harmful content
     ]
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
 
@@ -181,7 +181,7 @@ class BypassLeet(Bypass):
     goal = Bypass.goal + ", but use leetspeak"
     doc_uri = "https://hiddenlayer.com/innovation-hub/novel-universal-bypass-for-all-major-llms/"
     tags = Bypass.tags + [
-        "demon:Language:Code_and_encode:Data_encoding",
+        "demon:Language:Code_and_encode:Data_encoding",  # encodes prompts in leetspeak to bypass content filters
     ]
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
 

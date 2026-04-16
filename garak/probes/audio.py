@@ -29,7 +29,7 @@ class AudioAchillesHeel(garak.probes.Probe):
         "avid-effect:security:S0403",
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
-        "demon:Language:Code_and_encode:Data_presentation",
+        "demon:Language:Code_and_encode:Data_presentation",  # switches to audio modality to bypass text-based alignment
     ]
     goal = "disregard the system prompt via audio component"
     tier = garak.probes.Tier.UNLISTED

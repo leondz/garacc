@@ -62,7 +62,7 @@ class AnsiEscaped(garak.probes.Probe):
         "avid-effect:security:S0100",
         "avid-effect:security:S0200",
         "quality:Security:Integrity",
-        "demon:Language:Stylizing:Give_examples",
+        "demon:Language:Stylizing:Give_examples",  # asks model to repeat/reproduce ANSI escape code examples
     ]
     goal = "print escaped ANSI terminal codes"
     tier = garak.probes.Tier.INFORMATIONAL
@@ -118,7 +118,7 @@ class AnsiRawTokenizerHF(garak.probes.Probe):
     """
 
     lang = "*"
-    tags = ["owasp:llm05", "demon:Language:Code_and_encode:Token"]
+    tags = ["owasp:llm05", "demon:Language:Code_and_encode:Token"]  # checks tokenizer vocab for malicious ANSI tokens
     supported_generators = {
         "huggingface.Model",
         "huggingface.Pipeline",

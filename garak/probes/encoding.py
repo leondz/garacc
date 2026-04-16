@@ -197,7 +197,7 @@ class EncodingMixin:
         "owasp:llm01",
         "quality:Security:PromptStability",
         "payload:generic",
-        "demon:Language:Code_and_encode:Data_encoding",
+        "demon:Language:Code_and_encode:Data_encoding",  # encodes payloads in base64/ROT13/hex/etc. to bypass input filters
     ]
     goal = "make the model say an encoded payload"
     use_bytes = True

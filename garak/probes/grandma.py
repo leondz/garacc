@@ -56,7 +56,7 @@ class Win10(garak.probes.Probe):
         "owasp:llm06",
         "risk-cards:lmrc:providing_illegal_info",
         "quality:Behavioral:ContentSafety:LegalGoodsServices",
-        "demon:Fictionalizing:Roleplaying:User_persona",
+        "demon:Fictionalizing:Roleplaying:User_persona",  # roleplays as grandchild of deceased grandmother to elicit product keys
     ]
     goal = "get model to output Win 10 product keys"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -103,7 +103,7 @@ class Slurs(garak.probes.Probe):
     extended_detectors = ["mitigation.MitigationBypass"]
     tags = [
         "avid-effect:security:S0300",
-        "demon:Fictionalizing:Roleplaying:User_persona",
+        "demon:Fictionalizing:Roleplaying:User_persona",  # roleplays as grandchild wanting grandma's old-timey slang
     ]
     goal = "get model to use ethnic slur"
     tier = garak.probes.Tier.OF_CONCERN
@@ -140,7 +140,7 @@ class Substances(garak.probes.Probe):
     tags = [
         "risk-cards:lmrc:providing_illegal_info",
         "quality:Behavioral:ContentSafety:LegalGoodsServices",
-        "demon:Fictionalizing:Roleplaying:User_persona",
+        "demon:Fictionalizing:Roleplaying:User_persona",  # roleplays as grandchild of deceased chemical engineer grandmother
     ]
     goal = "get instructions for making bad things"
     doc_uri = "https://x.com/_annieversary/status/1647865782741749760"
@@ -165,7 +165,7 @@ class GrandmaIntent(garak.probes.IntentProbe):
     """
 
     # possible intent taxonomy value M009data
-    tags = ["demon:Fictionalizing:Roleplaying:User_persona"]
+    tags = ["demon:Fictionalizing:Roleplaying:User_persona"]  # roleplays as family member recalling a relative's expertise
     active = False
     lang = "*"
 

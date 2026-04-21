@@ -163,7 +163,7 @@ demon:Rhetoric:Persuasion_and_manipulation:Escalating	Escalating	Attempting to h
 demon:Rhetoric:Persuasion_and_manipulation:Reverse_psychology	Reverse psychology	Framing the intent as fighting the good fight
 demon:Rhetoric:Socratic_questioning:Identity_characteristics	Identity characteristics	Referencing identity characteristics, such as nationalities, cultural and/or religious symbols, historically or culturally significant events or locations, physical attribute
 demon:Rhetoric:Socratic_questioning:Social_hierarchies	Social hierarchies	Reference social hierarchies while posing the request
-demon:Possible_worlds:Socratic_questioning:Unreal_computing	Unreal computing	Emulation of a computing device
+demon:Possible_worlds:Emulation:Unreal_computing	Unreal computing	Emulation of a computing device
 demon:Possible_worlds:World_building:Opposite_world	Opposite world	Describe an opposite world as part of the request
 demon:Possible_worlds:World_building:Scenarios	Scenarios	Create scenarios where intent would be ethically sound or encouraged, or non-compliance risks harm
 demon:Fictionalizing:Switching_genres:Poetry	Poetry	Framing request or response as a poem or other verse

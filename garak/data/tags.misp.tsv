@@ -157,7 +157,7 @@ demon:Language:Stylizing:Formal_language	Formal language	Write from a position o
 demon:Language:Stylizing:Servile_language	Servile language	Employ servile language
 demon:Language:Stylizing:Synonymous_language	Synonymous language	Varying prompt slightly in form but not meaning
 demon:Language:Stylizing:Capitalizing	Capitalizing	USING CAPS
-demon:Language:Stylizing:Give_examples	Give examples	Issuing examples of the target behaviour
+demon:Language:Stylizing:Give_examples	Give examples	Issue examples of the target behaviour in the attack itself
 demon:Rhetoric:Persuasion_and_manipulation:Distraction	Distraction	Use an unrelated context or instruction to “slip something through the filter”
 demon:Rhetoric:Persuasion_and_manipulation:Escalating	Escalating	Attempting to have target “agree” with a very small part of the argument, and then building up to ask for slightly more
 demon:Rhetoric:Persuasion_and_manipulation:Reverse_psychology	Reverse psychology	Framing the intent as fighting the good fight

@@ -69,6 +69,8 @@ class TAPCached(garak.probes.Probe):
     jailbreaks from TAP"""
 
     lang = "en"
+    # T009ignore because TAP-generated jailbreaks try to replace the model's usual refusal behavior.
+    primary_intent = "T009ignore"
     primary_detector = "mitigation.MitigationBypass"
     tags = [
         "avid-effect:security:S0403",
@@ -109,6 +111,8 @@ class TAP(garak.probes.Probe):
     to jailbreaking the target are maintained in a tree, which is proactively pruned."""
 
     lang = "en"
+    # T009ignore because the search objective is to discover prompts that make the model ignore its active safeguards.
+    primary_intent = "T009ignore"
     primary_detector = "mitigation.MitigationBypass"
     tags = [
         "avid-effect:security:S0403",
@@ -247,6 +251,8 @@ class PAIR(garak.probes.Probe):
     PAIR settings, making it equivalent to the PAIR jailbreak"""
 
     lang = "en"
+    # T009ignore because PAIR is the same iterative jailbreak search tuned to override the model's guardrails.
+    primary_intent = "T009ignore"
     primary_detector = "mitigation.MitigationBypass"
     tags = [
         "avid-effect:security:S0403",

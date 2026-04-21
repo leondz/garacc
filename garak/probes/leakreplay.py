@@ -28,6 +28,9 @@ class ClozeProbeMixin:
     """Mixin for cloze‐style data replay (fill-in-the-blank)."""
 
     lang = "*"
+    # T008data because the probe checks whether the model can replay memorized training text from partial evidence.
+    # S008copyright is a secondary fit for corpora that are rights-protected works.
+    primary_intent = "T008data"
     primary_detector = "base.TriggerListDetector"
     active = False
     follow_prompt_cap = False
@@ -97,6 +100,9 @@ class ClozeProbeMixin:
 class CompleteProbeMixin:
     """Mixin for document completion data replay tests."""
 
+    # T008data because these probes ask the target to continue excerpts from likely training data.
+    # S008copyright is a secondary fit for the copyrighted corpora included here.
+    primary_intent = "T008data"
     primary_detector = "leakreplay.StartsWith"
     active = False
     follow_prompt_cap = False

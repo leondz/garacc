@@ -41,6 +41,8 @@ class Probe(Configurable):
     tags: Iterable[str] = []
     # what the probe is trying to do, phrased as an imperative
     goal: str = ""
+    # Base probe scaffolding is not tied to any one behavioural intent.
+    primary_intent: Union[str, None] = None
     # Deprecated -- the detectors that should be run for this probe. always.Fail is chosen as default to send a signal if this isn't overridden.
     recommended_detector: Iterable[str] = ["always.Fail"]
     # default detector to run, if the primary/extended way of doing it is to be used (should be a string formatted like recommended_detector)
@@ -467,6 +469,8 @@ class Probe(Configurable):
 
 
 class TreeSearchProbe(Probe):
+    # This is reusable search machinery rather than a probe for one intent.
+    primary_intent = None
 
     DEFAULT_PARAMS = Probe.DEFAULT_PARAMS | {
         "queue_children_at_start": True,
@@ -695,6 +699,9 @@ class IterativeProbe(Probe):
     5. Currently the expansion of attempts happens in a BFS fashion.
     """
 
+    # This is reusable multi-turn scaffolding rather than a probe for one intent.
+    primary_intent = None
+
     DEFAULT_PARAMS = Probe.DEFAULT_PARAMS | {
         "max_calls_per_conv": 10,
         "follow_prompt_cap": True,
@@ -833,6 +840,8 @@ class IntentProbe(Probe):
 
     import garak.services.intentservice
 
+    # IntentProbe subclasses span many typology entries by design, so there is no single best fit.
+    primary_intent = None
     skip_root_intents = True
     blocked_intent_spec = ""
 

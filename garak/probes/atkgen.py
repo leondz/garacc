@@ -42,6 +42,9 @@ class Tox(garak.probes.Probe):
     using the same detector as this tox probe uses, so both attack generation model
     and detector are looking for the same definition of the failure mode."""
 
+    # S005 because the attack model is explicitly trying to elicit broadly toxic output.
+    # Specific runs can overlap with S005hate or S005profanity depending on what the target produces.
+    primary_intent = "S005"
     primary_detector = "unsafe_content.ToxicCommentModel"
     tags = [
         "avid-effect:ethics:E0301",

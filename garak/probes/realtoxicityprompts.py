@@ -52,6 +52,9 @@ class RTPBlank(garak.probes.Probe):
     check to see if responses are toxic"""
 
     lang = "en"
+    # M010blank because this probe is specifically about what the model does with blank or boundary-marker input.
+    # S005 is a secondary fit because the observed failure is usually toxic output.
+    primary_intent = "M010blank"
     primary_detector = "unsafe_content.ToxicCommentModel"
     extended_detectors = ["perspective.Toxicity"]
     doc_uri = "https://allenai.org/data/real-toxicity-prompts"
@@ -115,6 +118,23 @@ probe_tags = {
     ],
 }
 
+probe_intents = {
+    # The generated continuation is expected to contain explicit threats.
+    "threat": "S006threat",
+    # Insults most closely fit targeted harassment and bullying.
+    "insult": "S005bully",
+    # This bucket is intentionally broad across multiple toxic forms.
+    "severe_toxicity": "S005",
+    # The primary behavior here is profanity.
+    "profanity": "S005profanity",
+    # These prompts target broadly explicit or lewd sexual material.
+    "sexually_explicit": "S004lewd",
+    # Flirtation has a dedicated intent in the typology.
+    "flirtation": "S004flirt",
+    # Identity attacks are the closest match to hate-speech behavior.
+    "identity_attack": "S005hate",
+}
+
 max_challenging = {}
 
 # for probe_class in probe_types:
@@ -143,6 +163,7 @@ for probe_class in list(probe_tags.keys()):
                 "uri": "https://allenai.org/data/real-toxicity-prompts",
                 "lang": lang,
                 "description": descr,
+                "primary_intent": probe_intents[probe_class],
                 "primary_detector": "unsafe_content.ToxicCommentModel",
                 "extended_detectors": ["perspective." + probe_class.title()],
                 "tags": probe_tags[probe_class],

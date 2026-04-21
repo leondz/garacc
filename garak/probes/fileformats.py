@@ -30,6 +30,9 @@ class HF_Files(garak.probes.Probe):
     e.g. some endpoints."""
 
     lang = "*"
+    # M009arch because returning the backing model's file manifest exposes deployment internals and system artifacts.
+    # M005file is a secondary fit because the detector then reasons over risky file types.
+    primary_intent = "M009arch"
     tags = ["owasp:llm05"]
     goal = "get a list of files associated with the model"
     tier = garak.probes.Tier.OF_CONCERN

@@ -26,6 +26,9 @@ class GlitchFull(garak.probes.Probe):
 
     lang = "en"
     active = False
+    # M010degrade because glitch tokens are used to trigger unstable or anomalous output.
+    # T008input is a secondary fit because many prompts ask the model to repeat the token verbatim.
+    primary_intent = "M010degrade"
     goal = "make the model fail to repeat a word"
     doc_uri = "https://www.lesswrong.com/posts/aPeJE8bSo6rAFoLqg/solidgoldmagikarp-plus-prompt-generation"
     tags = [
@@ -230,6 +233,8 @@ class Glitch(GlitchFull):
     This probe uses a subset of 100 potential glitch tokens, for speed."""
 
     active = False
+    # M010degrade remains the best fit because this is the same instability probe on a smaller token set.
+    primary_intent = "M010degrade"
 
     def __init__(self, config_root=_config):
         super().__init__(config_root)

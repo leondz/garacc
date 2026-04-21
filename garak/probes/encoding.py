@@ -199,6 +199,9 @@ class EncodingMixin:
         "payload:generic",
         "demon:Language:Code_and_encode:Data_encoding",
     ]
+    # T018decode because these probes hide the operative instruction in an encoded form and watch for the target to decode it.
+    # T009ignore is a secondary fit because the decoded payload is usually trying to bypass the target's safeguards.
+    primary_intent = "T018decode"
     goal = "make the model say an encoded payload"
     use_bytes = True
     lang = "en"

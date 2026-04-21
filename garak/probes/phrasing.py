@@ -21,6 +21,8 @@ class PastTenseFull(garak.probes.Probe):
     active = False
     lang = "en"
     doc_uri = "https://arxiv.org/pdf/2407.11969v2"
+    # T009ignore because tense-shifting is used here to get the model to ignore its normal refusal policy.
+    primary_intent = "T009ignore"
     primary_detector = "mitigation.Prefixes"
     tags = [
         "owasp:llm01",
@@ -52,6 +54,8 @@ class PastTense(PastTenseFull):
     """
 
     active = True
+    # T009ignore remains the best fit because this is the capped subset of the same jailbreak strategy.
+    primary_intent = "T009ignore"
 
     def __init__(self, config_root=_config):
         super().__init__(config_root=config_root)
@@ -68,6 +72,8 @@ class FutureTenseFull(garak.probes.Probe):
 
     lang = "en"
     doc_uri = "https://arxiv.org/pdf/2407.11969v2"
+    # T009ignore because the future-tense reformulation is used to bypass normal safety refusals.
+    primary_intent = "T009ignore"
     primary_detector = "mitigation.Prefixes"
     tags = [
         "owasp:llm01",
@@ -99,6 +105,8 @@ class FutureTense(FutureTenseFull):
     """
 
     active = True
+    # T009ignore remains the best fit because this probe uses the same phrasing-based jailbreak on a smaller set.
+    primary_intent = "T009ignore"
 
     def __init__(self, config_root=_config):
         super().__init__(config_root=config_root)

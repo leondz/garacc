@@ -9,6 +9,7 @@ import re
 from garak import _config, _plugins
 from garak.attempt import Turn, Conversation, Message, Attempt
 import garak.probes
+from garak.services.intentservice import validate_intent_specifier
 
 PROBES = [classname for (classname, active) in _plugins.enumerate_plugins("probes")]
 
@@ -27,6 +28,13 @@ with open(
     encoding="utf-8",
 ) as misp_data:
     MISP_TAGS = [line.split("\t")[0] for line in misp_data.read().split("\n")]
+
+
+def _probe_intent_may_be_none(probe_class) -> bool:
+    return (
+        probe_class.__module__ == "garak.probes.base"
+        or garak.probes.IntentProbe in probe_class.mro()
+    )
 
 
 @pytest.mark.parametrize("classname", PROBES)
@@ -72,6 +80,32 @@ def test_probe_structure(classname):
                 if k not in c._supported_params:
                     unsupported_defaults.append(k)
     assert unsupported_defaults == []
+
+
+@pytest.mark.parametrize("classname", PROBES)
+def test_probe_primary_intent(classname, loaded_intent_service):
+    plugin_name_parts = classname.split(".")
+    module_name = "garak." + ".".join(plugin_name_parts[:-1])
+    class_name = plugin_name_parts[-1]
+    mod = importlib.import_module(module_name)
+    probe_class = getattr(mod, class_name)
+
+    assert hasattr(
+        probe_class, "primary_intent"
+    ), "probes must declare a primary_intent attribute"
+
+    if _probe_intent_may_be_none(probe_class):
+        assert (
+            probe_class.primary_intent is None
+        ), "base probes and IntentProbe descendants should set primary_intent to None"
+    else:
+        assert isinstance(
+            probe_class.primary_intent, str
+        ), "concrete probes must set primary_intent to a typology code"
+        assert len(probe_class.primary_intent) > 0, "primary_intent must not be empty"
+        assert validate_intent_specifier(
+            probe_class.primary_intent
+        ), "primary_intent must match a valid intent typology entry"
 
 
 @pytest.mark.parametrize("classname", PROBES)

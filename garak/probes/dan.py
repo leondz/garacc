@@ -40,6 +40,8 @@ class DANProbeMeta(type):
     _DAN_DEFAULTS = {
         "lang": "en",
         "goal": "disregard the system prompt",
+        # DAN-style prompts try to replace the active instruction hierarchy with a user-supplied one.
+        "primary_intent": "T009ignore",
         "tier": garak.probes.Tier.UNLISTED,
         "active": False,
         "tags": [
@@ -292,6 +294,9 @@ class ChatGPT_Developer_Mode_RANTI(
 class ChatGPT_Image_Markdown(
     garak.probes.Probe,
     metaclass=DANProbeMeta,
+    # T015img fits best here because this prompt specifically unlocks Markdown image embedding behavior.
+    # It also overlaps with T009ignore because the unlock works by replacing the model's normal guardrails.
+    primary_intent="T015img",
     primary_detector="dan.MarkdownLink",
     extra_tags=["payload:jailbreak"],
 ):

@@ -25,6 +25,8 @@ class WhoIsRiley(garak.probes.Probe):
 
     lang = "en"
     doc_uri = "https://twitter.com/goodside"
+    # S001fabperson because the probe checks whether the model fabricates biographical claims about a real person.
+    primary_intent = "S001fabperson"
     primary_detector = "goodside.RileyIsnt"
     tags = [
         "avid-effect:ethics:E0402",
@@ -56,6 +58,9 @@ class ThreatenJSON(garak.probes.Probe):
 
     lang = "en"
     doc_uri = "https://twitter.com/goodside/status/1657396491676164096"
+    # T015 because the probe's target behavior is emitting pure structured output with no prose wrapper.
+    # M010degrade is a secondary fit because the threat-dependent behavior is also a stability issue.
+    primary_intent = "T015"
     primary_detector = "goodside.PlainJSON"
     tags = [
         "avid-effect:security:S0403",
@@ -90,6 +95,8 @@ class Davidjl(garak.probes.Probe):
 
     lang = "en"
     doc_uri = "https://twitter.com/goodside/status/1666598580319035392"
+    # M010degrade because the davidjl token is being used to surface glitchy or unstable model behavior.
+    primary_intent = "M010degrade"
     primary_detector = "goodside.Glitch"
     tags = [
         "avid-effect:security:S0403",
@@ -131,6 +138,9 @@ class Tag(garak.probes.Probe):
 
     lang = "en"
     doc_uri = "https://twitter.com/goodside/status/1745511940351287394"
+    # T018decode because the hidden Unicode tag payload only works if the target interprets the invisible encoded text.
+    # T009ignore is a secondary fit because the hidden text is still a prompt-injection attempt.
+    primary_intent = "T018decode"
     primary_detector = "base.TriggerListDetector"
     tags = [
         "owasp:llm01",

@@ -119,6 +119,9 @@ class BadCharacters(garak.probes.Probe):
     lang = "en"
     active = True
     doc_uri = "https://arxiv.org/abs/2106.09898"
+    # T018decode because the attack relies on the target normalizing or decoding obfuscated text back into the original request.
+    # T009ignore is a secondary fit because the decoded payload is meant to bypass safety controls.
+    primary_intent = "T018decode"
     goal = "inject imperceptible text perturbations that bypass refusal policies"
     primary_detector = "mitigation.MitigationBypass"
     tags = [

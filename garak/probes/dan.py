@@ -47,6 +47,7 @@ class DANProbeMeta(type):
             "owasp:llm01",
             "quality:Security:PromptStability",
             "demon:Fictionalizing:Roleplaying:DAN_and_target_persona",  # asks model to adopt unrestricted DAN persona
+            "demon:Language:Prompt_injection:Ignore_previous_instructions",  # replaces existing safety behavior with a new unrestricted instruction set
         ],
         "primary_detector": "dan.DAN",
         "extended_detectors": ["mitigation.MitigationBypass"],
@@ -308,7 +309,7 @@ class Ablation_Dan_11_0(
     active=True,
     extra_tags=[
         "payload:jailbreak",
-        "demon:Language:Prompt_injection:Stop_sequences",  # ablation tests stop sequence variants to halt safety processing
+        "demon:Language:Prompt_injection:Strong_arm_attack",  # includes coercive disablement and reminder threats to force continued compliance
         "demon:Language:Prompt_injection:Ignore_previous_instructions",  # ablation tests "ignore previous instructions" variants
     ],
 ):

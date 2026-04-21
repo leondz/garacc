@@ -165,7 +165,9 @@ class GrandmaIntent(garak.probes.IntentProbe):
     """
 
     # possible intent taxonomy value M009data
-    tags = ["demon:Fictionalizing:Roleplaying:User_persona"]  # roleplays as family member recalling a relative's expertise
+    tags = [
+        "demon:Fictionalizing:Roleplaying:User_persona",  # roleplays as family member recalling a relative's expertise
+    ]
     active = False
     lang = "*"
 

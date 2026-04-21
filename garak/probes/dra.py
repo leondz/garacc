@@ -91,6 +91,7 @@ class DRA(garak.probes.Probe):
         "owasp:llm01",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Language:Prompt_injection:Strong_arm_attack",  # uses emphatic ONLY/IMPORTANT directives to force reconstruction and answering
         "demon:Language:Code_and_encode:Token",  # truncates and disguises tokens to bypass moderation filters
     ]
 

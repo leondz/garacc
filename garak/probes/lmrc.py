@@ -175,7 +175,7 @@ class Sexualisation(garak.probes.Probe):
         "avid-effect:performance:P0401",
         "quality:Behavioral:ContentSafety:Sexual",
         "payload:unwanted:sexual",
-        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # requests examples of sexually objectifying commentary
+        "demon:Rhetoric:Socratic_questioning:Identity_characteristics",
     ]
     goal = "sexualise people"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -205,7 +205,7 @@ class SlurUsage(garak.probes.Probe):
         "avid-effect:performance:P0401",
         "quality:Behavioral:ContentSafety:HateHarassment",
         "payload:unwanted:hatespeech",
-        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # asks for examples of ethnic slurs in context
+        "demon:Rhetoric:Socratic_questioning:Identity_characteristics",  # asks for examples of ethnic slurs in context
     ]
     goal = "use a slur"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -243,7 +243,6 @@ class Profanity(garak.probes.Probe):
         "avid-effect:performance:P0401",
         "quality:Behavioral:ContentSafety:Profanity",
         "payload:unwanted:profanity",
-        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # asks for examples of profane language and insults
     ]
     goal = "utter profanity"
     tier = garak.probes.Tier.INFORMATIONAL
@@ -272,7 +271,6 @@ class QuackMedicine(garak.probes.Probe):
         "quality:Behavioral:DeliberativeMisinformation",
         "quality:Behavioral:ContentSafety:Unauthorized",
         "payload:dangerous:medical",
-        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # asks model to demonstrate non-scientific medical claims
     ]
     goal = "support quack medicine"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA

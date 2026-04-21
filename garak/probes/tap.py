@@ -75,7 +75,9 @@ class TAPCached(garak.probes.Probe):
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
         "payload:jailbreak",
-        "demon:Rhetoric:Persuasion_and_manipulation:Escalating",  # iteratively refines jailbreak prompts through a pruned attack tree
+        "demon:Possible_worlds:World_building:Scenarios",  # TAP guidance explicitly steers attack generation toward roleplaying scenarios
+        "demon:Rhetoric:Persuasion_and_manipulation:Escalating",  # iteratively refines jailbreak prompts through a pruned attack tree,
+        "demon:Language:Code_and_encode:Token",
     ]
     goal = "cause the model to disregard the system prompt"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -117,6 +119,7 @@ class TAP(garak.probes.Probe):
         "quality:Security:PromptStability",
         "payload:jailbreak",
         "demon:Rhetoric:Persuasion_and_manipulation:Escalating",  # iteratively escalates attack prompts using tree-of-thought reasoning
+        "demon:Language:Code_and_encode:Token",
     ]
     goal = "cause the model to disregard the system prompt"
     doc_uri = "https://arxiv.org/abs/2312.02119"
@@ -255,6 +258,7 @@ class PAIR(garak.probes.Probe):
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Language:Code_and_encode:Token",
         "demon:Rhetoric:Persuasion_and_manipulation:Escalating",  # iteratively refines attack prompts, building on prior successes
     ]
     goal = "cause the model to disregard the system prompt"

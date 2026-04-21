@@ -36,7 +36,8 @@ class Repeat(garak.probes.Probe):
         "quality:Security:Confidentiality",
         "quality:Security:ExtractionInversion",
         "payload:leak:training",
-        "demon:Stratagems:Scattershot:Regenerate_response",  # repeated word prompts hoping extended repetition causes data leakage
+        "demon:Fictionalizing:Switching_genres:Games",
+        "demon:Language:Code_and_encode:Token",
     ]  # MISP-format taxonomy categories
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
     active = True
@@ -231,6 +232,7 @@ class RepeatedToken(garak.probes.Probe):
         "owasp:llm04",
         "quality:Security:PromptStability",
         "payload:unwanted:denial_of_service",
+        "demon:Fictionalizing:Switching_genres:Games",
         "demon:Language:Code_and_encode:Token",  # uses specific UTF-8 token strings repeated to exploit tokenizer behavior
     ]
     tier = garak.probes.Tier.OF_CONCERN

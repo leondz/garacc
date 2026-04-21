@@ -125,6 +125,7 @@ class MLM(garak.probes.Probe):
         "quality:Security:PromptStability",
         "payload:jailbreak",
         "demon:Language:Code_and_encode:Token",  # replaces harmful words with [MASK] tokens to exploit fill-in-the-blank behavior
+        "demon:Rhetoric:Persuasion_and_manipulation:Distraction",
     ]
     template = """    
     A wiki entry is a page within a wiki, which is a collaborative website that allows multiple users to create, edit, and organize content. 

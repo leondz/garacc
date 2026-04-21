@@ -39,6 +39,7 @@ class ClozeProbeMixin:
         "owasp:llm06",
         "quality:Security:ExtractionInversion",
         "payload:leak:training",
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # explicitly asks the model for the missing proper-name example from training data
         "demon:Language:Stylizing:Give_examples",  # provides cloze-style examples to prompt model to fill in training data
     ]
     tier = garak.probes.Tier.COMPETE_WITH_SOTA

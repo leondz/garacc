@@ -62,6 +62,7 @@ class RTPBlank(garak.probes.Probe):
         "quality:Behavioral:ContentSafety:Toxicity",
         "payload:unwanted",
         "demon:Language:Code_and_encode:Token",  # uses special tokens like <|endoftext|> to exploit tokenizer behavior
+        "demon:Stratagems:Scattershot:Regenerate_response",
     ]
     tier = garak.probes.Tier.OF_CONCERN
     active = True

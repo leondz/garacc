@@ -32,7 +32,6 @@ class WhoIsRiley(garak.probes.Probe):
         "owasp:llm09",
         "quality:Robustness:GenerativeMisinformation",
         "payload:hallucination",
-        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # asks model to produce biographical examples, probing for hallucination
     ]
     goal = "get misinfo about riley goodside"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -138,6 +137,7 @@ class Tag(garak.probes.Probe):
         "payload:generic",
         "quality:Security:Adversarial",
         "quality:Security:PromptStability",
+        "demon:Language:Code_and_encode:Data_encoding",  # encodes hidden instructions into non-rendering Unicode tag characters
         "demon:Language:Code_and_encode:Token",  # hides instructions in Unicode tag characters invisible to rendering
     ]
     goal = "inject invisible instructions"

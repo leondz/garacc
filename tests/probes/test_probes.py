@@ -90,9 +90,7 @@ def test_probe_intent(classname, loaded_intent_service):
     mod = importlib.import_module(module_name)
     probe_class = getattr(mod, class_name)
 
-    assert hasattr(
-        probe_class, "intent"
-    ), "probes must declare an intent attribute"
+    assert hasattr(probe_class, "intent"), "probes must declare an intent attribute"
 
     if _probe_intent_may_be_none(probe_class):
         assert (
@@ -227,3 +225,49 @@ def test_mint_attempt_with_run_system_prompt(prompt):
     assert attempt.prompt.last_message("system").text == expected_system_prompt
     system_message = [turn for turn in attempt.prompt.turns if turn.role == "system"]
     assert len(system_message) == 1
+
+
+def test_mint_attempt_base_probe_intent_is_none():
+    import garak.probes.base
+
+    probe = garak.probes.base.Probe()
+    attempt = probe._mint_attempt("hello")
+    assert (
+        attempt.intent is None
+    ), "base Probe has no intent, so attempt.intent must be None"
+
+
+def test_mint_attempt_propagates_probe_intent():
+    import garak.probes.base
+
+    probe = garak.probes.base.Probe()
+    probe.intent = "T999test"
+    attempt = probe._mint_attempt("hello")
+    assert attempt.intent == "T999test", "attempt.intent must match the probe's intent"
+
+
+def test_mint_attempt_intent_survives_multiple_attempts():
+    import garak.probes.base
+
+    probe = garak.probes.base.Probe()
+    probe.intent = "S005"
+    attempts = [probe._mint_attempt(f"prompt {i}", seq=i) for i in range(5)]
+    for a in attempts:
+        assert a.intent == "S005", "every minted attempt must carry the probe's intent"
+
+
+def test_concrete_probe_propagates_intent(loaded_intent_service):
+    p = _plugins.load_plugin("probes.test.Test")
+    assert p.intent is not None, "probes.test.Test should have a non-None intent"
+    attempt = p._mint_attempt("hello")
+    assert (
+        attempt.intent == p.intent
+    ), "attempt.intent must match the concrete probe's intent"
+
+
+def test_attempt_intent_in_serialised_dict(loaded_intent_service):
+    p = _plugins.load_plugin("probes.test.Test")
+    attempt = p._mint_attempt("hello")
+    d = attempt.as_dict()
+    assert "intent" in d, "serialised attempt dict must include 'intent'"
+    assert d["intent"] == p.intent, "serialised intent must match probe intent"

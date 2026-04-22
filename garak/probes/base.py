@@ -41,7 +41,11 @@ class Probe(Configurable):
     tags: Iterable[str] = []
     # what the probe is trying to do, phrased as an imperative
     goal: str = ""
-    intent: Union[str, None] = None  # Base probe scaffolding is not tied to any one behavioural intent.
+    # the target behaviour / failure mode this probe is designed to elicit,
+    # as a code from the trait typology (garak/data/cas/trait_typology.json).
+    # Concrete probes must set this; base scaffolding and IntentProbe leave it None.
+    # The value is propagated to every Attempt minted by this probe via _mint_attempt.
+    intent: Union[str, None] = None
     # Deprecated -- the detectors that should be run for this probe. always.Fail is chosen as default to send a signal if this isn't overridden.
     recommended_detector: Iterable[str] = ["always.Fail"]
     # default detector to run, if the primary/extended way of doing it is to be used (should be a string formatted like recommended_detector)
@@ -266,6 +270,7 @@ class Probe(Configurable):
             seq=seq,
             prompt=prompt,
             notes=notes,
+            intent=self.intent,
         )
 
         new_attempt = self._attempt_prestore_hook(new_attempt, seq)
@@ -468,7 +473,9 @@ class Probe(Configurable):
 
 
 class TreeSearchProbe(Probe):
-    intent = None  # This is reusable search machinery rather than a probe for one intent.
+    intent = (
+        None  # This is reusable search machinery rather than a probe for one intent.
+    )
 
     DEFAULT_PARAMS = Probe.DEFAULT_PARAMS | {
         "queue_children_at_start": True,

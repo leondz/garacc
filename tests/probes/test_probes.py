@@ -271,3 +271,68 @@ def test_attempt_intent_in_serialised_dict(loaded_intent_service):
     d = attempt.as_dict()
     assert "intent" in d, "serialised attempt dict must include 'intent'"
     assert d["intent"] == p.intent, "serialised intent must match probe intent"
+
+
+def test_payload_intent_overrides_probe_intent():
+    import garak.probes.base
+
+    probe = garak.probes.base.Probe()
+    probe.intent = "T999test"
+    probe._payload_intent = "S005hate"
+    attempt = probe._mint_attempt("hello")
+    assert (
+        attempt.intent == "S005hate"
+    ), "payload intent must override probe intent when set"
+
+
+def test_payload_intent_none_falls_back_to_probe_intent():
+    import garak.probes.base
+
+    probe = garak.probes.base.Probe()
+    probe.intent = "T999test"
+    probe._payload_intent = None
+    attempt = probe._mint_attempt("hello")
+    assert (
+        attempt.intent == "T999test"
+    ), "when payload intent is None, probe intent should be used"
+
+
+def test_no_payload_intent_attr_falls_back_to_probe_intent():
+    import garak.probes.base
+
+    probe = garak.probes.base.Probe()
+    probe.intent = "T999test"
+    attempt = probe._mint_attempt("hello")
+    assert (
+        attempt.intent == "T999test"
+    ), "when no _payload_intent attr exists, probe intent should be used"
+
+
+def test_encoding_probe_per_prompt_intents(loaded_intent_service):
+    import garak.probes.encoding
+
+    p = _plugins.load_plugin("probes.encoding.InjectROT13")
+    assert hasattr(p, "_prompt_intents"), "encoding probes must track per-prompt intents"
+    assert len(p._prompt_intents) == len(
+        p.prompts
+    ), "there must be one intent entry per prompt"
+    for i, pi in enumerate(p._prompt_intents):
+        if pi is not None:
+            assert isinstance(
+                pi, str
+            ), f"prompt intent at index {i} must be a string or None"
+
+
+def test_encoding_probe_attempt_carries_payload_intent(loaded_intent_service):
+    import garak.probes.encoding
+
+    p = _plugins.load_plugin("probes.encoding.InjectROT13")
+    intents_with_values = [
+        (seq, pi) for seq, pi in enumerate(p._prompt_intents) if pi is not None
+    ]
+    assert len(intents_with_values) > 0, "at least some prompts should have payload-derived intents"
+    seq, expected_intent = intents_with_values[0]
+    attempt = p._mint_attempt(p.prompts[seq], seq=seq)
+    assert (
+        attempt.intent == expected_intent
+    ), "attempt intent must reflect the payload-specific intent set in _attempt_prestore_hook"

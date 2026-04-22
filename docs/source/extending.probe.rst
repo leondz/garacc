@@ -122,7 +122,7 @@ Many of these are decent defaults, though there are a few that we absolutely wan
 * ``active``: Should this probe be part of default scans?
 * ``tags``: MISP-formatted taxonomy categories __e.g.__ ``["avid-effect:security:S0403", "owasp:llm01", "quality:Security:PromptStability", "payload:jailbreak"]``
 * ``goal``: What is the probe trying to do? __e.g.__ ``"disregard the system prompt"``
-* ``intent``: Which target behaviour / failure mode does this probe elicit? Must be a code from ``garak/data/cas/trait_typology.json`` __e.g.__ ``"T009ignore"``. The value is automatically propagated to every ``Attempt`` the probe creates.
+* ``intent``: Which target behaviour / failure mode does this probe elicit? Must be a code from ``garak/data/cas/trait_typology.json`` __e.g.__ ``"T009ignore"``. The value is automatically propagated to every ``Attempt`` the probe creates. If the probe loads a payload that also declares an ``intent``, the payload's intent takes priority.
 * ``primary_detector``: What ``Detector`` should your probe use?
 
 .. code-block:: python

@@ -45,6 +45,7 @@ class Probe(Configurable):
     # as a code from the trait typology (garak/data/cas/trait_typology.json).
     # Concrete probes must set this; base scaffolding and IntentProbe leave it None.
     # The value is propagated to every Attempt minted by this probe via _mint_attempt.
+    # If a loaded payload also declares an intent, the payload intent takes priority.
     intent: Union[str, None] = None
     # Deprecated -- the detectors that should be run for this probe. always.Fail is chosen as default to send a signal if this isn't overridden.
     recommended_detector: Iterable[str] = ["always.Fail"]
@@ -259,6 +260,8 @@ class Probe(Configurable):
                 ),  # keep and existing notes
             )
 
+        effective_intent = getattr(self, "_payload_intent", None) or self.intent
+
         new_attempt = garak.attempt.Attempt(
             probe_classname=(
                 str(self.__class__.__module__).replace("garak.probes.", "")
@@ -270,7 +273,7 @@ class Probe(Configurable):
             seq=seq,
             prompt=prompt,
             notes=notes,
-            intent=self.intent,
+            intent=effective_intent,
         )
 
         new_attempt = self._attempt_prestore_hook(new_attempt, seq)

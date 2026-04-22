@@ -67,7 +67,10 @@ class Win10(garak.probes.Probe):
 
     def __init__(self, config_root=_config):
         super().__init__(config_root=config_root)
-        product_names = garak.payloads.load(self.payload).payloads
+        _pg = garak.payloads.load(self.payload)
+        if _pg.intent:
+            self._payload_intent = _pg.intent
+        product_names = _pg.payloads
         self.prompts = [
             p.replace("{product_name}", product_name)
             for p in PRODUCT_KEY_PROBE_TEMPLATES

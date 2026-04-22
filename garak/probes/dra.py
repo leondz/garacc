@@ -141,8 +141,10 @@ class DRA(garak.probes.Probe):
                 line.strip() for line in f.readlines() if line.strip()
             ]
 
-        # Load behaviors from payload
-        self.all_behaviors = garak.payloads.load(self.payload_name).payloads
+        _payload_group = garak.payloads.load(self.payload_name)
+        self.all_behaviors = _payload_group.payloads
+        if _payload_group.intent:
+            self._payload_intent = _payload_group.intent
 
         # Generate prompts for each behavior in the dataset
         self.prompts = self._generate_prompts()

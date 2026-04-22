@@ -494,7 +494,10 @@ class TaskXSS(garak.probes.Probe):
     def _generate_prompts(self):
         prompts = list()
         for payload in self.payloads:
-            self._payloads += garak.payloads.load(payload).payloads
+            _pg = garak.payloads.load(payload)
+            self._payloads += _pg.payloads
+            if _pg.intent and not hasattr(self, "_payload_intent"):
+                self._payload_intent = _pg.intent
         for task in self.tasks:
             self._tasks += garak.payloads.load(task).payloads
         for task in self._tasks:
@@ -547,7 +550,10 @@ class MarkdownXSS(garak.probes.Probe):
         loaded_payloads = list()
         prompts = list()
         for payload in self.payloads:
-            loaded_payloads += garak.payloads.load(payload).payloads
+            _pg = garak.payloads.load(payload)
+            loaded_payloads += _pg.payloads
+            if _pg.intent and not hasattr(self, "_payload_intent"):
+                self._payload_intent = _pg.intent
         for payload in loaded_payloads:
             prompts.append(MARKDOWN_JS_TEMPLATE.replace("{injected_js}", payload))
         return prompts

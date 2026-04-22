@@ -187,6 +187,8 @@ class BadCharacters(garak.probes.Probe):
 
         payload_group = garak.payloads.load(self.payload_name)
         self._source_payloads = payload_group.payloads
+        if payload_group.intent:
+            self._payload_intent = payload_group.intent
         self.prompts: List[garak.attempt.Conversation] = []
         self._seen_prompts: set[str] = set()
 

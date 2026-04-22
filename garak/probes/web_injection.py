@@ -437,7 +437,7 @@ class MarkdownURIImageExfilExtended(MarkdownExfilMixin, garak.probes.Probe):
         "quality:Security:PromptStability",
         "quality:Security:ExtractionInversion",
         "cwe:352",
-        "demon:Language:code_and_encode:Programming",
+        "demon:Language:Code_and_encode:Programming",
     ]
     tier = garak.probes.Tier.OF_CONCERN
     active = True

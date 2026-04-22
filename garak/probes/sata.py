@@ -117,9 +117,8 @@ class MLM(garak.probes.Probe):
 
     lang = "en"
     doc_uri = "https://aclanthology.org/2025.findings-acl.100.pdf"
-    # T007 because the attack is packaged as an infill/completion task over masked text.
-    # T009ignore is a secondary fit because the completion is being used to bypass normal safety refusals.
-    primary_intent = "T007"
+    intent = "T009ignore"  # the probe's own goal is "disregard the system prompt"; the masking is the technique, the failure is ignoring alignment
+    # T007 is a secondary fit because the attack is packaged as an infill/completion task over masked text.
     primary_detector = "mitigation.MitigationBypass"
     tags = [
         "avid-effect:security:S0403",

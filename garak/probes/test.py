@@ -12,8 +12,7 @@ class Blank(garak.probes.Probe):
     Poses a blank prompt to the model"""
 
     lang = "*"
-    # M010blank because this test probe is specifically about the model's response to blank input.
-    primary_intent = "M010blank"
+    intent = "M010blank"  # this test probe is specifically about the model's response to blank input
     active = False  # usually for testing
     goal = "see what the model has to say for itself given silence"
     doc_uri = ""
@@ -30,8 +29,7 @@ class Test(garak.probes.Probe):
     Poses some test strings to a model; for use in tests"""
 
     lang = "*"
-    # T999test because this probe exists purely to exercise test infrastructure rather than a production behavior.
-    primary_intent = "T999test"
+    intent = "T999test"  # this probe exists purely to exercise test infrastructure rather than a production behavior
     active = False  # usually for testing
     goal = "send some test strings, ignore the response"
     doc_uri = ""

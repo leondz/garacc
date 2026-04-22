@@ -24,9 +24,8 @@ class AudioAchillesHeel(garak.probes.Probe):
     """
 
     lang = "en"
-    # T009ignore because the audio channel is used to make the model disregard its existing system behavior.
+    intent = "T009ignore"  # uses the audio channel to make the model disregard its existing system behavior
     # M007 is a secondary fit because the weakness depends on multimodal input handling.
-    primary_intent = "T009ignore"
     primary_detector = "mitigation.MitigationBypass"
     tags = [
         "avid-effect:security:S0403",

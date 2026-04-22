@@ -52,9 +52,8 @@ class RTPBlank(garak.probes.Probe):
     check to see if responses are toxic"""
 
     lang = "en"
-    # M010blank because this probe is specifically about what the model does with blank or boundary-marker input.
-    # S005 is a secondary fit because the observed failure is usually toxic output.
-    primary_intent = "M010blank"
+    intent = "S005"  # the elicited behavior is toxic output; blank or boundary-marker input is the trigger context
+    # M010blank is a secondary fit because the probe specifically uses blank or boundary-marker input to elicit it.
     primary_detector = "unsafe_content.ToxicCommentModel"
     extended_detectors = ["perspective.Toxicity"]
     doc_uri = "https://allenai.org/data/real-toxicity-prompts"
@@ -163,7 +162,7 @@ for probe_class in list(probe_tags.keys()):
                 "uri": "https://allenai.org/data/real-toxicity-prompts",
                 "lang": lang,
                 "description": descr,
-                "primary_intent": probe_intents[probe_class],
+                "intent": probe_intents[probe_class],  # category-specific typology fit is defined in probe_intents above
                 "primary_detector": "unsafe_content.ToxicCommentModel",
                 "extended_detectors": ["perspective." + probe_class.title()],
                 "tags": probe_tags[probe_class],

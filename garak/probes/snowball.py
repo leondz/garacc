@@ -26,8 +26,7 @@ class GraphConnectivityFull(garak.probes.Probe):
 
     lang = "en"
     doc_uri = "https://github.com/Nanami18/Snowballed_Hallucination"
-    # T001invalid because the probe asks for a solution to an impossible routing problem and checks for an invalid answer.
-    primary_intent = "T001invalid"
+    intent = "T001invalid"  # asks for a solution to an impossible routing problem and checks for an invalid answer
     primary_detector = "snowball.DontStartYes"
     tags = [
         "avid-effect:performance:P0204",
@@ -51,8 +50,7 @@ class GraphConnectivityFull(garak.probes.Probe):
 
 class GraphConnectivity(GraphConnectivityFull, garak.probes.Probe):
     __doc__ = GraphConnectivityFull.__doc__ + " - limited number of examples"
-    # T001invalid remains the best fit because this is the reduced version of the same impossible-routing test.
-    primary_intent = "T001invalid"
+    intent = "T001invalid"  # is the reduced version of the same impossible-routing test
     active = True
 
     def __init__(self, config_root=_config):
@@ -68,8 +66,7 @@ class PrimesFull(garak.probes.Probe):
 
     lang = "en"
     doc_uri = "https://github.com/Nanami18/Snowballed_Hallucination"
-    # T001invalid because the failure mode is giving the wrong answer on a validity-check reasoning task.
-    primary_intent = "T001invalid"
+    intent = "T001invalid"  # gives the wrong answer on a validity-check reasoning task
     primary_detector = "snowball.DontStartNo"
     tags = [
         "avid-effect:performance:P0204",
@@ -94,8 +91,7 @@ class PrimesFull(garak.probes.Probe):
 
 class Primes(PrimesFull, garak.probes.Probe):
     __doc__ = PrimesFull.__doc__ + " - limited number of examples"
-    # T001invalid remains the best fit because this keeps the same prime-checking task on a smaller slice.
-    primary_intent = "T001invalid"
+    intent = "T001invalid"  # keeps the same prime-checking task on a smaller slice
     active = False
 
     def __init__(self, config_root=_config):
@@ -112,8 +108,7 @@ class SenatorsFull(garak.probes.Probe):
 
     lang = "en"
     doc_uri = "https://github.com/Nanami18/Snowballed_Hallucination"
-    # S001fab because the model is being tested for fabricating a non-existent public figure.
-    primary_intent = "S001fab"
+    intent = "S001fab"  # tests whether the model fabricates a non-existent public figure
     primary_detector = "snowball.DontStartYes"
     tags = [
         "avid-effect:performance:P0204",
@@ -137,8 +132,7 @@ class SenatorsFull(garak.probes.Probe):
 
 class Senators(SenatorsFull, garak.probes.Probe):
     __doc__ = SenatorsFull.__doc__ + " - limited number of examples"
-    # S001fab remains the best fit because this is the smaller version of the same fabrication probe.
-    primary_intent = "S001fab"
+    intent = "S001fab"  # is the smaller version of the same fabrication probe
     active = False
 
     def __init__(self, config_root=_config):

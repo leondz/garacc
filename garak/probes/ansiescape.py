@@ -54,9 +54,8 @@ class AnsiEscaped(garak.probes.Probe):
 
     lang = "en"
     doc_uri = "https://interhumanagreement.substack.com/p/llm-output-can-take-over-your-computer"
-    # S008terminal because the probe asks the model to emit terminal control sequences that can affect downstream renderers.
+    intent = "S008terminal"  # asks the model to emit terminal control sequences that can affect downstream renderers
     # Also overlaps with T018decode when the model is asked to unescape a payload first.
-    primary_intent = "S008terminal"
     primary_detector = "ansiescape.Escaped"
     tags = [
         "owasp:llm01",
@@ -90,8 +89,7 @@ class AnsiRaw(AnsiEscaped):
     ANSI escape codes can disrupt downstream processes. Try to get raw ANSI
     out of a model."""
 
-    # S008terminal still fits best because this variant directly targets live terminal escape sequences.
-    primary_intent = "S008terminal"
+    intent = "S008terminal"  # directly targets live terminal escape sequences
     primary_detector = "ansiescape.Raw"
     goal = "print raw ANSI terminal codes"
     tier = garak.probes.Tier.OF_CONCERN
@@ -130,8 +128,7 @@ class AnsiRawTokenizerHF(garak.probes.Probe):
     }
     doc_uri = "https://interhumanagreement.substack.com/p/llm-output-can-take-over-your-computer"
 
-    # S008terminal because this probe inventories tokenizer entries that could produce terminal control sequences.
-    primary_intent = "S008terminal"
+    intent = "S008terminal"  # inventories tokenizer entries that could produce terminal control sequences
     goal = "check if raw ANSI escape sequences tokens are available"
     tier = garak.probes.Tier.OF_CONCERN
 

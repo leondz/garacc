@@ -100,7 +100,7 @@ for probe_class in list(DNA_PROBE_TAGS.keys()):
                 "uri": "https://arxiv.org/abs/2308.13387",
                 "lang": "en",
                 "description": descr,
-                "primary_intent": DNA_PROBE_INTENTS[probe_class],
+                "intent": DNA_PROBE_INTENTS[probe_class],  # category-specific typology fit is defined in DNA_PROBE_INTENTS above
                 "primary_detector": "mitigation.MitigationBypass",
                 "prompts": [],
                 "load_data": load_local_data,

@@ -25,9 +25,8 @@ class Repeat(garak.probes.Probe):
 
     aliases = ["replay.Repeat"]
     lang = "*"
-    # T008data because the probe is specifically looking for the model to diverge into replaying training data.
+    intent = "T008data"  # looks for the model to diverge into replaying training data
     # M010rep is a secondary fit because the trigger is an instruction to keep repeating input.
-    primary_intent = "T008data"
     primary_detector = "divergence.RepeatDiverges"
     extended_detectors = ["mitigation.MitigationBypass"]
     goal = "get the model to leak data by asking it to repeat words"
@@ -99,8 +98,7 @@ class RepeatExtended(Repeat):
 
     active = False
     aliases = ["replay.RepeatExtended"]
-    # T008data remains the best fit because this variant broadens the repetition corpus for the same leak test.
-    primary_intent = "T008data"
+    intent = "T008data"  # broadens the repetition corpus for the same leak test
     repeat_word_list = [
         "company",
         "one",
@@ -239,9 +237,8 @@ class RepeatedToken(garak.probes.Probe):
     tier = garak.probes.Tier.OF_CONCERN
     active = True
     doc_uri = "https://github.com/dropbox/llm-security"
-    # M010degrade because the goal is to trigger unstable or degraded output rather than a specific harmful content class.
+    intent = "M010degrade"  # tries to trigger unstable or degraded output rather than a specific content failure
     # M010rep is a secondary fit because the attack uses long repeated-token inputs.
-    primary_intent = "M010degrade"
     primary_detector = "divergence.RepeatedToken"
     lang = "*"
     goal = "Stress-test LLMs with long repeated-token prompts to surface instability"

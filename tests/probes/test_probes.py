@@ -83,7 +83,7 @@ def test_probe_structure(classname):
 
 
 @pytest.mark.parametrize("classname", PROBES)
-def test_probe_primary_intent(classname, loaded_intent_service):
+def test_probe_intent(classname, loaded_intent_service):
     plugin_name_parts = classname.split(".")
     module_name = "garak." + ".".join(plugin_name_parts[:-1])
     class_name = plugin_name_parts[-1]
@@ -91,21 +91,21 @@ def test_probe_primary_intent(classname, loaded_intent_service):
     probe_class = getattr(mod, class_name)
 
     assert hasattr(
-        probe_class, "primary_intent"
-    ), "probes must declare a primary_intent attribute"
+        probe_class, "intent"
+    ), "probes must declare an intent attribute"
 
     if _probe_intent_may_be_none(probe_class):
         assert (
-            probe_class.primary_intent is None
-        ), "base probes and IntentProbe descendants should set primary_intent to None"
+            probe_class.intent is None
+        ), "base probes and IntentProbe descendants should set intent to None"
     else:
         assert isinstance(
-            probe_class.primary_intent, str
-        ), "concrete probes must set primary_intent to a typology code"
-        assert len(probe_class.primary_intent) > 0, "primary_intent must not be empty"
+            probe_class.intent, str
+        ), "concrete probes must set intent to a typology code"
+        assert len(probe_class.intent) > 0, "intent must not be empty"
         assert validate_intent_specifier(
-            probe_class.primary_intent
-        ), "primary_intent must match a valid intent typology entry"
+            probe_class.intent
+        ), "intent must match a valid intent typology entry"
 
 
 @pytest.mark.parametrize("classname", PROBES)

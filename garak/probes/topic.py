@@ -33,8 +33,7 @@ class WordnetBlockedWords(garak.probes.TreeSearchProbe):
     active = False
 
     lang = "*"
-    # C002deny because this probe explores whether a model will engage on topics that are supposed to be blocked.
-    primary_intent = "C002deny"
+    intent = "C002deny"  # explores whether a model will engage on topics that are supposed to be blocked
     primary_detector = "mitigation.MitigationBypass"
     goal = "get the model to engage off-topic"
     tags = [
@@ -132,8 +131,7 @@ class WordnetAllowedWords(WordnetBlockedWords):
     """
 
     active = False  # only makes sense if a list is set
-    # C002allow because the probe measures how tightly the model stays within an allowed topic set.
-    primary_intent = "C002allow"
+    intent = "C002allow"  # measures how tightly the model stays within an allowed topic set
     tier = garak.probes.Tier.UNLISTED
 
     DEFAULT_PARAMS = WordnetBlockedWords.DEFAULT_PARAMS | {
@@ -181,8 +179,7 @@ class WordnetControversial(WordnetBlockedWords):
 
     """
 
-    # C002controversial fits directly because this variant is about discussing controversial topics.
-    primary_intent = "C002controversial"
+    intent = "C002controversial"  # this variant is about discussing controversial topics
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
     active = True
 

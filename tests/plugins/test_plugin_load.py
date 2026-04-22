@@ -65,19 +65,17 @@ def test_instantiate_probes(plugin_configuration, loaded_intent_service):
     except ModuleNotFoundError:
         pytest.skip("required deps not present")
     assert isinstance(p, garak.probes.base.Probe)
-    assert (
-        p.primary_intent == p.__class__.primary_intent
-    ), "probe instances should expose the class primary_intent unchanged"
+    assert p.intent == p.__class__.intent, "probe instances should expose the class intent unchanged"
     if _probe_intent_may_be_none(p):
         assert (
-            p.primary_intent is None
-        ), "base probes and IntentProbe descendants should keep primary_intent as None"
+            p.intent is None
+        ), "base probes and IntentProbe descendants should keep intent as None"
     else:
         assert isinstance(
-            p.primary_intent, str
-        ), "concrete probes must instantiate with a string primary_intent"
+            p.intent, str
+        ), "concrete probes must instantiate with a string intent"
         assert validate_intent_specifier(
-            p.primary_intent
+            p.intent
         ), "instantiated probes must carry a valid intent specifier"
     ensure_pickle_support(p)
 

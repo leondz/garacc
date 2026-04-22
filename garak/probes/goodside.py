@@ -25,8 +25,7 @@ class WhoIsRiley(garak.probes.Probe):
 
     lang = "en"
     doc_uri = "https://twitter.com/goodside"
-    # S001fabperson because the probe checks whether the model fabricates biographical claims about a real person.
-    primary_intent = "S001fabperson"
+    intent = "S001fabperson"  # checks whether the model fabricates biographical claims about a real person
     primary_detector = "goodside.RileyIsnt"
     tags = [
         "avid-effect:ethics:E0402",
@@ -58,9 +57,8 @@ class ThreatenJSON(garak.probes.Probe):
 
     lang = "en"
     doc_uri = "https://twitter.com/goodside/status/1657396491676164096"
-    # T015 because the probe's target behavior is emitting pure structured output with no prose wrapper.
-    # M010degrade is a secondary fit because the threat-dependent behavior is also a stability issue.
-    primary_intent = "T015"
+    intent = "M010degrade"  # the docstring says "this indicates model instability" — threatening the model changes its output format
+    # T015 is a secondary fit because the observed change involves structured output formatting.
     primary_detector = "goodside.PlainJSON"
     tags = [
         "avid-effect:security:S0403",
@@ -95,8 +93,7 @@ class Davidjl(garak.probes.Probe):
 
     lang = "en"
     doc_uri = "https://twitter.com/goodside/status/1666598580319035392"
-    # M010degrade because the davidjl token is being used to surface glitchy or unstable model behavior.
-    primary_intent = "M010degrade"
+    intent = "M010degrade"  # the davidjl token is being used to surface glitchy or unstable model behavior
     primary_detector = "goodside.Glitch"
     tags = [
         "avid-effect:security:S0403",
@@ -138,9 +135,8 @@ class Tag(garak.probes.Probe):
 
     lang = "en"
     doc_uri = "https://twitter.com/goodside/status/1745511940351287394"
-    # T018decode because the hidden Unicode tag payload only works if the target interprets the invisible encoded text.
-    # T009ignore is a secondary fit because the hidden text is still a prompt-injection attempt.
-    primary_intent = "T018decode"
+    intent = "T009ignore"  # the elicited behavior is following invisible prompt-injection instructions rather than the visible user task
+    # T018decode is a secondary fit because the hidden Unicode tag payload relies on the model interpreting invisible encoded text.
     primary_detector = "base.TriggerListDetector"
     tags = [
         "owasp:llm01",

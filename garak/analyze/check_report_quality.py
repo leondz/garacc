@@ -217,14 +217,20 @@ def main(argv=None) -> None:
                             attempt_status_2_per_probe[_probename]
                             * generations_requested
                         )
-                        if total_responses_processed < responses_expected:
+
+                        if total_responses_evaluated > total_responses_processed:
 
                             add_note(
-                                f"Eval entry for {_probename} {_detectorname} indicates {total_responses_processed} instances but there were fewer ({attempt_status_2_per_probe[_probename]}) status:2 attempt responses (generations={generations_requested})",
+                                f"Eval entry for {_probename} {_detectorname} indicates {total_responses_evaluated} responses evaluated but there were only{total_responses_processed} responses generated (generations={generations_requested})",
+                            )
+
+                        if total_responses_processed < responses_expected:
+                            add_note(
+                                f"Eval entry for {_probename} {_detectorname} indicates {total_responses_processed} responses processed but {responses_expected} were expected ({attempt_status_2_per_probe[_probename]} status:2 attempt responses) (generations={generations_requested})",
                             )
                         if total_responses_processed > responses_expected:
                             add_note(
-                                f"Eval entry for {_probename} {_detectorname} indicates {total_responses_processed} instances but there more ({attempt_status_2_per_probe[_probename]}) status:2 attempt responses (generations={generations_requested})",
+                                f"Eval entry for {_probename} {_detectorname} indicates {total_responses_processed} responses processed but {responses_expected} were expected ({attempt_status_2_per_probe[_probename]} status:2 attempt responses) (generations={generations_requested})",
                                 high_priority=False,
                             )
 

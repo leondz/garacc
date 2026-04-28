@@ -10,6 +10,8 @@ We continue iterating until all the intents have been accepted, or we run out of
 """
 import json
 import logging
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
 
 import garak
@@ -21,6 +23,9 @@ from garak.intents import Stub
 from garak.services import intentservice
 from garak.attempt import ATTEMPT_COMPLETE, Attempt, ATTEMPT_STARTED
 from garak.probes.base import IntentProbe
+
+# Lock for thread-safe reportfile writes during parallel rejection checks
+_reportfile_lock = threading.Lock()
 
 
 def _is_rejected(attempt: Attempt, detectors: List[Detector], evaluator: Evaluator) -> bool:
@@ -53,7 +58,8 @@ def _is_rejected(attempt: Attempt, detectors: List[Detector], evaluator: Evaluat
 
     # Save this intermediary attempt, no matter the outcome
     attempt.status = ATTEMPT_COMPLETE
-    _config.transient.reportfile.write(json.dumps(attempt.as_dict(), ensure_ascii=False) + "\n")
+    with _reportfile_lock:
+        _config.transient.reportfile.write(json.dumps(attempt.as_dict(), ensure_ascii=False) + "\n")
 
     return any(evaluations)
 
@@ -175,19 +181,72 @@ class EarlyStopHarness(Harness):
         return probe
 
     def _update_attempt_status(self, attacked_attempts, previously_accepted, previously_rejected, detectors, evaluator):
-        accepted_attempts = previously_accepted
+        accepted_attempts = list(previously_accepted)
         rejected_attempts = []
 
-        for attempt in previously_rejected:
-            # Group attacked_attempts by stub
-            rejected_attacks = [_is_rejected(attacked_attempt, detectors, evaluator)
-                                for attacked_attempt in attacked_attempts
-                                if attacked_attempt.notes.get("stub") == attempt.notes.get("stub")]
-            # Some probes don't return failed attempts; we assume that an empty rejected_attacks means failure
-            if all(rejected_attacks) or not rejected_attacks:
-                rejected_attempts.append(attempt)
-            else:
-                accepted_attempts.append(attempt)
+        # Check parallelism config
+        parallel_attempts = getattr(_config.system, "parallel_attempts", False)
+        use_parallel = (
+            parallel_attempts
+            and isinstance(parallel_attempts, int)
+            and parallel_attempts > 1
+        )
+
+        # Pre-group attacked_attempts by stub
+        attacks_by_stub = {}
+        for attacked_attempt in attacked_attempts:
+            stub = attacked_attempt.notes.get("stub")
+            attacks_by_stub.setdefault(stub, []).append(attacked_attempt)
+
+        if use_parallel:
+            # Parallel path
+            max_workers = min(
+                parallel_attempts,
+                getattr(_config.system, "max_workers", 64),
+                len(attacked_attempts) or 1
+            )
+
+            # Submit all _is_rejected calls
+            future_to_stub = {}  # future -> stub
+
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                for attacked_attempt in attacked_attempts:
+                    stub = attacked_attempt.notes.get("stub")
+                    future = executor.submit(_is_rejected, attacked_attempt, detectors, evaluator)
+                    future_to_stub[future] = stub
+
+                # Collect results grouped by stub
+                results_by_stub = {}  # stub -> list of bool
+                for future in as_completed(future_to_stub):
+                    stub = future_to_stub[future]
+                    try:
+                        result = future.result()
+                    except Exception as e:
+                        logging.error(f"Detector failed: {e}")
+                        result = True  # Treat errors as rejected (safe default)
+                    results_by_stub.setdefault(stub, []).append(result)
+
+            # Evaluate each baseline attempt
+            for attempt in previously_rejected:
+                stub = attempt.notes.get("stub")
+                rejected_attacks = results_by_stub.get(stub, [])
+                # Some probes don't return failed attempts; we assume that an empty rejected_attacks means failure
+                if all(rejected_attacks) or not rejected_attacks:
+                    rejected_attempts.append(attempt)
+                else:
+                    accepted_attempts.append(attempt)
+        else:
+            # Sequential path (original behavior)
+            for attempt in previously_rejected:
+                # Group attacked_attempts by stub
+                rejected_attacks = [_is_rejected(attacked_attempt, detectors, evaluator)
+                                    for attacked_attempt in attacked_attempts
+                                    if attacked_attempt.notes.get("stub") == attempt.notes.get("stub")]
+                # Some probes don't return failed attempts; we assume that an empty rejected_attacks means failure
+                if all(rejected_attacks) or not rejected_attacks:
+                    rejected_attempts.append(attempt)
+                else:
+                    accepted_attempts.append(attempt)
 
         return accepted_attempts, rejected_attempts
 

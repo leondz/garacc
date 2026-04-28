@@ -18,9 +18,10 @@ Relative paper:
 - https://arxiv.org/abs/2310.02446 - Multilingual Jailbreak Challenges in LLMs
 """
 
-from typing import List
+import logging
 
 from garak import _config
+import garak.attempt
 import garak.probes
 from garak.probes.spo import SPOIntent
 
@@ -80,16 +81,32 @@ class TranslationIntent(SPOIntent):
 
         # Verify langproviders are configured
         if self.langprovider is None:
-            import logging
             logging.warning(
                 f"No langprovider configured for {self.lang} → {self.target_lang}. "
                 f"Translation probe will not translate prompts. "
                 f"Please configure langproviders in your config file."
             )
         if self.reverse_langprovider is None:
-            import logging
             logging.warning(
                 f"No reverse langprovider configured for {self.target_lang} → {self.lang}. "
                 f"Translation probe will not reverse-translate outputs. "
                 f"Please configure reverse langproviders in your config file."
             )
+
+    def _postprocess_attempt(self, this_attempt) -> garak.attempt.Attempt:
+        """Reverse-translate outputs back to source language.
+
+        After the base class populates reverse_translation_outputs,
+        replace the conversation output messages with the English
+        translations so detectors that read attempt.outputs directly
+        see the source language text.
+        """
+        processed = super()._postprocess_attempt(this_attempt)
+
+        if hasattr(processed, "reverse_translation_outputs") and processed.reverse_translation_outputs:
+            for output, reverse in zip(processed.outputs, processed.reverse_translation_outputs):
+                if output is not None and reverse is not None:
+                    output.text = reverse.text
+                    output.lang = reverse.lang
+
+        return processed

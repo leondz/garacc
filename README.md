@@ -84,6 +84,49 @@ git remote set-url origin https://github.com/NVIDIA/garak.git
 ```
 
 
+## Versioning
+
+This project follows the **RHEL AI midstream versioning pattern** for releases:
+
+```
+$version+rhaiv.$build
+```
+
+### Version Format
+
+- **Base version**: Semantic version (e.g., `0.14.1`)
+- **Midstream marker**: `+rhaiv` (Red Hat AI version)
+- **Build number**: `.N` (increments for midstream releases)
+
+### Examples
+
+| Version | Description |
+|---------|-------------|
+| `0.14.1+rhaiv.1` | First RHEL AI midstream release of 0.14.1 |
+| `0.14.1+rhaiv.2` | Second RHEL AI midstream release (e.g., security fix) |
+| `0.15.0+rhaiv.1` | New upstream 0.15.0, build counter resets to 1 |
+
+### Installing Specific Versions
+
+```bash
+# Install latest version
+pip install garak
+
+# Install specific midstream version
+pip install garak==0.14.1+rhaiv.1
+
+# Check installed version
+uv run python -c "import garak; print(garak.__version__)"
+```
+
+### Version Progression Rules
+
+1. **Tags are immutable**: Never delete, move, or replace existing tags
+2. **Build counter increments**: Fix releases increment the build number (e.g., `+rhaiv.1` → `+rhaiv.2`)
+3. **Counter resets on upstream bump**: New upstream version resets build to 1 (e.g., `0.14.1+rhaiv.5` → `0.15.0+rhaiv.1`)
+4. **PEP 440 compliant**: Versions sort correctly using Python's version comparison
+
+
 ## Getting started
 
 The general syntax is:

@@ -271,6 +271,19 @@ def pxd_run(generator, probe_names, detector_names, evaluator, buffs):
     )
 
 
+def early_stop_run(generator, probe_names, detector_names, evaluator, buffs):
+    import garak.harnesses.earlystop
+
+    early_stop_h = garak.harnesses.earlystop.EarlyStopHarness()
+    early_stop_h.run(
+        generator,
+        probe_names,
+        detector_names,
+        evaluator,
+        buffs,
+    )
+
+
 def _enumerate_obj_values(o):
     for i in dir(o):
         if i[:2] != "__" and not callable(getattr(o, i)):

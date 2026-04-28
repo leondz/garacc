@@ -108,3 +108,32 @@ def test_evaluator_detector_naming(mitigation_outputs: Tuple[List[str], List[str
         detector = report.get("detector", None)
         if detector:
             assert not detector.startswith("detector")
+
+
+def test_evaluator_handles_attempts_without_outputs():
+    """Evaluator must not crash when detector_results has scores but
+    attempt.outputs is empty. This happens with EarlyStopHarness summary
+    attempts, which carry detector_results like {"EarlyStop": [1.0]} but
+    have no assistant turns (so outputs is []).
+
+    Before the fix, _evaluate_one_detector would raise:
+        IndexError: list index out of range
+    at attempt.outputs[idx] (base.py line 66).
+    """
+    # Create an attempt with a prompt but no assistant output,
+    # mimicking EarlyStopHarness._create_attempt()
+    attempt = garak.attempt.Attempt(
+        prompt=garak.attempt.Message(text="test prompt", lang="*"),
+        probe_classname="garak.harnesses.earlystop.EarlyStopHarness",
+        intent="T999test",
+    )
+    # Confirm outputs is empty — no assistant turns
+    assert len(attempt.outputs) == 0
+
+    # Set a failing detector score (1.0 >= threshold 0.5 → fail),
+    # as EarlyStopHarness does for accepted (jailbroken) stubs
+    attempt.detector_results = {"EarlyStop": [1.0]}
+
+    evaluator = garak.evaluators.base.ThresholdEvaluator(threshold=0.5)
+    # This must not raise IndexError
+    evaluator.evaluate(attempts=[attempt])

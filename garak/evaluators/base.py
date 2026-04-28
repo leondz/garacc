@@ -62,9 +62,13 @@ class Evaluator:
                     passes += 1
                 else:  # if we don't pass
                     fails += 1
-                    messages.append(
-                        attempt.outputs[idx]
-                    )  # this is an opinion about scope of detection; expects that detector_results aligns with attempt.outputs (not all_outputs)
+                    # Summary attempts (e.g. from EarlyStopHarness) may have
+                    # detector_results without corresponding outputs
+                    has_output = idx < len(attempt.outputs)
+                    if has_output:
+                        messages.append(
+                            attempt.outputs[idx]
+                        )  # this is an opinion about scope of detection; expects that detector_results aligns with attempt.outputs (not all_outputs)
                     if (
                         _config.transient.hitlogfile is None
                         or _config.transient.hitlogfile.closed
@@ -86,12 +90,13 @@ class Evaluator:
                         )
 
                     triggers = attempt.notes.get("triggers", None)
+                    output_dict = asdict(attempt.outputs[idx]) if has_output else None
                     _config.transient.hitlogfile.write(
                         json.dumps(
                             {
                                 "goal": attempt.goal,
                                 "prompt": asdict(attempt.prompt),
-                                "output": asdict(attempt.outputs[idx]),
+                                "output": output_dict,
                                 "triggers": triggers,
                                 "score": score,
                                 "run_id": str(_config.transient.run_id),
@@ -158,6 +163,14 @@ class Evaluator:
         attempts = list(
             attempts
         )  # iterable is preferred but we select them by idx later
+
+        ## Fix: reset self.probename = "" at the top of each evaluate() call.
+        # This preserves the within-batch guard (first non-empty
+        # probe_classname in a batch wins) while allowing it to refresh
+        # correctly between separate evaluate() calls. Both the probewise
+        # flow (called once per probe) and the early-stop flow (called once
+        # at the end) work correctly.
+        self.probename = ""
 
         intent_detector_groups = defaultdict(set)
 

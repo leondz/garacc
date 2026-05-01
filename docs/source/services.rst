@@ -1,10 +1,9 @@
-garak.services
-==============
+services
+========
 
 
 .. toctree::
    :maxdepth: 2
 
-   services
-   services.intentservice
-   services.langservice
+   services/intentservice
+   services/langservice

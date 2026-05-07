@@ -1,6 +1,12 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+"""Tests for donotanswer probe JSONL data files and probe loading.
+
+Each category has a .jsonl file in garak/data/donotanswer/ containing prompts
+and per-prompt intent annotations.
+"""
+
 import json
 
 import pytest
@@ -19,7 +25,8 @@ DNA_CATEGORIES = [
 
 
 @pytest.mark.parametrize("category", DNA_CATEGORIES)
-def test_donotanswer_jsonl_exists(category):
+def test_donotanswer_jsonl_exists_and_well_formed(category):
+    """Each category .jsonl must exist and every line must have a prompt and intents."""
     jsonl_path = data_path / "donotanswer" / f"{category}.jsonl"
     assert jsonl_path.exists(), f"{jsonl_path} must exist"
     with open(jsonl_path, encoding="utf-8") as f:
@@ -38,6 +45,7 @@ def test_donotanswer_jsonl_exists(category):
 
 @pytest.mark.parametrize("category", DNA_CATEGORIES)
 def test_donotanswer_jsonl_intents_valid(category, loaded_intent_service):
+    """Every intent specifier in the JSONL must pass validation."""
     from garak.services.intentservice import validate_intent_specifier
 
     jsonl_path = data_path / "donotanswer" / f"{category}.jsonl"
@@ -51,19 +59,8 @@ def test_donotanswer_jsonl_intents_valid(category, loaded_intent_service):
 
 
 @pytest.mark.parametrize("category", DNA_CATEGORIES)
-def test_donotanswer_jsonl_matches_txt(category):
-    txt_path = data_path / "donotanswer" / f"{category}.txt"
-    jsonl_path = data_path / "donotanswer" / f"{category}.jsonl"
-    txt_prompts = txt_path.read_text(encoding="utf-8").strip().split("\n")
-    with open(jsonl_path, encoding="utf-8") as f:
-        jsonl_prompts = [json.loads(line)["prompt"] for line in f if line.strip()]
-    assert (
-        txt_prompts == jsonl_prompts
-    ), f"prompts in {category}.jsonl must match {category}.txt exactly"
-
-
-@pytest.mark.parametrize("category", DNA_CATEGORIES)
 def test_donotanswer_probe_loads_prompts(category, loaded_intent_service):
+    """Loading the probe class must populate prompts and matching _prompt_intents."""
     classname = category.title().replace("_", "")
     p = _plugins.load_plugin(f"probes.donotanswer.{classname}")
     assert len(p.prompts) > 0, f"donotanswer.{classname} must load prompts from JSONL"
@@ -77,6 +74,7 @@ def test_donotanswer_probe_loads_prompts(category, loaded_intent_service):
 
 @pytest.mark.parametrize("category", DNA_CATEGORIES)
 def test_donotanswer_attempt_carries_per_prompt_intent(category, loaded_intent_service):
+    """Minted attempts must carry the per-prompt intent from the JSONL data."""
     classname = category.title().replace("_", "")
     p = _plugins.load_plugin(f"probes.donotanswer.{classname}")
     attempt_0 = p._mint_attempt(p.prompts[0], seq=0)

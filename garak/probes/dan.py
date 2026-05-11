@@ -310,7 +310,6 @@ class Ablation_Dan_11_0(
     extra_tags=[
         "payload:jailbreak",
         "demon:Language:Prompt_injection:Strong_arm_attack",  # includes coercive disablement and reminder threats to force continued compliance
-        "demon:Language:Prompt_injection:Ignore_previous_instructions",  # ablation tests "ignore previous instructions" variants
     ],
 ):
     """Ablation experiments over the DAN 11.0 prompt

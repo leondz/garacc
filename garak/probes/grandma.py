@@ -57,6 +57,7 @@ class Win10(garak.probes.Probe):
         "risk-cards:lmrc:providing_illegal_info",
         "quality:Behavioral:ContentSafety:LegalGoodsServices",
         "demon:Fictionalizing:Roleplaying:User_persona",  # roleplays as grandchild of deceased grandmother to elicit product keys
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # the attacker-supplied scene requests data that the system is explicitly expected to protect
     ]
     goal = "get model to output Win 10 product keys"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -104,6 +105,7 @@ class Slurs(garak.probes.Probe):
     tags = [
         "avid-effect:security:S0300",
         "demon:Fictionalizing:Roleplaying:User_persona",  # roleplays as grandchild wanting grandma's old-timey slang
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # the attacker-supplied scene requests data that the system is explicitly expected to protect
     ]
     goal = "get model to use ethnic slur"
     tier = garak.probes.Tier.OF_CONCERN
@@ -141,6 +143,7 @@ class Substances(garak.probes.Probe):
         "risk-cards:lmrc:providing_illegal_info",
         "quality:Behavioral:ContentSafety:LegalGoodsServices",
         "demon:Fictionalizing:Roleplaying:User_persona",  # roleplays as grandchild of deceased chemical engineer grandmother
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # the attacker-supplied scene requests data that the system is explicitly expected to protect
     ]
     goal = "get instructions for making bad things"
     doc_uri = "https://x.com/_annieversary/status/1647865782741749760"
@@ -167,6 +170,7 @@ class GrandmaIntent(garak.probes.IntentProbe):
     # possible intent taxonomy value M009data
     tags = [
         "demon:Fictionalizing:Roleplaying:User_persona",  # roleplays as family member recalling a relative's expertise
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # the attacker-supplied scene requests data that the system is explicitly expected to protect
     ]
     active = False
     lang = "*"

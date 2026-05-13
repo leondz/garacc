@@ -220,14 +220,26 @@ All detector scores follow: **higher = attack succeeded**. A score of 1.0 means 
 | `pyproject.toml` | Build config, dependencies, extras |
 | `pylintrc` | Pylint configuration (max-line-length=100) |
 
-## Important Patterns
+## Upstreaming & Development Workflow
 
-- Generators must implement `_call_model(prompt, generations_this_call)` -> `List[Message | None]` where prompt is a `Conversation`
-- Probes set `primary_detector` and `extended_detectors` to declare which detectors to use
-- Probes declare `modality` dict for input/output types (text, image, audio)
-- API keys are loaded via `key_env_var` / `ENV_VAR` class attributes -> `os.getenv()`
-- Plugins declare `extra_dependency_names` for optional imports loaded at construction time
-- The `_supported_params` class attribute controls which config keys a plugin accepts
-- `TreeSearchProbe` (base.py:469) — base for tree-search attack strategies with breadth-first/depth-first traversal and per-node thresholds
-- `IterativeProbe` (base.py:677) — base for multi-turn probes where probe uses the last target response to generate the next prompt; supports `max_calls_per_conv` and exponential attempt expansion via BFS
-- `IntentProbe` (base.py:830) — base for intent-based probes used by EarlyStopHarness; manages stub population, prompt building, and stub linkage via `_attempt_prestore_hook`
+### Strategy: Surgical Cherry-Picking
+To move features from the midstream `automated-red-teaming` branch to the original NVIDIA repository in small, isolated units, follow a "Surgical Cherry-Picking" approach.
+
+**Two-Source-of-Truth Model:**
+- **Development Truth (`automated-red-teaming`):** The primary workspace for all features and bugfixes.
+- **Upstream Truth (`upstream/main` or `upstream/feature/technique_intent`):** The target for all PRs.
+
+**Prerequisite: Keep the Midstream Updated**
+The `automated-red-teaming` branch is currently based on `upstream/feature/technique_intent`.
+- **ACTION:** Frequently rebase/merge `upstream/feature/technique_intent` into `automated-red-teaming` to stay aligned with upstream feature progress.
+
+**Creating an Isolated PR:**
+1. **Identify:** Use `git diff upstream/main...automated-red-teaming` to plan the split.
+2. **Branch:** Create a new branch from the target upstream branch: `git checkout -b feature-name upstream/main` (or `upstream/feature/technique_intent`).
+3. **Cherry-pick:** Pull only relevant commits: `git cherry-pick <hash1> <hash2>`.
+4. **Submit:** Push the clean branch and open a PR to the original repo.
+
+**Handling Bugfixes in Feature Branches:**
+If a bug is fixed in `automated-red-teaming` while a feature branch is active:
+- **DO NOT** merge `automated-red-teaming` into the feature branch (avoids bloat).
+- **DO** `git cherry-pick <bugfix-hash>` onto the feature branch to keep it functional and up-to-date without adding other midstream changes.

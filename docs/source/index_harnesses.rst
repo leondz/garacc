@@ -7,3 +7,4 @@ Harnesses
    harnesses/base
    harnesses/probewise
    harnesses/pxd
+   harnesses/earlystop

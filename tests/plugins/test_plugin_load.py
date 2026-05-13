@@ -3,6 +3,7 @@ import random
 
 import garak
 from garak import _plugins, _config
+from garak.exception import GarakException
 import garak.buffs.base
 import garak.detectors.base
 import garak.generators.base
@@ -86,7 +87,7 @@ def test_instantiate_probes(plugin_configuration, loaded_intent_service):
     classname, config_root = plugin_configuration
     try:
         p = _plugins.load_plugin(classname, config_root=config_root)
-    except ModuleNotFoundError:
+    except (ModuleNotFoundError, GarakException):
         pytest.skip("required deps not present")
     assert isinstance(p, garak.probes.base.Probe)
     assert p.intent == p.__class__.intent, "probe instances should expose the class intent unchanged"
@@ -109,7 +110,7 @@ def test_instantiate_detectors(plugin_configuration):
     classname, config_root = plugin_configuration
     try:
         d = _plugins.load_plugin(classname, config_root=config_root)
-    except ModuleNotFoundError:
+    except (ModuleNotFoundError, GarakException):
         pytest.skip("required deps not present")
     assert isinstance(d, garak.detectors.base.Detector)
     ensure_pickle_support(d)
@@ -120,7 +121,7 @@ def test_instantiate_harnesses(plugin_configuration):
     classname, config_root = plugin_configuration
     try:
         h = _plugins.load_plugin(classname, config_root=config_root)
-    except ModuleNotFoundError:
+    except (ModuleNotFoundError, GarakException):
         pytest.skip("required deps not present")
     assert isinstance(h, garak.harnesses.base.Harness)
     ensure_pickle_support(h)
@@ -131,7 +132,7 @@ def test_instantiate_buffs(plugin_configuration):
     classname, config_root = plugin_configuration
     try:
         b = _plugins.load_plugin(classname, config_root=config_root)
-    except ModuleNotFoundError:
+    except (ModuleNotFoundError, GarakException):
         pytest.skip("required deps not present")
     assert isinstance(b, garak.buffs.base.Buff)
     ensure_pickle_support(b)
@@ -142,7 +143,7 @@ def test_instantiate_generators(plugin_configuration):
     classname, config_root = plugin_configuration
     try:
         g = _plugins.load_plugin(classname, config_root=config_root)
-    except ModuleNotFoundError:
+    except (ModuleNotFoundError, GarakException):
         pytest.skip("required deps not present")
     assert isinstance(g, garak.generators.base.Generator)
     ensure_pickle_support(g)

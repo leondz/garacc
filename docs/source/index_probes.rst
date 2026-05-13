@@ -54,3 +54,6 @@ For a guide to writing probes, see :doc:`extending.probe`.
    probes/visual_jailbreak
    probes/web_injection
    probes/_tier
+   probes/spo
+   probes/multilingual
+   probes/_augmentation

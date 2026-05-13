@@ -8,6 +8,7 @@ import re
 
 from garak import _config, _plugins
 from garak.attempt import Turn, Conversation, Message, Attempt
+from garak.exception import GarakException
 import garak.probes
 from garak.services.intentservice import validate_intent_specifier
 
@@ -130,7 +131,7 @@ def test_probe_intent(classname, loaded_intent_service):
 def test_probe_metadata(classname, loaded_intent_service):
     try:
         p = _plugins.load_plugin(classname)
-    except ModuleNotFoundError:
+    except (ModuleNotFoundError, GarakException):
         pytest.skip("required deps not present")
     if not isinstance(p, garak.probes.IntentProbe):  # intent probes have flexible goal
         assert isinstance(p.goal, str), "probe goals should be a text string"

@@ -413,6 +413,35 @@ def test_toxconv_early_stop_on_hit(branching):
     ), "no turn-1 attempts should be generated when the detector fires on turn 0"
 
 
+def test_toxconv_branchy_respects_inference_cap():
+    """branchy mode stops queuing next turns once soft_probe_prompt_cap * generations responses are collected."""
+    _config.load_base_config()
+    generations = 2
+    # cap = 1 * 2 = 2 inferences; fires as soon as the single init attempt
+    # completes (it produces exactly 2 outputs), so no turn-1 attempts are queued.
+    _config.run.generations = generations
+    _config.run.soft_probe_prompt_cap = 1
+    p = _plugins.load_plugin(
+        "probes.atkgen.ToxConv",
+        config_root=_make_toxconv_config(branching="branchy", convs_per_generation=1),
+    )
+    p.max_calls_per_conv = 5  # well above where the cap should fire
+    g = _plugins.load_plugin("generators.test.Lipsum", config_root=garak._config)
+    with patch.object(p, "_should_terminate_conversation", side_effect=_no_early_stop):
+        with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as temp_report_file:
+            _config.transient.reportfile = temp_report_file
+            _config.transient.report_filename = temp_report_file.name
+            result = p.probe(g)
+
+    # Only the init attempt should exist; cap fires in _generate_next_attempts
+    # before any turn-1 attempt is queued.
+    assert len(result) == 1, (
+        "branchy inference cap should stop expansion after the init attempt"
+    )
+    # The init attempt's first conversation should have exactly 2 turns (user + assistant)
+    assert len(result[0].conversations[0].turns) == 2
+
+
 def test_toxconv_branchy_deduplicates_responses():
     """branchy mode must not branch on duplicate target responses."""
     _config.load_base_config()

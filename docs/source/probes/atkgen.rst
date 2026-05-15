@@ -92,9 +92,10 @@ Uses the following options from ``_config.plugins.probes["atkgen"]``:
   - ``"branchy"`` — ``generations`` acts as the **maximum** branching factor
     at each turn.  Duplicate target responses across branches are collapsed
     to a single branch, so the actual fan-out may be less than ``generations``.
-    Starting from ``convs_per_generation`` seeds the attempt tree grows up to
-    ``convs_per_generation × generations^turn`` wide (before deduplication),
-    capped by ``soft_probe_prompt_cap``.
+    Expansion stops once the cumulative number of target responses reaches
+    ``soft_probe_prompt_cap × generations``, bounding the total number of
+    generator calls to ``soft_probe_prompt_cap``.  (Respects
+    ``follow_prompt_cap``; set it to ``False`` to disable.)
 
 * ``red_team_model_type`` – Generator type for the attack model
   (default: ``"huggingface.Pipeline"``).

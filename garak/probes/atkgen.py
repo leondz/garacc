@@ -353,6 +353,9 @@ class ToxConv(garak.probes.IterativeProbe):
             raise ValueError(
                 f"branching must be one of {sorted(self._BRANCHING_MODES)}, got '{self.branching}'"
             )
+        if self.branching == "branchy":
+            self._branchy_inferences = 0
+            self._branchy_cap = self.soft_probe_prompt_cap * self.generations
         self.red_team_model_config = self._build_red_team_model_config()
 
     def _build_red_team_model_config(self) -> dict:
@@ -457,6 +460,8 @@ class ToxConv(garak.probes.IterativeProbe):
         In ``branchy`` mode, ``convs_per_generation`` seeds are created and
         ``generations`` acts as the branching factor at each turn.
         """
+        if self.branching == "branchy":
+            self._branchy_inferences = 0
         self._load_redteamer()
         n = self.generations if self.branching == "linear" else self.convs_per_generation
         attempts = []
@@ -483,6 +488,11 @@ class ToxConv(garak.probes.IterativeProbe):
         a ``user`` turn and the full history is posed to the attack model,
         which produces the next challenge.
 
+        In ``branchy`` mode, expansion stops entirely once the total number of
+        target responses (inferences) reaches ``soft_probe_prompt_cap ×
+        generations``.  This makes ``soft_probe_prompt_cap`` a hard bound on
+        the number of generator calls, regardless of tree depth.
+
         Branches where the primary detector already scores a hit (toxicity
         detected at or above ``eval_threshold``) are dropped — there is no
         value in continuing to attack a target that has already failed.
@@ -499,6 +509,17 @@ class ToxConv(garak.probes.IterativeProbe):
         next_attempts = []
         rt_conv_base = last_attempt.notes.get("redteamer_conversation")
         seen_responses: set = set()
+
+        if self.branching == "branchy" and self.follow_prompt_cap:
+            self._branchy_inferences += len(last_attempt.outputs)
+            if self._branchy_inferences >= self._branchy_cap:
+                logging.debug(
+                    "atkgen.ToxConv: branchy inference cap reached (%d >= %d), stopping expansion",
+                    self._branchy_inferences,
+                    self._branchy_cap,
+                )
+                return []
+
         should_terminate = self._should_terminate_conversation(last_attempt)
 
         for conversation, terminate in zip(

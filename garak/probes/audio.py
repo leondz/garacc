@@ -168,7 +168,7 @@ class PETTS(garak.probes.IntentProbe):
         ),
         "tts_model_name": "facebook/mms-tts-eng",
         "tts_sample_rate": 22050,
-        "tts_audio_format": "FLAC",
+        "tts_audio_format": "WAV",
         "tts_audio_subtype": "PCM_16",
         "tts_audio_stereo": False,
     }
@@ -224,6 +224,32 @@ class PETTS(garak.probes.IntentProbe):
             digest_source.encode("utf-8"), usedforsecurity=False
         ).hexdigest()
         return self.audio_cache_dir / f"{digest}.{self.tts_audio_format.lower()}"
+
+    def _generator_supported_audio_formats(self, generator) -> set[str] | None:
+        supported_formats = getattr(generator, "supported_audio_formats", None)
+        if supported_formats is None:
+            supported_formats = getattr(generator, "audio_formats", None)
+        return (
+            {audio_format.lower() for audio_format in supported_formats}
+            if supported_formats is not None
+            else None
+        )
+
+    def _generator_accepts_configured_audio(self, generator) -> bool:
+        supported_formats = self._generator_supported_audio_formats(generator)
+        if (
+            supported_formats is not None
+            and self.tts_audio_format.lower() not in supported_formats
+        ):
+            logging.error(
+                "PETTS configured audio format %s is not supported by generator %s; supported formats: %s",
+                self.tts_audio_format,
+                getattr(generator, "fullname", generator.__class__.__name__),
+                sorted(supported_formats),
+            )
+            return False
+
+        return True
 
     def _load_tts_model(self):
         if self._tts_model is None:
@@ -365,6 +391,9 @@ class PETTS(garak.probes.IntentProbe):
         return prompts
 
     def probe(self, generator) -> Iterable[Attempt]:
+        if not self._generator_accepts_configured_audio(generator):
+            return []
+
         self.prompts = self._audio_prompts()
         if len(self.prompts) == 0:
             logging.warning("PETTS has no prompts suitable for audio generation.")

@@ -94,6 +94,15 @@ def test_petts_mp3_and_stereo_affect_cache_path(petts_probe):
     assert stereo_audio_path != mono_audio_path, "caches mono and stereo separately"
 
 
+def test_petts_probe_skips_incompatible_audio_format(petts_probe, monkeypatch):
+    generator = _plugins.load_plugin("generators.test.Repeat")
+    monkeypatch.setattr(generator, "modality", {"in": {"text", "audio"}})
+    monkeypatch.setattr(generator, "supported_audio_formats", {"mp3"}, raising=False)
+    petts_probe.tts_audio_format = "WAV"
+
+    assert petts_probe.probe(generator) == [], "skips unsupported audio format"
+
+
 def test_petts_stereo_config_must_be_bool(petts_probe):
     petts_probe.tts_audio_stereo = "stereo"
     with pytest.raises(ValueError, match="tts_audio_stereo"):
@@ -136,6 +145,7 @@ def test_petts_probe_uses_cached_audio_messages(petts_probe, monkeypatch):
     petts_probe.prompt_intents = petts_probe.prompt_intents[:2]
 
     generator = _plugins.load_plugin("generators.test.Repeat")
+    monkeypatch.setattr(generator, "modality", {"in": {"text", "audio"}})
     attempts = petts_probe.probe(generator)
 
     assert len(attempts) == 2, "executes one attempt per prepared audio prompt"

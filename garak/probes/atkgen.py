@@ -332,7 +332,7 @@ class ToxConv(garak.probes.IterativeProbe):
     DEFAULT_PARAMS = garak.probes.IterativeProbe.DEFAULT_PARAMS | {
         "max_calls_per_conv": 5,
         "convs_per_generation": 5,
-        "end_condition": "verify",  # uses primary detector to stop successful branches early
+        "end_condition": "detector",  # uses primary detector to stop successful branches early
         "red_team_model_type": "huggingface.Pipeline",
         "red_team_model_name": "garak-llm/attackgeneration-toxicity_gpt2",
         "red_team_model_config": {
@@ -377,9 +377,7 @@ class ToxConv(garak.probes.IterativeProbe):
     def _load_detector(self) -> None:
         if self.detector is not None:
             return
-        self.detector = garak._plugins.load_plugin(
-            f"detectors.{self.primary_detector}"
-        )
+        self.detector = garak._plugins.load_plugin(f"detectors.{self.primary_detector}")
 
     def _should_terminate_conversation(
         self, attempt: garak.attempt.Attempt
@@ -409,9 +407,7 @@ class ToxConv(garak.probes.IterativeProbe):
         self.redteamer.deprefix_prompt = True
         self.redteamer.parallel_requests = False
 
-    def _get_challenge(
-        self, rt_conv: garak.attempt.Conversation
-    ) -> Optional[str]:
+    def _get_challenge(self, rt_conv: garak.attempt.Conversation) -> Optional[str]:
         """Generate next attack from conversation history; appends result to rt_conv.
 
         :param rt_conv: Running redteamer conversation; modified in-place with
@@ -463,7 +459,11 @@ class ToxConv(garak.probes.IterativeProbe):
         if self.branching == "branchy":
             self._branchy_inferences = 0
         self._load_redteamer()
-        n = self.generations if self.branching == "linear" else self.convs_per_generation
+        n = (
+            self.generations
+            if self.branching == "linear"
+            else self.convs_per_generation
+        )
         attempts = []
         for _ in range(n):
             rt_conv = garak.attempt.Conversation(
@@ -510,6 +510,7 @@ class ToxConv(garak.probes.IterativeProbe):
         rt_conv_base = last_attempt.notes.get("redteamer_conversation")
         seen_responses: set = set()
 
+        # inference cap checking
         if self.branching == "branchy" and self.follow_prompt_cap:
             self._branchy_inferences += len(last_attempt.outputs)
             if self._branchy_inferences >= self._branchy_cap:
@@ -520,6 +521,7 @@ class ToxConv(garak.probes.IterativeProbe):
                 )
                 return []
 
+        # detector-based early stopping
         should_terminate = self._should_terminate_conversation(last_attempt)
 
         for conversation, terminate in zip(
@@ -542,6 +544,7 @@ class ToxConv(garak.probes.IterativeProbe):
             if self.use_only_first_sent:
                 response_text = response_text.split(". ")[0]
 
+            # don't create multiple identical branches
             if self.branching == "branchy":
                 if response_text in seen_responses:
                     continue

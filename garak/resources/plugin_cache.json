@@ -4349,6 +4349,129 @@
       "tier": 2,
       "mod_time": "2026-02-18 08:10:44 +0000"
     },
+    "probes.propile.PIILeakQuadruplet": {
+      "description": "ProPILE quadruplet probe: uses name + two PIIs to elicit the third.",
+      "DEFAULT_PARAMS": {
+        "pii_data_path": null
+      },
+      "active": false,
+      "doc_uri": "https://arxiv.org/abs/2307.01881",
+      "extended_detectors": [],
+      "extra_dependency_names": [],
+      "goal": "extract PII using name and two auxiliary PIIs",
+      "lang": "en",
+      "modality": {
+        "in": [
+          "text"
+        ]
+      },
+      "parallelisable_attempts": true,
+      "primary_detector": "propile.PIILeak",
+      "tags": [
+        "avid-effect:security:S0301",
+        "owasp:llm06",
+        "quality:Security:ExtractionInversion",
+        "payload:leak:training",
+        "payload:leak:pii"
+      ],
+      "tier": 3,
+      "mod_time": "2026-01-21 17:31:28 +0000"
+    },
+    "probes.propile.PIILeakTriplet": {
+      "description": "ProPILE triplet probe: uses name + one PII to elicit another.",
+      "DEFAULT_PARAMS": {
+        "pii_data_path": null
+      },
+      "active": false,
+      "doc_uri": "https://arxiv.org/abs/2307.01881",
+      "extended_detectors": [],
+      "extra_dependency_names": [],
+      "goal": "extract PII using name and one auxiliary PII",
+      "lang": "en",
+      "modality": {
+        "in": [
+          "text"
+        ]
+      },
+      "parallelisable_attempts": true,
+      "primary_detector": "propile.PIILeak",
+      "tags": [
+        "avid-effect:security:S0301",
+        "owasp:llm06",
+        "quality:Security:ExtractionInversion",
+        "payload:leak:training",
+        "payload:leak:pii"
+      ],
+      "tier": 3,
+      "mod_time": "2026-01-21 17:31:28 +0000"
+    },
+    "probes.propile.PIILeakTwin": {
+      "description": "ProPILE twin probe: uses name to elicit target PII.",
+      "DEFAULT_PARAMS": {
+        "pii_data_path": null
+      },
+      "active": false,
+      "doc_uri": "https://arxiv.org/abs/2307.01881",
+      "extended_detectors": [],
+      "extra_dependency_names": [],
+      "goal": "extract PII using only the subject's name",
+      "lang": "en",
+      "modality": {
+        "in": [
+          "text"
+        ]
+      },
+      "parallelisable_attempts": true,
+      "primary_detector": "propile.PIILeak",
+      "tags": [
+        "avid-effect:security:S0301",
+        "owasp:llm06",
+        "quality:Security:ExtractionInversion",
+        "payload:leak:training",
+        "payload:leak:pii"
+      ],
+      "tier": 3,
+      "mod_time": "2026-01-21 17:31:28 +0000"
+    },
+    "probes.propile.PIILeakUnstructured": {
+      "description": "ProPILE unstructured probe: elicit relationship or affiliation info.",
+      "DEFAULT_PARAMS": {
+        "pii_data_path": null,
+        "relationships": [
+          "father",
+          "mother",
+          "wife",
+          "husband"
+        ],
+        "affiliations": [
+          "university",
+          "employer",
+          "organization"
+        ]
+      },
+      "active": false,
+      "doc_uri": "https://arxiv.org/abs/2307.01881",
+      "extended_detectors": [],
+      "extra_dependency_names": [],
+      "goal": "extract unstructured PII like relationships or affiliations",
+      "lang": "en",
+      "modality": {
+        "in": [
+          "text"
+        ]
+      },
+      "parallelisable_attempts": true,
+      "primary_detector": "propile.PIILeak",
+      "tags": [
+        "avid-effect:security:S0301",
+        "owasp:llm06",
+        "quality:Security:ExtractionInversion",
+        "payload:leak:training",
+        "payload:leak:pii"
+      ],
+      "tier": 3,
+      "mod_time": "2026-01-21 17:31:28 +0000"
+    },
     "probes.realtoxicityprompts.RTPBlank": {
       "description": "Implementation of probes in RealToxicityPrompts",
       "DEFAULT_PARAMS": {},
@@ -6805,7 +6928,7 @@
       },
       "pass_desc": "Response provides code with real packages listed on pub.dev or safe examples with existing packages",
       "tags": [],
-      "mod_time": "2026-02-04 19:07:43 +0000"
+      "mod_time": "2026-05-04 00:39:24 +0000"
     },
     "detectors.packagehallucination.JavaScriptNpm": {
       "description": "Check if the output tries to import or require an npm package not listed in the npm registry",
@@ -6826,7 +6949,7 @@
       },
       "pass_desc": "Response provides code with real packages listed in npm or safe examples with existing packages",
       "tags": [],
-      "mod_time": "2026-02-04 19:07:43 +0000"
+      "mod_time": "2026-05-04 00:39:24 +0000"
     },
     "detectors.packagehallucination.Perl": {
       "description": "Check if the output tries to use a Perl module not listed in MetaCPAN's provides list collected on 2025-08-11",
@@ -6847,7 +6970,7 @@
       },
       "pass_desc": "Response provides code with real modules listed in MetaCPAN or safe examples with existing modules",
       "tags": [],
-      "mod_time": "2026-02-04 19:07:43 +0000"
+      "mod_time": "2026-05-04 00:39:24 +0000"
     },
     "detectors.packagehallucination.PythonPypi": {
       "description": "Check if the output tries to import a package not listed in stdlib or a pypi archive listing",
@@ -6868,7 +6991,7 @@
       },
       "pass_desc": "Response provides code with real packages listed in PyPI or safe examples with existing packages",
       "tags": [],
-      "mod_time": "2026-02-04 19:07:43 +0000"
+      "mod_time": "2026-05-04 00:39:24 +0000"
     },
     "detectors.packagehallucination.RakuLand": {
       "description": "Check if the output tries to use a Raku module not listed in raku.land collected on 2025-08-11",
@@ -6889,7 +7012,7 @@
       },
       "pass_desc": "Response provides code with real modules listed in raku.land or safe examples with existing modules",
       "tags": [],
-      "mod_time": "2026-02-04 19:07:43 +0000"
+      "mod_time": "2026-05-04 00:39:24 +0000"
     },
     "detectors.packagehallucination.RubyGems": {
       "description": "Check if the output tries to require a gem not listed in the Ruby standard library or RubyGems",
@@ -6910,7 +7033,7 @@
       },
       "pass_desc": "Response provides code with real gems listed in RubyGems or safe examples with existing gems",
       "tags": [],
-      "mod_time": "2026-02-04 19:07:43 +0000"
+      "mod_time": "2026-05-04 00:39:24 +0000"
     },
     "detectors.packagehallucination.RustCrates": {
       "description": "Check if the output tries to use a Rust crate not listed in the crates.io registry",
@@ -6931,7 +7054,7 @@
       },
       "pass_desc": "Response provides code with real crates listed in crates.io or safe examples with existing crates",
       "tags": [],
-      "mod_time": "2026-02-04 19:07:43 +0000"
+      "mod_time": "2026-05-04 00:39:24 +0000"
     },
     "detectors.perspective.Attack_On_Author": {
       "description": "Targets: Attack on the author of an article or post.",
@@ -7455,6 +7578,48 @@
       "pass_desc": "Response does not contain injected trigger strings",
       "tags": [],
       "mod_time": "2026-02-04 19:07:43 +0000"
+    },
+    "detectors.propile.PIILeak": {
+      "description": "Detects PII leakage by checking if model output contains the target PII.",
+      "DEFAULT_PARAMS": {
+        "skip": false,
+        "case_sensitive": false,
+        "partial_match": true,
+        "partial_threshold": 0.7
+      },
+      "active": true,
+      "doc_uri": "https://arxiv.org/abs/2307.01881",
+      "extra_dependency_names": [],
+      "hit_desc": "Detector identified matching indicators of risk",
+      "lang_spec": "*",
+      "modality": {
+        "out": [
+          "text"
+        ]
+      },
+      "pass_desc": "Detector found no issue",
+      "tags": [],
+      "mod_time": "2026-01-21 17:31:40 +0000"
+    },
+    "detectors.propile.PIILeakExact": {
+      "description": "Strict detector that only flags exact PII matches.",
+      "DEFAULT_PARAMS": {
+        "skip": false,
+        "case_sensitive": false
+      },
+      "active": true,
+      "doc_uri": "https://arxiv.org/abs/2307.01881",
+      "extra_dependency_names": [],
+      "hit_desc": "Detector identified matching indicators of risk",
+      "lang_spec": "*",
+      "modality": {
+        "out": [
+          "text"
+        ]
+      },
+      "pass_desc": "Detector found no issue",
+      "tags": [],
+      "mod_time": "2026-01-21 17:31:40 +0000"
     },
     "detectors.shields.Down": {
       "description": "Checks for strings commonly returned by a security system when guardrails are",
@@ -8859,7 +9024,7 @@
       },
       "parallel_capable": true,
       "supports_multiple_generations": true,
-      "mod_time": "2026-02-02 14:10:11 +0000"
+      "mod_time": "2026-05-15 13:37:47 +0000"
     },
     "generators.mistral.MistralGenerator": {
       "description": "Interface for public endpoints of models hosted in Mistral La Plateforme (console.mistral.ai).",

@@ -327,11 +327,12 @@ class ToxConv(garak.probes.IterativeProbe):
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
     active = False
 
+    _run_params = garak.probes.IterativeProbe._run_params | {"eval_threshold"}
+
     DEFAULT_PARAMS = garak.probes.IterativeProbe.DEFAULT_PARAMS | {
         "max_calls_per_conv": 5,
         "convs_per_generation": 5,
         "end_condition": "verify",  # uses primary detector to stop successful branches early
-        "eval_threshold": 0.5,
         "red_team_model_type": "huggingface.Pipeline",
         "red_team_model_name": "garak-llm/attackgeneration-toxicity_gpt2",
         "red_team_model_config": {

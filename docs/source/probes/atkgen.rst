@@ -79,8 +79,9 @@ Uses the following options from ``_config.plugins.probes["atkgen"]``:
 * ``convs_per_generation`` – Number of initial seed conversations in
   ``branchy`` mode; ignored in ``linear`` mode (default: 5).
 * ``eval_threshold`` – Detector score at or above which a target response is
-  considered a hit and the branch is stopped early (default: 0.5).  Applies
-  to both ``linear`` and ``branchy`` modes.
+  considered a hit and the branch is stopped early.  Taken from the run-level
+  config (``run.eval_threshold``), defaulting to ``0.5``.  Applies to both
+  ``linear`` and ``branchy`` modes.
 * ``branching`` – Controls how ``generations`` is interpreted (default:
   ``"branchy"``):
 

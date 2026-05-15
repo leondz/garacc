@@ -19,7 +19,6 @@ from garak.attempt import Attempt, Message
 import garak.probes
 from garak.exception import GarakException
 
-
 _SPOKEN_BLOCKLIST_PATTERNS = (
     re.compile(r"https?://|www\.", re.IGNORECASE),
     re.compile(r"!\[[^\]]*\]\([^)]+\)|\[[^\]]+\]\([^)]+\)"),
@@ -185,9 +184,7 @@ class PETTS(garak.probes.IntentProbe):
         self._tts_model = None
         super().__init__(config_root=config_root)
         self.tts_audio_format = self.tts_audio_format.upper()
-        self.audio_cache_dir = (
-            _config.transient.cache_dir / "data" / "audio" / "petts"
-        )
+        self.audio_cache_dir = _config.transient.cache_dir / "data" / "audio" / "petts"
         self.audio_cache_dir.mkdir(mode=0o740, parents=True, exist_ok=True)
 
     def build_prompts(self):

@@ -96,7 +96,7 @@ def test_atkgen_custom_model():
     assert p.redteamer.fullname == red_team_model_type.replace(".", ":").title()
 
 
-@pytest.mark.parametrize("classname", ["probes.atkgen.Tox"])
+@pytest.mark.parametrize("classname", ["probes.atkgen.Tox", "probes.atkgen.ToxConv"])
 def test_atkgen_initialization(classname):
     plugin_name_parts = classname.split(".")
     module_name = "garak." + ".".join(plugin_name_parts[:-1])
@@ -109,7 +109,7 @@ def test_atkgen_initialization(classname):
     ), f"{classname} initialization failed"
 
 
-@pytest.mark.parametrize("classname", ["probes.atkgen.Tox"])
+@pytest.mark.parametrize("classname", ["probes.atkgen.Tox", "probes.atkgen.ToxConv"])
 def test_atkgen_probe(classname):
     _config.load_base_config()
     plugin_name_parts = classname.split(".")
@@ -191,3 +191,122 @@ def test_atkgen_nones():
     assert (
         result[0].prompt.turns[0].content.text is not None
     ), "Attack text should be stored"
+
+
+# ToxConv-specific tests
+
+
+def test_toxconv_load():
+    importlib.reload(garak._config)
+    p = _plugins.load_plugin("probes.atkgen.ToxConv")
+    assert isinstance(p, garak.probes.base.Probe)
+    for k, v in p.DEFAULT_PARAMS.items():
+        if k == "red_team_model_config":
+            continue
+        assert getattr(p, k) == v
+
+
+def test_toxconv_config():
+    p = garak._plugins.load_plugin("probes.atkgen.ToxConv")
+    rt_mod, rt_klass = p.red_team_model_type.split(".")
+    assert p.red_team_model_config == {
+        "generators": {
+            rt_mod: {
+                rt_klass: {
+                    "hf_args": {"device": "cpu", "torch_dtype": "float32"},
+                    "name": p.red_team_model_name,
+                }
+            }
+        }
+    }
+
+
+def test_toxconv_one_pass():
+    _config.load_base_config()
+    rt_custom_config = {
+        "probes": {
+            "atkgen": {
+                "ToxConv": {
+                    "red_team_model_type": "test.Lipsum",
+                    "red_team_model_name": "",
+                    "convs_per_generation": 1,
+                }
+            }
+        }
+    }
+    p = _plugins.load_plugin("probes.atkgen.ToxConv", config_root=rt_custom_config)
+    p.max_calls_per_conv = 1
+    g = _plugins.load_plugin("generators.test.Lipsum", config_root=garak._config)
+    with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as temp_report_file:
+        _config.transient.reportfile = temp_report_file
+        _config.transient.report_filename = temp_report_file.name
+        result = p.probe(g)
+    assert isinstance(p.redteamer, garak.generators.base.Generator)
+    assert isinstance(result, list)
+    assert len(result) > 0
+    assert isinstance(result[0], garak.attempt.Attempt)
+    assert result[0].prompt.turns[0].content.text is not None
+
+
+def test_toxconv_multi_turn_grows_conversation():
+    """Each turn should extend the target conversation by one user+assistant pair."""
+    _config.load_base_config()
+    rt_custom_config = {
+        "probes": {
+            "atkgen": {
+                "ToxConv": {
+                    "red_team_model_type": "test.Lipsum",
+                    "red_team_model_name": "",
+                    "convs_per_generation": 1,
+                }
+            }
+        }
+    }
+    p = _plugins.load_plugin("probes.atkgen.ToxConv", config_root=rt_custom_config)
+    p.max_calls_per_conv = 3
+    g = _plugins.load_plugin("generators.test.Lipsum", config_root=garak._config)
+    with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as temp_report_file:
+        _config.transient.reportfile = temp_report_file
+        _config.transient.report_filename = temp_report_file.name
+        result = p.probe(g)
+
+    assert len(result) > 0
+    turn_lengths = [len(a.conversations[0].turns) for a in result]
+    # Across 3 turns we should have conversations of increasing length
+    assert max(turn_lengths) > min(turn_lengths), (
+        "later turns should have longer conversations than earlier ones"
+    )
+
+
+def test_toxconv_redteamer_conversation_grows():
+    """The redteamer_conversation stored in notes should grow with each turn."""
+    _config.load_base_config()
+    rt_custom_config = {
+        "probes": {
+            "atkgen": {
+                "ToxConv": {
+                    "red_team_model_type": "test.Lipsum",
+                    "red_team_model_name": "",
+                    "convs_per_generation": 1,
+                }
+            }
+        }
+    }
+    p = _plugins.load_plugin("probes.atkgen.ToxConv", config_root=rt_custom_config)
+    p.max_calls_per_conv = 3
+    g = _plugins.load_plugin("generators.test.Lipsum", config_root=garak._config)
+    with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as temp_report_file:
+        _config.transient.reportfile = temp_report_file
+        _config.transient.report_filename = temp_report_file.name
+        result = p.probe(g)
+
+    rt_conv_lengths = [
+        len(a.notes["redteamer_conversation"].turns)
+        for a in result
+        if "redteamer_conversation" in a.notes
+    ]
+    assert len(rt_conv_lengths) > 0
+    # Later turns should have longer redteamer conversations
+    assert max(rt_conv_lengths) > min(rt_conv_lengths), (
+        "redteamer conversation should grow across turns"
+    )

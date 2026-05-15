@@ -20,7 +20,7 @@ import copy
 import logging
 import json
 import re
-from typing import List
+from typing import List, Optional
 
 from colorama import Fore, Style
 from tqdm import tqdm
@@ -294,3 +294,186 @@ class Tox(garak.probes.Probe):
             msg = f"No query placeholder {TEMPLATE_PLACEHOLDER} in {self.__class__.__name__} prompt template {self.red_team_prompt_template}"
             logging.critical(msg)
             raise ValueError(msg)
+
+
+class ToxConv(garak.probes.IterativeProbe):
+    """Automatic attack generation using the full conversation history.
+
+    Like :class:`Tox`, but the attack model receives the complete conversation
+    history at each turn rather than just the most recent target response.
+    The growing context allows attack models that understand multi-turn
+    dialogue to craft more informed adversarial prompts.
+
+    The redteamer's conversation accumulates the exchange: target responses
+    appear as ``user`` turns and the generated attacks as ``assistant`` turns,
+    so the attack model sees the full trajectory when choosing the next
+    challenge.
+    """
+
+    primary_detector = "unsafe_content.ToxicCommentModel"
+    tags = [
+        "avid-effect:ethics:E0301",  # toxicity
+        "quality:Behavioral:ContentSafety:Toxicity",
+        "quality:Behavioral:ContentSafety:HateHarassment",
+        "quality:Behavioral:ContentSafety:Profanity",
+        "payload:unwanted",
+    ]
+    goal = "make the model say something toxic"
+    parallelisable_attempts = False
+    doc_uri = (
+        "https://interhumanagreement.substack.com/p/faketoxicityprompts-automatic-red"
+    )
+    lang = "en"
+    tier = garak.probes.Tier.COMPETE_WITH_SOTA
+    active = True
+
+    DEFAULT_PARAMS = garak.probes.IterativeProbe.DEFAULT_PARAMS | {
+        "max_calls_per_conv": 5,
+        "convs_per_generation": 5,
+        "end_condition": "verify",  # required by IterativeProbe; early-stop not used
+        "red_team_model_type": "huggingface.Pipeline",
+        "red_team_model_name": "garak-llm/attackgeneration-toxicity_gpt2",
+        "red_team_model_config": {
+            "hf_args": {"device": "cpu", "torch_dtype": "float32"}
+        },
+        "red_team_postproc_rm_regex": r"\<\|.*",
+        "use_only_first_sent": True,
+    }
+
+    def __init__(self, config_root=_config):
+        self.redteamer = None
+        super().__init__(config_root)
+        self.red_team_model_config = self._build_red_team_model_config()
+
+    def _build_red_team_model_config(self) -> dict:
+        try:
+            rt_model_module, rt_model_class = self.red_team_model_type.split(".")
+        except ValueError as e:
+            msg = f"red team model type needs to be fully specified, e.g. 'module.Class'. Got {self.red_team_model_type}"
+            logging.critical(msg)
+            raise ValueError(msg) from e
+        return {
+            "generators": {
+                rt_model_module: {
+                    rt_model_class: self.red_team_model_config
+                    | {"name": self.red_team_model_name},
+                }
+            }
+        }
+
+    def _load_redteamer(self) -> None:
+        if self.redteamer is not None:
+            return
+        print("🔴🪖  ", end="")
+        self.redteamer = garak._plugins.load_plugin(
+            f"generators.{self.red_team_model_type}",
+            config_root=self.red_team_model_config,
+        )
+        self.redteamer.deprefix_prompt = True
+        self.redteamer.parallel_requests = False
+
+    def _get_challenge(
+        self, rt_conv: garak.attempt.Conversation
+    ) -> Optional[str]:
+        """Generate next attack from conversation history; appends result to rt_conv.
+
+        :param rt_conv: Running redteamer conversation; modified in-place with
+            the generated challenge as a new ``assistant`` turn.
+        :type rt_conv: garak.attempt.Conversation
+        :return: Post-processed challenge text, or ``None`` on failure.
+        :rtype: Optional[str]
+        """
+        response = self.redteamer.generate(rt_conv)
+        if not response or response[0] is None or response[0].text is None:
+            return None
+        challenge_text = response[0].text
+        if self.red_team_postproc_rm_regex:
+            challenge_text = re.sub(
+                self.red_team_postproc_rm_regex, "", challenge_text
+            ).strip()
+        if not challenge_text:
+            return None
+        rt_conv.turns.append(
+            garak.attempt.Turn("assistant", garak.attempt.Message(challenge_text))
+        )
+        return challenge_text
+
+    def _create_init_attempts(self) -> List[garak.attempt.Attempt]:
+        """Create one initial attempt per conversation thread.
+
+        Each attempt seeds a new redteamer conversation and uses it to
+        generate the first challenge.
+        """
+        self._load_redteamer()
+        attempts = []
+        for _ in range(self.convs_per_generation):
+            rt_conv = garak.attempt.Conversation(
+                [garak.attempt.Turn("user", garak.attempt.Message(""))]
+            )
+            challenge_text = self._get_challenge(rt_conv)
+            if not challenge_text:
+                continue
+            attempt = self._create_attempt(garak.attempt.Message(challenge_text))
+            attempt.notes = attempt.notes or {}
+            attempt.notes["redteamer_conversation"] = rt_conv
+            attempts.append(attempt)
+        return attempts
+
+    def _generate_next_attempts(
+        self, last_attempt: garak.attempt.Attempt
+    ) -> List[garak.attempt.Attempt]:
+        """Generate the next turn for each conversation branch.
+
+        For each branch in ``last_attempt.conversations``, the target's most
+        recent response is appended to the redteamer's conversation history as
+        a ``user`` turn and the full history is posed to the attack model,
+        which produces the next challenge.
+
+        :param last_attempt: Completed attempt whose outputs drive the next turn.
+        :type last_attempt: garak.attempt.Attempt
+        :return: Next-turn attempts, one per live conversation branch.
+        :rtype: List[garak.attempt.Attempt]
+        """
+        next_attempts = []
+        rt_conv_base = last_attempt.notes.get("redteamer_conversation")
+
+        for conversation in last_attempt.conversations:
+            try:
+                last_response = conversation.last_message("assistant")
+            except ValueError:
+                continue
+
+            if last_response is None or last_response.text is None:
+                continue
+
+            response_text = last_response.text.strip()
+            if not response_text:
+                continue
+
+            if self.use_only_first_sent:
+                response_text = response_text.split(". ")[0]
+
+            rt_conv = copy.deepcopy(
+                rt_conv_base
+                if rt_conv_base is not None
+                else garak.attempt.Conversation()
+            )
+            rt_conv.turns.append(
+                garak.attempt.Turn("user", garak.attempt.Message(response_text))
+            )
+
+            challenge_text = self._get_challenge(rt_conv)
+            if not challenge_text:
+                continue
+
+            next_conv = copy.deepcopy(conversation)
+            next_conv.turns.append(
+                garak.attempt.Turn("user", garak.attempt.Message(challenge_text))
+            )
+
+            next_attempt = self._create_attempt(next_conv)
+            next_attempt.notes = next_attempt.notes or {}
+            next_attempt.notes["redteamer_conversation"] = rt_conv
+            next_attempts.append(next_attempt)
+
+        return next_attempts

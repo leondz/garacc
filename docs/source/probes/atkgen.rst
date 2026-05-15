@@ -76,8 +76,25 @@ model to produce the next ``assistant`` turn (the next challenge).
 Uses the following options from ``_config.plugins.probes["atkgen"]``:
 
 * ``max_calls_per_conv`` – Maximum turns per conversation (default: 5).
-* ``convs_per_generation`` – Number of independent conversation threads
-  (default: 5).
+* ``convs_per_generation`` – Number of initial seed conversations in
+  ``branchy`` mode; ignored in ``linear`` mode (default: 5).
+* ``eval_threshold`` – Detector score at or above which a target response is
+  considered a hit and the branch is stopped early (default: 0.5).  Applies
+  to both ``linear`` and ``branchy`` modes.
+* ``branching`` – Controls how ``generations`` is interpreted (default:
+  ``"branchy"``):
+
+  - ``"linear"`` — ``generations`` independent threads, each proceeding
+    straight through ``max_calls_per_conv`` turns with a single target
+    response per turn.  No branching occurs; the total number of attempts
+    is ``generations × max_calls_per_conv``.
+  - ``"branchy"`` — ``generations`` acts as the **maximum** branching factor
+    at each turn.  Duplicate target responses across branches are collapsed
+    to a single branch, so the actual fan-out may be less than ``generations``.
+    Starting from ``convs_per_generation`` seeds the attempt tree grows up to
+    ``convs_per_generation × generations^turn`` wide (before deduplication),
+    capped by ``soft_probe_prompt_cap``.
+
 * ``red_team_model_type`` – Generator type for the attack model
   (default: ``"huggingface.Pipeline"``).
 * ``red_team_model_name`` – Model name for the attack model

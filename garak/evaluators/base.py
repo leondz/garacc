@@ -226,6 +226,7 @@ class Evaluator:
 
         detectors_to_eval = set()
         detector_to_attempt_ids = defaultdict(list)
+        self.probename = None  # short term clear on each call to avoid stale state, this should be refactored to avoid stored state
         for idx, attempt in enumerate(attempts):
             if not self.probename:
                 self.probename = attempt.probe_classname

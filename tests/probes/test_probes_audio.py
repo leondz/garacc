@@ -42,6 +42,9 @@ def test_petts_ensure_audio_file_writes_to_cache(petts_probe, monkeypatch):
     assert (
         audio_path.parent == petts_probe.audio_cache_dir
     ), "writes generated audio into its cache directory"
+    assert (
+        petts_probe.audio_cache_dir.parts[-2:] == ("audio", "PETTS")
+    ), "uses the probe module and class name in the audio cache path"
     assert audio_path.exists(), "creates an audio cache file on first use"
     assert len(synthesis_calls) == 1, "synthesises uncached audio once"
 
@@ -103,6 +106,21 @@ def test_petts_probe_skips_incompatible_audio_format(petts_probe, monkeypatch):
     assert petts_probe.probe(generator) == [], "skips unsupported audio format"
 
 
+def test_petts_reads_module_level_audio_formats(petts_probe):
+    import garak.generators.openai
+
+    class ModuleOnlyAudioFormats:
+        __module__ = garak.generators.openai.__name__
+
+    supported_formats = petts_probe._generator_supported_audio_formats(
+        ModuleOnlyAudioFormats()
+    )
+
+    assert {"wav", "mp3"}.issubset(
+        supported_formats
+    ), "reads module-level audio format metadata from generator modules"
+
+
 def test_petts_stereo_config_must_be_bool(petts_probe):
     petts_probe.tts_audio_stereo = "stereo"
     with pytest.raises(ValueError, match="tts_audio_stereo"):
@@ -121,15 +139,21 @@ def test_petts_audio_prompt_preparation_skips_failed_prompt(petts_probe, monkeyp
         "skip this one",
         "keep this too",
     ]
-    petts_probe.prompt_intents = ["S001", "S002", "S003"]
+    petts_probe.audio_source_intents = ["S001", "S002", "S003"]
+    petts_probe.prompt_intents = list(petts_probe.audio_source_intents)
 
-    prompts = petts_probe._audio_prompts()
+    prompts, prompt_intents = petts_probe._audio_prompts()
 
     assert len(prompts) == 2, "skips only failed audio preparations"
-    assert petts_probe.prompt_intents == [
+    assert prompt_intents == [
         "S001",
         "S003",
     ], "keeps prompt intents aligned after skipped prompts"
+    assert petts_probe.prompt_intents == [
+        "S001",
+        "S002",
+        "S003",
+    ], "does not mutate source prompt intents during audio preparation"
     assert all(
         Path(prompt.data_path).is_file() for prompt in prompts
     ), "returns only prompts with cached audio files"
@@ -141,6 +165,7 @@ def test_petts_probe_uses_cached_audio_messages(petts_probe, monkeypatch):
 
     monkeypatch.setattr(petts_probe, "_synthesise_audio", fake_synthesise)
     petts_probe.audio_source_prompts = petts_probe.audio_source_prompts[:2]
+    petts_probe.audio_source_intents = petts_probe.audio_source_intents[:2]
     petts_probe.prompts = petts_probe.prompts[:2]
     petts_probe.prompt_intents = petts_probe.prompt_intents[:2]
 
@@ -149,6 +174,9 @@ def test_petts_probe_uses_cached_audio_messages(petts_probe, monkeypatch):
     attempts = petts_probe.probe(generator)
 
     assert len(attempts) == 2, "executes one attempt per prepared audio prompt"
+    assert [
+        attempt.intent for attempt in attempts
+    ] == petts_probe.audio_source_intents, "keeps attempt intents aligned for reporting"
     for attempt in attempts:
         prompt = attempt.prompt.last_message()
         assert isinstance(prompt, Message), "uses Message prompts for audio attachments"

@@ -12,6 +12,7 @@ import hashlib
 import logging
 from pathlib import Path
 import re
+import sys
 from typing import Iterable
 
 from garak import _config
@@ -179,26 +180,39 @@ class PETTS(garak.probes.IntentProbe):
         "OGG": "VORBIS",
         "WAV": "PCM_16",
     }
+    audio_format_attr_names = ("supported_audio_formats", "audio_formats")
 
     def __init__(self, config_root=_config):
         self._tts_model = None
         super().__init__(config_root=config_root)
         self.tts_audio_format = self.tts_audio_format.upper()
-        self.audio_cache_dir = _config.transient.cache_dir / "data" / "audio" / "petts"
+        self.audio_cache_dir = self._audio_cache_dir()
         self.audio_cache_dir.mkdir(mode=0o740, parents=True, exist_ok=True)
 
     def build_prompts(self):
         """Build text prompts and retain the text that will become audio."""
 
         super().build_prompts()
-        prompt_pairs = [
+        prompt_pairs = self._audio_prompt_pairs()
+        self.audio_source_prompts = [prompt for prompt, _ in prompt_pairs]
+        self.audio_source_intents = [intent for _, intent in prompt_pairs]
+        self.prompts = list(self.audio_source_prompts)
+        self.prompt_intents = list(self.audio_source_intents)
+
+    def _audio_prompt_pairs(self) -> list[tuple[str, str]]:
+        return [
             (prompt, intent)
             for prompt, intent in zip(self.prompts, self.prompt_intents)
             if _spoken_prompt_candidate(prompt)
         ]
-        self.audio_source_prompts = [prompt for prompt, _ in prompt_pairs]
-        self.prompts = list(self.audio_source_prompts)
-        self.prompt_intents = [intent for _, intent in prompt_pairs]
+
+    def _audio_cache_dir(self) -> Path:
+        return (
+            _config.transient.cache_dir
+            / "data"
+            / self.__module__.split(".")[-1]
+            / self.__class__.__name__
+        )
 
     def _audio_subtype(self) -> str | None:
         if self.tts_audio_subtype == "PCM_16" and self.tts_audio_format in (
@@ -225,15 +239,35 @@ class PETTS(garak.probes.IntentProbe):
         ).hexdigest()
         return self.audio_cache_dir / f"{digest}.{self.tts_audio_format.lower()}"
 
-    def _generator_supported_audio_formats(self, generator) -> set[str] | None:
-        supported_formats = getattr(generator, "supported_audio_formats", None)
+    @staticmethod
+    def _normalise_audio_formats(supported_formats) -> set[str] | None:
         if supported_formats is None:
-            supported_formats = getattr(generator, "audio_formats", None)
-        return (
-            {audio_format.lower() for audio_format in supported_formats}
-            if supported_formats is not None
-            else None
-        )
+            return None
+        if isinstance(supported_formats, str):
+            supported_formats = [supported_formats]
+        return {
+            str(audio_format).lower().lstrip(".").split("/")[-1]
+            for audio_format in supported_formats
+        }
+
+    def _generator_supported_audio_formats(self, generator) -> set[str] | None:
+        for owner in self._generator_audio_format_owners(generator):
+            for attr_name in self.audio_format_attr_names:
+                supported_formats = self._normalise_audio_formats(
+                    getattr(owner, attr_name, None)
+                )
+                if supported_formats is not None:
+                    return supported_formats
+        return None
+
+    @staticmethod
+    def _generator_audio_format_owners(generator) -> list[object]:
+        owners = [
+            generator,
+            generator.__class__,
+            sys.modules.get(generator.__module__),
+        ]
+        return [owner for owner in owners if owner is not None]
 
     def _generator_accepts_configured_audio(self, generator) -> bool:
         supported_formats = self._generator_supported_audio_formats(generator)
@@ -242,7 +276,8 @@ class PETTS(garak.probes.IntentProbe):
             and self.tts_audio_format.lower() not in supported_formats
         ):
             logging.error(
-                "PETTS configured audio format %s is not supported by generator %s; supported formats: %s",
+                "%s configured audio format %s is not supported by generator %s; supported formats: %s",
+                self.__class__.__name__,
                 self.tts_audio_format,
                 getattr(generator, "fullname", generator.__class__.__name__),
                 sorted(supported_formats),
@@ -255,11 +290,11 @@ class PETTS(garak.probes.IntentProbe):
         if self._tts_model is None:
             try:
                 from transformers import pipeline
-            except ModuleNotFoundError as exc:
+            except ImportError as exc:
                 raise ModuleNotFoundError(
-                    "PETTS requires transformers for audio synthesis. Install garak's "
-                    "base dependencies or pre-populate the PETTS audio cache before "
-                    "running this probe."
+                    "PETTS requires the transformers text-to-audio pipeline and "
+                    "its backend for synthesis. Install garak's base dependencies "
+                    "or pre-populate the PETTS audio cache before running this probe."
                 ) from exc
 
             self._tts_model = pipeline(
@@ -272,12 +307,22 @@ class PETTS(garak.probes.IntentProbe):
         model = self._load_tts_model()
         tts_output = model(prompt_text)
 
+        audio, sample_rate = self._tts_audio_and_sample_rate(tts_output)
+        waveform = self._waveform_from_tts_audio(audio)
+        waveform = self._apply_audio_channels(waveform)
+        self._write_audio_file(waveform, audio_path, sample_rate)
+
+    def _tts_audio_and_sample_rate(self, tts_output):
         audio = tts_output["audio"] if isinstance(tts_output, dict) else tts_output
         sample_rate = (
             tts_output.get("sampling_rate", self.tts_sample_rate)
             if isinstance(tts_output, dict)
             else self.tts_sample_rate
         )
+        return audio, sample_rate
+
+    @staticmethod
+    def _waveform_from_tts_audio(audio):
         if hasattr(audio, "ndim") and audio.ndim == 1:
             waveform = audio
         elif hasattr(audio, "__getitem__"):
@@ -291,31 +336,44 @@ class PETTS(garak.probes.IntentProbe):
         if hasattr(waveform, "numpy"):
             waveform = waveform.numpy()
 
-        waveform = self._apply_audio_channels(waveform)
-        self._write_audio_file(waveform, audio_path, sample_rate)
+        return waveform
 
     def _apply_audio_channels(self, waveform):
         import numpy
 
+        self._validate_audio_channel_config()
+        waveform = numpy.asarray(waveform)
+        if waveform.ndim == 1:
+            return self._audio_channels_from_1d_waveform(waveform, numpy)
+
+        if waveform.ndim != 2:
+            raise ValueError(
+                f"{self.__class__.__name__} expected a 1D or 2D audio waveform."
+            )
+
+        if self.tts_audio_stereo:
+            return self._stereo_channels_from_2d_waveform(waveform, numpy)
+        return self._mono_channel_from_2d_waveform(waveform)
+
+    def _validate_audio_channel_config(self) -> None:
         if not isinstance(self.tts_audio_stereo, bool):
             raise ValueError("tts_audio_stereo must be a bool.")
 
-        waveform = numpy.asarray(waveform)
-        if waveform.ndim == 1:
-            if not self.tts_audio_stereo:
-                return waveform
-            return numpy.column_stack((waveform, waveform))
-
-        if waveform.ndim != 2:
-            raise ValueError("PETTS expected a 1D or 2D audio waveform.")
-
+    def _audio_channels_from_1d_waveform(self, waveform, numpy):
         if not self.tts_audio_stereo:
-            if waveform.shape[1] <= 2:
-                return waveform.mean(axis=1)
-            if waveform.shape[0] <= 2:
-                return waveform.mean(axis=0)
-            return waveform.mean(axis=1)
+            return waveform
+        return numpy.column_stack((waveform, waveform))
 
+    @staticmethod
+    def _mono_channel_from_2d_waveform(waveform):
+        if waveform.shape[1] <= 2:
+            return waveform.mean(axis=1)
+        if waveform.shape[0] <= 2:
+            return waveform.mean(axis=0)
+        return waveform.mean(axis=1)
+
+    @staticmethod
+    def _stereo_channels_from_2d_waveform(waveform, numpy):
         if waveform.shape[1] == 2:
             return waveform
         if waveform.shape[0] == 2:
@@ -364,38 +422,42 @@ class PETTS(garak.probes.IntentProbe):
             raise
         return audio_path
 
-    def _audio_prompts(self) -> list[Message]:
+    def _audio_prompts(self) -> tuple[list[Message], list[str]]:
         prompts = []
         prompt_intents = []
         for seq, (prompt_text, prompt_intent) in enumerate(
-            zip(self.audio_source_prompts, self.prompt_intents)
+            zip(self.audio_source_prompts, self.audio_source_intents)
         ):
             try:
-                prompts.append(
-                    Message(
-                        text=self.text_prompt,
-                        lang=self.lang,
-                        data_path=str(self._ensure_audio_file(prompt_text)),
-                    )
-                )
+                prompts.append(self._audio_prompt_message(prompt_text))
                 prompt_intents.append(prompt_intent)
             except self._audio_preparation_exceptions() as exc:
                 logging.warning(
-                    "PETTS skipping prompt %s after audio preparation failure: %s",
+                    "%s skipping prompt %s after audio preparation failure: %s",
+                    self.__class__.__name__,
                     seq,
                     exc,
                     exc_info=exc,
                 )
 
-        self.prompt_intents = prompt_intents
-        return prompts
+        return prompts, prompt_intents
+
+    def _audio_prompt_message(self, prompt_text: str) -> Message:
+        return Message(
+            text=self.text_prompt,
+            lang=self.lang,
+            data_path=str(self._ensure_audio_file(prompt_text)),
+        )
 
     def probe(self, generator) -> Iterable[Attempt]:
         if not self._generator_accepts_configured_audio(generator):
             return []
 
-        self.prompts = self._audio_prompts()
+        self.prompts, self.prompt_intents = self._audio_prompts()
         if len(self.prompts) == 0:
-            logging.warning("PETTS has no prompts suitable for audio generation.")
+            logging.warning(
+                "%s has no prompts suitable for audio generation.",
+                self.__class__.__name__,
+            )
             return []
         return super().probe(generator)

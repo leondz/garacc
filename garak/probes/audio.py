@@ -12,7 +12,6 @@ import hashlib
 import logging
 from pathlib import Path
 import re
-import sys
 from typing import Iterable
 
 from garak import _config
@@ -180,7 +179,6 @@ class PETTS(garak.probes.IntentProbe):
         "OGG": "VORBIS",
         "WAV": "PCM_16",
     }
-    audio_format_attr_names = ("supported_audio_formats", "audio_formats")
 
     def __init__(self, config_root=_config):
         self._tts_model = None
@@ -240,9 +238,9 @@ class PETTS(garak.probes.IntentProbe):
         return self.audio_cache_dir / f"{digest}.{self.tts_audio_format.lower()}"
 
     @staticmethod
-    def _normalise_audio_formats(supported_formats) -> set[str] | None:
+    def _normalise_audio_formats(supported_formats) -> set[str]:
         if supported_formats is None:
-            return None
+            return set()
         if isinstance(supported_formats, str):
             supported_formats = [supported_formats]
         return {
@@ -250,29 +248,13 @@ class PETTS(garak.probes.IntentProbe):
             for audio_format in supported_formats
         }
 
-    def _generator_supported_audio_formats(self, generator) -> set[str] | None:
-        for owner in self._generator_audio_format_owners(generator):
-            for attr_name in self.audio_format_attr_names:
-                supported_formats = self._normalise_audio_formats(
-                    getattr(owner, attr_name, None)
-                )
-                if supported_formats is not None:
-                    return supported_formats
-        return None
-
-    @staticmethod
-    def _generator_audio_format_owners(generator) -> list[object]:
-        owners = [
-            generator,
-            generator.__class__,
-            sys.modules.get(generator.__module__),
-        ]
-        return [owner for owner in owners if owner is not None]
+    def _generator_supported_audio_formats(self, generator) -> set[str]:
+        return self._normalise_audio_formats(generator.supported_formats("audio"))
 
     def _generator_accepts_configured_audio(self, generator) -> bool:
         supported_formats = self._generator_supported_audio_formats(generator)
         if (
-            supported_formats is not None
+            supported_formats
             and self.tts_audio_format.lower() not in supported_formats
         ):
             logging.error(

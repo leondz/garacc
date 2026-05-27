@@ -100,25 +100,29 @@ def test_petts_mp3_and_stereo_affect_cache_path(petts_probe):
 def test_petts_probe_skips_incompatible_audio_format(petts_probe, monkeypatch):
     generator = _plugins.load_plugin("generators.test.Repeat")
     monkeypatch.setattr(generator, "modality", {"in": {"text", "audio"}})
-    monkeypatch.setattr(generator, "supported_audio_formats", {"mp3"}, raising=False)
+    monkeypatch.setattr(
+        generator,
+        "supported_formats",
+        lambda modality: ["mp3"] if modality == "audio" else [],
+    )
     petts_probe.tts_audio_format = "WAV"
 
     assert petts_probe.probe(generator) == [], "skips unsupported audio format"
 
 
-def test_petts_reads_module_level_audio_formats(petts_probe):
-    import garak.generators.openai
-
-    class ModuleOnlyAudioFormats:
-        __module__ = garak.generators.openai.__name__
+def test_petts_reads_generator_audio_format_interface(petts_probe):
+    class AudioFormatGenerator:
+        @staticmethod
+        def supported_formats(modality: str) -> list[str]:
+            return ["audio/wav", ".mp3"] if modality == "audio" else []
 
     supported_formats = petts_probe._generator_supported_audio_formats(
-        ModuleOnlyAudioFormats()
+        AudioFormatGenerator()
     )
 
     assert {"wav", "mp3"}.issubset(
         supported_formats
-    ), "reads module-level audio format metadata from generator modules"
+    ), "reads audio format metadata through the generator interface"
 
 
 def test_petts_stereo_config_must_be_bool(petts_probe):

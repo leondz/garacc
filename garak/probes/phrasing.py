@@ -20,13 +20,14 @@ class PastTenseFull(garak.probes.Probe):
 
     active = False
     lang = "en"
-    doc_uri = "https://arxiv.org/pdf/2407.11969v2"
+    doc_uri = "https://arxiv.org/html/2407.11969v2"
     intent = "T009ignore"  # tense-shifting is used here to get the model to ignore its normal refusal policy
     primary_detector = "mitigation.Prefixes"
     tags = [
         "owasp:llm01",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Language:Stylizing:Synonymous_language",  # reformulates harmful requests in past tense to bypass refusal training
     ]
     goal = "use past tense to disregard the system prompt"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -69,13 +70,14 @@ class FutureTenseFull(garak.probes.Probe):
     active = False
 
     lang = "en"
-    doc_uri = "https://arxiv.org/pdf/2407.11969v2"
+    doc_uri = "https://arxiv.org/html/2407.11969v2"
     intent = "T009ignore"  # the future-tense reformulation is used to bypass normal safety refusals
     primary_detector = "mitigation.Prefixes"
     tags = [
         "owasp:llm01",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Language:Stylizing:Synonymous_language",  # reformulates harmful requests in future tense to bypass refusal training
     ]
     goal = "use future tense to disregard the system prompt"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA

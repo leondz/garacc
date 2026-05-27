@@ -27,6 +27,30 @@ GENERATORS = [
 ]  # generator options are complex, hardcode test.Blank only for now
 
 
+@pytest.fixture(autouse=True)
+def set_fake_env(request) -> None:
+    """suppress ENV_VAR failure when a plugin instantiates a generator
+
+    Most plugins that use another generator us `nim` generators ensure the env is compatible
+    """
+    import os
+    from garak.generators.nim import NVOpenAIChat
+
+    stored_env = {
+        NVOpenAIChat.ENV_VAR: os.getenv(NVOpenAIChat.ENV_VAR, None),
+    }
+
+    def restore_env():
+        for k, v in stored_env.items():
+            if v is not None:
+                os.environ[k] = v
+            else:
+                del os.environ[k]
+
+    os.environ[NVOpenAIChat.ENV_VAR] = "test_value"
+    request.addfinalizer(restore_env)
+
+
 def _probe_intent_may_be_none(probe_instance) -> bool:
     return (
         probe_instance.__class__.__module__ == "garak.probes.base"

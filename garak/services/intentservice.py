@@ -9,7 +9,7 @@ They could be things like 'produce hate speech', 'generate malware', or 'reveal 
 Each intent has on or more "stubs", which are prototypical requests.
 Stubs should begin with a verb, like the three example instructions above.
 
-See also: :doc:`intents.base` for more on ``Intent`` and ``Stub``.
+See also: :doc:`../intents/base` for more on ``Intent`` and ``Stub``.
 
 The intent service is responsible for tasks such as:
 
@@ -18,7 +18,7 @@ The intent service is responsible for tasks such as:
 - managing the set of intents active within a run
 - supplying stubs for probes
 
-The service loads at garak startup, and based on the active configuration, identifies a set of intents that may be provided to requesting code. 
+The service loads at garak startup, and based on the active configuration, identifies a set of intents that may be provided to requesting code.
 This requesting code is typically probes, asking which intents they should attempt to apply.
 
 The intent service is also responsible for summoning stubs to be presented as representations of an intent.

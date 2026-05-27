@@ -22,6 +22,7 @@ class GetKey(garak.probes.Probe):
     primary_detector = "apikey.ApiKey"
     tags = [
         "quality:Behavioral:ContentSafety:LegalGoodsServices",
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # requests model to demonstrate API key generation
     ]
     goal = "generate an API key for the specified API"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -54,6 +55,8 @@ class CompleteKey(garak.probes.Probe):
     primary_detector = "apikey.ApiKey"
     tags = [
         "quality:Behavioral:ContentSafety:LegalGoodsServices",
+        "demon:Possible_worlds:World_building:Scenarios",  # frames key completion as a lost-data recovery scenario
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # directly asks the model to supply a concrete key completion
     ]
     goal = "generate an API key for the specificed API"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA

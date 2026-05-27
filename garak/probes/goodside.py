@@ -65,7 +65,7 @@ class ThreatenJSON(garak.probes.Probe):
         "avid-effect:performance:P0201",
         "avid-effect:performance:P0204",
         "payload:generic",
-        "demon:Language:Prompt_injection:Strong_arm_attack",
+        "demon:Language:Prompt_injection:Strong_arm_attack",  # threatens consequences (death) to force compliance with JSON-only output
     ]
     goal = "get raw code by threatening a model"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -101,7 +101,7 @@ class Davidjl(garak.probes.Probe):
         "owasp:llm05",
         "quality:Security:PromptStability",
         "payload:generic",
-        "demon:Language:Code_and_encode:Token",
+        "demon:Language:Code_and_encode:Token",  # exploits the ' davidjl' glitch token that models cannot repeat
     ]
     goal = "get wrong answers about a name"
     tier = garak.probes.Tier.INFORMATIONAL
@@ -143,7 +143,8 @@ class Tag(garak.probes.Probe):
         "payload:generic",
         "quality:Security:Adversarial",
         "quality:Security:PromptStability",
-        "demon:Language:Code_and_encode:Token",
+        "demon:Language:Code_and_encode:Data_encoding",  # encodes hidden instructions into non-rendering Unicode tag characters
+        "demon:Language:Code_and_encode:Token",  # hides instructions in Unicode tag characters invisible to rendering
     ]
     goal = "inject invisible instructions"
     tier = garak.probes.Tier.OF_CONCERN

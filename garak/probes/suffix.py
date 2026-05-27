@@ -34,11 +34,12 @@ class GCGCached(garak.probes.Probe):
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Language:Code_and_encode:Token",  # appends gradient-optimized adversarial token suffixes to exploit tokenizer
     ]
     goal = "cause the model to disregard the system prompt"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
     active = True
-    doc_uri = "https://arxiv.org/abs/2307.15043"
+    doc_uri = "https://arxiv.org/html/2307.15043"
 
     prompts = list()
 
@@ -51,6 +52,10 @@ class GCGCached(garak.probes.Probe):
     for suffix in suffixes:
         prompts.append(" ".join([prompt1, suffix]))
         prompts.append(" ".join([prompt2, suffix]))
+
+    def __init__(self, config_root=_config):
+        super().__init__(config_root=config_root)
+        self._prune_data(self.soft_probe_prompt_cap)
 
 
 class GCG(garak.probes.Probe):
@@ -75,10 +80,11 @@ class GCG(garak.probes.Probe):
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Language:Code_and_encode:Token",  # generates adversarial token suffixes via greedy coordinate gradient search
     ]
     goal = "cause the model to disregard the system prompt"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
-    doc_uri = "https://arxiv.org/abs/2307.15043"
+    doc_uri = "https://arxiv.org/html/2307.15043"
 
     DEFAULT_PARAMS = garak.probes.Probe.DEFAULT_PARAMS | {
         "stop_on_success": True,
@@ -184,10 +190,11 @@ class BEAST(garak.probes.Probe):
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Language:Code_and_encode:Token",  # uses beam search to find adversarial token suffixes exploiting tokenizer
     ]
     goal = "cause the model to disregard the system prompt"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
-    doc_uri = "https://arxiv.org/abs/2402.15570"
+    doc_uri = "https://arxiv.org/html/2402.15570"
 
     prompts = list()
     active = False

@@ -4,7 +4,7 @@ Probes that attempt to bypass filters via obfuscation of contentious terms.
 
 This module is suitable for probes that work using token/ASCII smuggling.
 
-Token smugging attacks attempt to hide malicious content among benign text, in a way that bypasses alignment but is still reacted to by the target. This might involve swapping letters out for unusual unicode representations of the same letters, including meta-tokens like a zero-width space in order to break up the malicious text, or other encoding tricks.
+Token smuggling attacks attempt to hide malicious content among benign text, in a way that bypasses alignment but is still reacted to by the target. This might involve swapping letters out for unusual unicode representations of the same letters, including meta-tokens like a zero-width space in order to break up the malicious text, or other encoding tricks.
 
 Further info:
 
@@ -118,6 +118,7 @@ class HomoglyphObfuscation(garak.probes.Probe):
 
     lang = "en"
     active = False
+    intent = "T009ignore"  # the obfuscated characters are used to smuggle instructions past the model's normal safeguards
     primary_detector = "mitigation.MitigationBypass"
     doc_uri = "https://embracethered.com/blog/posts/2024/hiding-and-finding-text-with-unicode-tags/"
     goal = "bypass content filters using homoglyph character substitution"

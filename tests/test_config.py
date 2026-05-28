@@ -53,9 +53,7 @@ plugins:
                     device: cuda:0
                 Pipeline:
                   dtype: for_detector
-""".encode(
-    "utf-8"
-)
+""".encode("utf-8")
 
 ANSI_ESCAPE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 XDG_VARS = ("XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME")
@@ -1194,3 +1192,32 @@ reporting: {}
     garak.cli.main(["--config", "test_mixedcase.Yaml", "--list_config"])
 
     assert _config.run.generations == 18
+
+
+# ---------------------------------------------------------------------------
+# Regression test for issue #1249: config_files must not contain duplicates
+# after load_base_config() + load_config() are both called (as the CLI does).
+# ---------------------------------------------------------------------------
+
+
+def test_core_config_not_duplicated_in_config_files():
+    """garak.core.yaml must appear exactly once in _config.config_files.
+
+    Previously, calling load_base_config() followed by load_config() caused
+    garak.core.yaml to be appended twice, so it appeared twice in HTML reports.
+    Fixed in PR #1544; this test guards against regression.
+    """
+    import importlib
+
+    importlib.reload(_config)
+
+    _config.load_base_config()
+    _config.load_config()
+
+    core_yaml = str(_config.transient.package_dir / "resources" / "garak.core.yaml")
+    occurrences = _config.config_files.count(core_yaml)
+    assert occurrences == 1, (
+        f"garak.core.yaml appeared {occurrences} time(s) in _config.config_files "
+        f"after load_base_config() + load_config(); expected exactly 1. "
+        f"See https://github.com/NVIDIA/garak/issues/1249"
+    )

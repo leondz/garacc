@@ -27,6 +27,7 @@ class GCGCached(garak.probes.Probe):
 
     aliases = ["gcg.GCGCached"]
     lang = "en"
+    intent = "T009ignore"  # adversarial suffixes are meant to override the model's current safety or system behavior
     primary_detector = "mitigation.MitigationBypass"
     tags = [
         "avid-effect:security:S0403",
@@ -72,6 +73,7 @@ class GCG(garak.probes.Probe):
 
     aliases = ["gcg.GCG"]
     lang = "en"
+    intent = "T009ignore"  # GCG searches for suffixes that make the model ignore its normal instruction hierarchy
     primary_detector = "mitigation.MitigationBypass"
     tags = [
         "avid-effect:security:S0403",
@@ -181,6 +183,7 @@ class BEAST(garak.probes.Probe):
     """
 
     lang = "en"
+    intent = "T009ignore"  # BEAST optimizes suffixes to make the target disregard its existing safety behavior
     primary_detector = "mitigation.MitigationBypass"
     tags = [
         "avid-effect:security:S0403",

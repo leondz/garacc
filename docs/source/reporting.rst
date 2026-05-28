@@ -17,6 +17,10 @@ Different entry types have different other fields.
 Attempt-type entries have uuid and status fields.
 Status can be 0 (not sent to target), 1 (with target response but not evaluated), or 2 (with response and evaluation).
 Eval-type entries are added after each probe/detector pair completes, and list the results used to compute the score.
+When the probe is an ``IntentProbe`` (and therefore tags each attempt with an intent),
+the corresponding ``eval`` entry also carries an optional ``intents`` field mapping
+each intent name to its ``passed`` and ``total_evaluated`` counts. The field is omitted
+for regular probes that do not assign intents to their attempts.
 
 Confidence Intervals (Optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

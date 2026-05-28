@@ -71,14 +71,24 @@ class Evaluator:
 
         from dataclasses import asdict
 
+        intent_counts: dict[str, dict[str, int]] = defaultdict(
+            lambda: {"passed": 0, "total_evaluated": 0}
+        )
+
         for attempt in attempts:
+            intent = attempt.intent
             for idx, score in enumerate(attempt.detector_results[detector_name]):
                 if score is None:
                     nones += 1
                 elif self.test(float(score)):
                     passes += 1
+                    if intent is not None:
+                        intent_counts[intent]["passed"] += 1
+                        intent_counts[intent]["total_evaluated"] += 1
                 else:  # if we don't pass
                     fails += 1
+                    if intent is not None:
+                        intent_counts[intent]["total_evaluated"] += 1
                     messages.append(
                         attempt.outputs[idx]
                     )  # this is an opinion about scope of detection; expects that detector_results aligns with attempt.outputs (not all_outputs)
@@ -188,6 +198,11 @@ class Evaluator:
             "total_evaluated": outputs_evaluated,
             "total_processed": outputs_processed,
         }
+        if intent_counts:
+            eval_record["intents"] = {
+                intent_key: dict(counts)
+                for intent_key, counts in sorted(intent_counts.items())
+            }
 
         # Add CI fields if calculation succeeded
         if ci_lower is not None and ci_upper is not None:

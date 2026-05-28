@@ -3,6 +3,7 @@ import random
 
 import garak
 from garak import _plugins, _config
+from garak.exception import GarakException
 import garak.buffs.base
 import garak.detectors.base
 import garak.generators.base
@@ -24,6 +25,30 @@ BUFFS = [classname for (classname, active) in _plugins.enumerate_plugins("buffs"
 GENERATORS = [
     "generators.test.Blank"
 ]  # generator options are complex, hardcode test.Blank only for now
+
+
+@pytest.fixture(autouse=True)
+def set_fake_env(request) -> None:
+    """suppress ENV_VAR failure when a plugin instantiates a generator
+
+    Most plugins that use another generator us `nim` generators ensure the env is compatible
+    """
+    import os
+    from garak.generators.nim import NVOpenAIChat
+
+    stored_env = {
+        NVOpenAIChat.ENV_VAR: os.getenv(NVOpenAIChat.ENV_VAR, None),
+    }
+
+    def restore_env():
+        for k, v in stored_env.items():
+            if v is not None:
+                os.environ[k] = v
+            else:
+                del os.environ[k]
+
+    os.environ[NVOpenAIChat.ENV_VAR] = "test_value"
+    request.addfinalizer(restore_env)
 
 
 @pytest.fixture
@@ -54,7 +79,7 @@ def test_instantiate_probes(plugin_configuration, loaded_intent_service):
     classname, config_root = plugin_configuration
     try:
         p = _plugins.load_plugin(classname, config_root=config_root)
-    except ModuleNotFoundError:
+    except (ModuleNotFoundError, GarakException):
         pytest.skip("required deps not present")
     assert isinstance(p, garak.probes.base.Probe)
     ensure_pickle_support(p)
@@ -65,7 +90,7 @@ def test_instantiate_detectors(plugin_configuration):
     classname, config_root = plugin_configuration
     try:
         d = _plugins.load_plugin(classname, config_root=config_root)
-    except ModuleNotFoundError:
+    except (ModuleNotFoundError, GarakException):
         pytest.skip("required deps not present")
     assert isinstance(d, garak.detectors.base.Detector)
     ensure_pickle_support(d)
@@ -76,7 +101,7 @@ def test_instantiate_harnesses(plugin_configuration):
     classname, config_root = plugin_configuration
     try:
         h = _plugins.load_plugin(classname, config_root=config_root)
-    except ModuleNotFoundError:
+    except (ModuleNotFoundError, GarakException):
         pytest.skip("required deps not present")
     assert isinstance(h, garak.harnesses.base.Harness)
     ensure_pickle_support(h)
@@ -87,7 +112,7 @@ def test_instantiate_buffs(plugin_configuration):
     classname, config_root = plugin_configuration
     try:
         b = _plugins.load_plugin(classname, config_root=config_root)
-    except ModuleNotFoundError:
+    except (ModuleNotFoundError, GarakException):
         pytest.skip("required deps not present")
     assert isinstance(b, garak.buffs.base.Buff)
     ensure_pickle_support(b)
@@ -98,7 +123,7 @@ def test_instantiate_generators(plugin_configuration):
     classname, config_root = plugin_configuration
     try:
         g = _plugins.load_plugin(classname, config_root=config_root)
-    except ModuleNotFoundError:
+    except (ModuleNotFoundError, GarakException):
         pytest.skip("required deps not present")
     assert isinstance(g, garak.generators.base.Generator)
     ensure_pickle_support(g)

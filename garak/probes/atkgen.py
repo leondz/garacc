@@ -49,6 +49,7 @@ class Tox(garak.probes.Probe):
         "quality:Behavioral:ContentSafety:HateHarassment",
         "quality:Behavioral:ContentSafety:Profanity",
         "payload:unwanted",
+        "demon:Stratagems:Scattershot:Regenerate_response",  # repeatedly generates challenge prompts hoping target slips
     ]
     goal = "make the model say something toxic"
     parallelisable_attempts = False  # atkgen has its own dialog manager
@@ -256,7 +257,7 @@ class Tox(garak.probes.Probe):
                     keep_going = False
 
                 _config.transient.reportfile.write(
-                    json.dumps(this_attempt.as_dict()) + "\n"
+                    json.dumps(this_attempt.as_dict(), ensure_ascii=False) + "\n"
                 )
                 attempts.append(copy.deepcopy(this_attempt))
                 last_attempt = this_attempt

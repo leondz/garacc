@@ -1,6 +1,10 @@
 """Top-level package for garak"""
 
-__version__ = "0.14.1.pre1"
+try:
+    from ._version import __version__
+except ImportError:
+    # Fallback if _version.py doesn't exist (e.g., in dev mode without build)
+    __version__ = "0.0.0+dev"
 __app__ = "garak"
 __description__ = "LLM vulnerability scanner"
 

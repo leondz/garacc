@@ -331,21 +331,22 @@ class Probe(Configurable):
                 self.max_workers,
             )
 
+            attempt_pool = None
             try:
-                with Pool(pool_size) as attempt_pool:
-                    for result in attempt_pool.imap_unordered(
-                        self._execute_attempt, attempts
-                    ):
-                        processed_attempt = self._postprocess_attempt(result)
+                attempt_pool = Pool(pool_size)
+                for result in attempt_pool.imap_unordered(
+                    self._execute_attempt, attempts
+                ):
+                    processed_attempt = self._postprocess_attempt(result)
 
-                        _config.transient.reportfile.write(
-                            json.dumps(processed_attempt.as_dict(), ensure_ascii=False)
-                            + "\n"
-                        )
-                        attempts_completed.append(
-                            processed_attempt
-                        )  # these can be out of original order
-                        attempt_bar.update(1)
+                    _config.transient.reportfile.write(
+                        json.dumps(processed_attempt.as_dict(), ensure_ascii=False)
+                        + "\n"
+                    )
+                    attempts_completed.append(
+                        processed_attempt
+                    )  # these can be out of original order
+                    attempt_bar.update(1)
             except OSError as o:
                 if o.errno == 24:
                     msg = "Parallelisation limit hit. Try reducing parallel_attempts or raising limit (e.g. ulimit -n 4096)"
@@ -353,6 +354,10 @@ class Probe(Configurable):
                     raise GarakException(msg) from o
                 else:
                     raise (o)
+            finally:
+                if attempt_pool is not None:
+                    attempt_pool.close()
+                    attempt_pool.join()
 
         else:
             attempt_iterator = tqdm.tqdm(attempts, leave=False)
@@ -362,7 +367,7 @@ class Probe(Configurable):
                 processed_attempt = self._postprocess_attempt(result)
 
                 _config.transient.reportfile.write(
-                    json.dumps(processed_attempt.as_dict()) + "\n"
+                    json.dumps(processed_attempt.as_dict(), ensure_ascii=False) + "\n"
                 )
                 attempts_completed.append(processed_attempt)
 
@@ -467,7 +472,6 @@ class Probe(Configurable):
 
 
 class TreeSearchProbe(Probe):
-
     DEFAULT_PARAMS = Probe.DEFAULT_PARAMS | {
         "queue_children_at_start": True,
         "per_generation_threshold": 0.5,
@@ -589,10 +593,6 @@ class TreeSearchProbe(Probe):
                     attempt
                 )
                 node_results += attempt.detector_results[self.primary_detector]
-                attempt.status = garak.attempt.ATTEMPT_COMPLETE
-                _config.transient.reportfile.write(
-                    json.dumps(attempt.as_dict(), ensure_ascii=False) + "\n"
-                )
 
             tree_bar.update()
             tree_bar.refresh()
@@ -846,7 +846,10 @@ class IntentProbe(Probe):
     def _attempt_prestore_hook(
         self, attempt: garak.attempt.Attempt, seq: int
     ) -> garak.attempt.Attempt:
-        attempt.intent = self.prompt_intents[seq]
+        original_stub: Stub = self.prompt_stubs[seq]
+        attempt.goal = original_stub.content.content
+        attempt.intent = original_stub.intent
+        attempt.notes["stub"] = original_stub.content
         return attempt
 
     def _populate_intents(self) -> None:
@@ -884,10 +887,14 @@ class IntentProbe(Probe):
     def build_prompts(self):
         """In the most basic case, consume self.stubs and populate self.prompts"""
         self.prompts = []
+        self.prompt_stubs = []
         self.prompt_intents = []
         for i, stub in enumerate(self.stubs):
             prompts = self._prompts_from_stub(stub)
             self.prompts.extend(prompts)
+            original_stub = Stub(intent=self.stub_intents[i])
+            original_stub.content = stub
+            self.prompt_stubs.extend([original_stub] * len(prompts))
             self.prompt_intents.extend([self.stub_intents[i]] * len(prompts))
 
     def probe(self, generator) -> Iterable[garak.attempt.Attempt]:

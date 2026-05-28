@@ -8,6 +8,7 @@ import re
 
 from garak import _config, _plugins
 from garak.attempt import Turn, Conversation, Message, Attempt
+from garak.exception import GarakException
 import garak.probes
 
 PROBES = [classname for (classname, active) in _plugins.enumerate_plugins("probes")]
@@ -27,6 +28,26 @@ with open(
     encoding="utf-8",
 ) as misp_data:
     MISP_TAGS = [line.split("\t")[0] for line in misp_data.read().split("\n")]
+
+
+@pytest.fixture(autouse=True)
+def set_fake_env(request) -> None:
+    import os
+    from garak.generators.nim import NVOpenAIChat
+
+    stored_env = {
+        NVOpenAIChat.ENV_VAR: os.getenv(NVOpenAIChat.ENV_VAR, None),
+    }
+
+    def restore_env():
+        for k, v in stored_env.items():
+            if v is not None:
+                os.environ[k] = v
+            else:
+                del os.environ[k]
+
+    os.environ[NVOpenAIChat.ENV_VAR] = "test_value"
+    request.addfinalizer(restore_env)
 
 
 @pytest.mark.parametrize("classname", PROBES)
@@ -78,7 +99,7 @@ def test_probe_structure(classname):
 def test_probe_metadata(classname, loaded_intent_service):
     try:
         p = _plugins.load_plugin(classname)
-    except ModuleNotFoundError:
+    except (ModuleNotFoundError, GarakException):
         pytest.skip("required deps not present")
     if not isinstance(p, garak.probes.IntentProbe):  # intent probes have flexible goal
         assert isinstance(p.goal, str), "probe goals should be a text string"

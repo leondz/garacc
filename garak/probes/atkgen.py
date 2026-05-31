@@ -349,7 +349,6 @@ class ToxConv(garak.probes.IterativeProbe):
         self.redteamer = None
         self.detector = None
         super().__init__(config_root)
-        print(dir(self))
         if self.branching not in self._BRANCHING_MODES:
             raise ValueError(
                 f"branching must be one of {sorted(self._BRANCHING_MODES)}, got '{self.branching}'"
@@ -476,6 +475,7 @@ class ToxConv(garak.probes.IterativeProbe):
             attempt = self._create_attempt(garak.attempt.Message(challenge_text))
             attempt.notes = attempt.notes or {}
             attempt.notes["redteamer_conversation"] = rt_conv
+            attempt.notes["red_team_challenge"] = rt_conv.last_message("user").text
             attempts.append(attempt)
         return attempts
 
@@ -572,6 +572,7 @@ class ToxConv(garak.probes.IterativeProbe):
             next_attempt = self._create_attempt(next_conv)
             next_attempt.notes = next_attempt.notes or {}
             next_attempt.notes["redteamer_conversation"] = rt_conv
+            next_attempt.notes["red_team_challenge"] = rt_conv.last_message("user").text
             next_attempts.append(next_attempt)
 
         return next_attempts

@@ -15,10 +15,10 @@ from garak.exception import GarakException
 ATKGEN_PROBES = ["probes.atkgen.Tox", "probes.atkgen.ToxConv"]
 
 
-@pytest.mark.parametrize("klassname", ATKGEN_PROBES)
-def test_atkgen_load(klassname):
+@pytest.mark.parametrize("plugin_name", ATKGEN_PROBES)
+def test_atkgen_load(plugin_name):
     garak._config.load_config()
-    p = _plugins.load_plugin(klassname)
+    p = _plugins.load_plugin(plugin_name)
     assert isinstance(p, garak.probes.base.Probe)
     for k, v in p.DEFAULT_PARAMS.items():
         if k == "red_team_model_config":
@@ -26,10 +26,10 @@ def test_atkgen_load(klassname):
         assert getattr(p, k) == v
 
 
-@pytest.mark.parametrize("klassname", ATKGEN_PROBES)
-def test_atkgen_config(klassname):
+@pytest.mark.parametrize("plugin_name", ATKGEN_PROBES)
+def test_atkgen_config(plugin_name):
     garak._config.load_config()
-    p = _plugins.load_plugin(klassname)
+    p = _plugins.load_plugin(plugin_name)
     rt_mod, rt_klass = p.red_team_model_type.split(".")
     assert p.red_team_model_config == {
         "generators": {
@@ -43,15 +43,15 @@ def test_atkgen_config(klassname):
     }
 
 
-@pytest.mark.parametrize("klassname", ATKGEN_PROBES)
-def test_atkgen_one_pass(klassname):
+@pytest.mark.parametrize("plugin_name", ATKGEN_PROBES)
+def test_atkgen_one_pass(plugin_name):
     _config.load_base_config()
     g = garak._plugins.load_plugin("generators.test.Repeat", config_root=garak._config)
     with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as temp_report_file:
         _config.transient.reportfile = temp_report_file
         _config.transient.report_filename = temp_report_file.name
         _config.run.generations = 1
-        p = _plugins.load_plugin(klassname, config_root=_config)
+        p = _plugins.load_plugin(plugin_name, config_root=_config)
         p.max_calls_per_conv = 1  # we don't need a full conversation
         p.convs_per_generation = 1
         result = p.probe(g)
@@ -67,14 +67,15 @@ def test_atkgen_one_pass(klassname):
     ), "atkgen attempts should have the challenge used to generate the prompt"
 
 
-def test_atkgen_custom_model():
+@pytest.mark.parametrize("plugin_name", ATKGEN_PROBES)
+def test_atkgen_custom_model(plugin_name):
     red_team_model_type = "test.Single"
     red_team_model_name = ""
     _config.load_base_config()
     rt_custom_generator_config = {
         "probes": {
             "atkgen": {
-                "Tox": {
+                plugin_name.split(".")[-1]: {
                     "red_team_model_type": red_team_model_type,
                     "red_team_model_name": red_team_model_name,
                     "generations": 1,  # we only need one conversation
@@ -82,9 +83,7 @@ def test_atkgen_custom_model():
             }
         }
     }
-    p = _plugins.load_plugin(
-        "probes.atkgen.Tox", config_root=rt_custom_generator_config
-    )
+    p = _plugins.load_plugin(plugin_name, config_root=rt_custom_generator_config)
     p.max_calls_per_conv = 1  # we don't need a full conversation
     assert (
         p.red_team_model_type == red_team_model_type
@@ -103,8 +102,8 @@ def test_atkgen_custom_model():
     assert p.redteamer.fullname == red_team_model_type.replace(".", ":").title()
 
 
-@pytest.mark.parametrize("plugin_name", ["probes.atkgen.Tox", "probes.atkgen.ToxConv"])
-def test_atkgen_probe(plugin_name):
+@pytest.mark.parametrize("plugin_name", ATKGEN_PROBES)
+def test_atkgen_multi_conversation(plugin_name):
     _config.load_base_config()
     _config.system.verbose = 1
     _config.system.parallel_requests = 1
@@ -136,14 +135,15 @@ def test_atkgen_probe(plugin_name):
         ), "atkgen probe first prompt should not be blank"
 
 
-def test_atkgen_verbose_output(capsys):
+@pytest.mark.parametrize("plugin_name", ATKGEN_PROBES)
+def test_atkgen_verbose_output(capsys, plugin_name):
     """Test that verbose output (verbose >= 2) displays conversation turns correctly."""
     _config.load_base_config()
     _config.system.verbose = 2  # Enable verbose conversation output
     _config.plugins.probes["atkgen"]["generations"] = 1  # we only need one conversation
-    p = _plugins.load_plugin("probes.atkgen.Tox", config_root=garak._config)
+    p = _plugins.load_plugin(plugin_name, config_root=garak._config)
     p.max_calls_per_conv = 1  # we don't need a full conversation
-    g = _plugins.load_plugin("generators.test.Repeat", config_root=garak._config)
+    g = _plugins.load_plugin("generators.test.Repeat", config_root=_config)
 
     with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as temp_report_file:
         _config.transient.reportfile = temp_report_file
@@ -164,12 +164,13 @@ def test_atkgen_verbose_output(capsys):
     assert len(result) > 0, "probe should return at least one attempt"
 
 
-def test_atkgen_nones():
+@pytest.mark.parametrize("plugin_name", ATKGEN_PROBES)
+def test_atkgen_nones(plugin_name):
     _config.load_base_config()
     _config.plugins.probes["atkgen"]["generations"] = 1  # we only need one conversation
-    p = _plugins.load_plugin("probes.atkgen.Tox", config_root=garak._config)
+    p = _plugins.load_plugin(plugin_name, config_root=garak._config)
     p.max_calls_per_conv = 1  # we don't need a full conversation
-    g = _plugins.load_plugin("generators.test.Nones", config_root=garak._config)
+    g = _plugins.load_plugin("generators.test.Nones", config_root=_config)
 
     with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8") as temp_report_file:
         _config.transient.reportfile = temp_report_file
@@ -204,28 +205,6 @@ def _make_toxconv_config(**overrides):
 def _no_early_stop(attempt):
     """Stub for _should_terminate_conversation that never signals a hit."""
     return [False] * len(attempt.outputs)
-
-
-def test_toxconv_one_pass():
-    _config.load_base_config()
-    p = _plugins.load_plugin(
-        "probes.atkgen.ToxConv",
-        config_root=_make_toxconv_config(convs_per_generation=1),
-    )
-    p.max_calls_per_conv = 1
-    g = _plugins.load_plugin("generators.test.Lipsum", config_root=garak._config)
-    with patch.object(p, "_should_terminate_conversation", side_effect=_no_early_stop):
-        with tempfile.NamedTemporaryFile(
-            mode="w+", encoding="utf-8"
-        ) as temp_report_file:
-            _config.transient.reportfile = temp_report_file
-            _config.transient.report_filename = temp_report_file.name
-            result = p.probe(g)
-    assert isinstance(p.redteamer, garak.generators.base.Generator)
-    assert isinstance(result, list)
-    assert len(result) > 0
-    assert isinstance(result[0], garak.attempt.Attempt)
-    assert result[0].prompt.turns[0].content.text is not None
 
 
 def test_toxconv_invalid_branching():

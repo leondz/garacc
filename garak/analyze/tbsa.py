@@ -26,6 +26,10 @@ import garak.resources.theme
 PROBE_DETECTOR_SEP = "+"
 
 
+def _print_hr() -> None:
+    print("─" * 50, flush=True)
+
+
 def build_tiers() -> dict:
     from garak._plugins import enumerate_plugins, plugin_info
 
@@ -75,7 +79,6 @@ def digest_to_tbsa(digest: dict, verbose=False, quiet=False) -> Tuple[float, str
     c = garak.analyze.calibration.Calibration()
     if not quiet:
         print(f"📐 Calibration was {c.calibration_filename} from {c.metadata['date']}")
-        print("─" * 50, flush=True)
     probe_detector_scores = {}
     probe_detector_defcons = {}
 
@@ -268,19 +271,22 @@ def main(argv=None) -> None:
 
     report_path = Path(report_path)
     if report_path.is_dir():
-        candidate = report_path / "report.jsonl"
-        if not candidate.is_file():
+        candidates = list(report_path.glob("*.report.jsonl"))
+        if len(candidates) == 0:
             parser.error(
-                f"{report_path} is a directory but does not contain report.jsonl"
+                f"{report_path} is a directory but does not contain a file ending report.jsonl"
             )
+        candidate = candidates[0]
+        if not candidate.is_file():
+            parser.error(f"found {candidate} but this is not a file")
         report_path = candidate
 
     if not args.quiet:
         print(
             f"garak {garak.__description__} v{garak._config.version} ( https://github.com/NVIDIA/garak ) TBSA"
         )
-        print("─" * 50)
-        print(f"📜 Report file: {report_path}")
+        _print_hr()
+        print(f"📜 Report file: {args.report_path}")
 
         if args.json_output:
             print(f"📜 JSON output to: {args.json_output}")
@@ -309,7 +315,7 @@ def main(argv=None) -> None:
     )
 
     if not args.quiet:
-        print("─" * 50)
+        _print_hr()
 
     if not (args.quiet and args.json_output):
         print(f"📝 Probe/detector pairs contributing: {pd_count}")

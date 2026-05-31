@@ -14,6 +14,7 @@ For detailed information on detector metrics and evaluation, see :doc:`../detect
    :maxdepth: 2
 
    detectors/base
+   detectors/agent_breaker
    detectors/always
    detectors/any
    detectors/ansiescape
@@ -36,8 +37,10 @@ For detailed information on detector metrics and evaluation, see :doc:`../detect
    detectors/perspective
    detectors/promptinject
    detectors/productkey
+   detectors/propile
    detectors/shields
    detectors/snowball
+   detectors/sysprompt_extraction
    detectors/unsafe_content
    detectors/visual_jailbreak
    detectors/web_injection

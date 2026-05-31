@@ -11,6 +11,7 @@ For a guide to writing probes, see :doc:`extending.probe`.
 .. toctree::
    :maxdepth: 2
 
+   probes/agent_breaker
    probes/ansiescape
    probes/apikey
    probes/atkgen
@@ -29,6 +30,7 @@ For a guide to writing probes, see :doc:`extending.probe`.
    probes/fileformats
    probes/fitd
    probes/glitch
+   probes/goat
    probes/goodside
    probes/grandma
    probes/latentinjection
@@ -39,11 +41,13 @@ For a guide to writing probes, see :doc:`extending.probe`.
    probes/packagehallucination
    probes/phrasing
    probes/promptinject
+   probes/propile
    probes/realtoxicityprompts
    probes/sata
    probes/snowball
    probes/smuggling
    probes/suffix
+   probes/sysprompt_extraction
    probes/tap
    probes/test
    probes/topic

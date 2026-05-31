@@ -28,7 +28,7 @@ intersphinx_mapping = {
 intersphinx_disabled_domains = ["std"]
 
 templates_path = ["_templates"]
-exclude_patterns = []
+exclude_patterns = ["404.rst"]
 
 # -- Options for HTML output
 
@@ -179,5 +179,5 @@ redirects = {
 import os
 import sys
 
-sys.path.insert(0, "../..")
+sys.path.insert(0, os.path.abspath("../.."))
 sys.path.append(os.path.abspath("./_ext"))

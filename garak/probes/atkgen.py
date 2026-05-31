@@ -349,6 +349,7 @@ class ToxConv(garak.probes.IterativeProbe):
         self.redteamer = None
         self.detector = None
         super().__init__(config_root)
+        print(dir(self))
         if self.branching not in self._BRANCHING_MODES:
             raise ValueError(
                 f"branching must be one of {sorted(self._BRANCHING_MODES)}, got '{self.branching}'"

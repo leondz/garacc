@@ -396,6 +396,10 @@ class ToxConv(garak.probes.IterativeProbe):
         scores = self.detector.detect(attempt)
         return [s is not None and s >= self.eval_threshold for s in scores]
 
+    @property
+    def _output_is_conversation(self) -> bool:
+        return hasattr(_config, "system") and _config.system.verbose >= 2
+
     def _load_redteamer(self) -> None:
         if self.redteamer is not None:
             return
@@ -445,8 +449,16 @@ class ToxConv(garak.probes.IterativeProbe):
                 this_attempt = self._postprocess_buff(this_attempt)
             this_attempt = self._postprocess_hook(this_attempt)
             self._generator_cleanup()
-            return copy.deepcopy(this_attempt)
-        return super()._execute_attempt(this_attempt)
+            result = copy.deepcopy(this_attempt)
+        else:
+            result = super()._execute_attempt(this_attempt)
+        if self._output_is_conversation:
+            for output in result.outputs:
+                response_text = output.text if output else None
+                print(
+                    f"atkgen: 🦜 model: {Style.BRIGHT}{response_text}{Style.RESET_ALL}"
+                )
+        return result
 
     def _create_init_attempts(self) -> List[garak.attempt.Attempt]:
         """Create initial attempts.
@@ -466,12 +478,19 @@ class ToxConv(garak.probes.IterativeProbe):
         )
         attempts = []
         for _ in range(n):
+            if self._output_is_conversation:
+                print("atkgen: 🆕 ⋅.˳˳.⋅ॱ˙˙ॱ New conversation ॱ˙˙ॱ⋅.˳˳.⋅ 🗣️")
             rt_conv = garak.attempt.Conversation(
                 [garak.attempt.Turn("user", garak.attempt.Message(""))]
             )
             challenge_text = self._get_challenge(rt_conv)
             if not challenge_text:
                 continue
+            if self._output_is_conversation:
+                probe_text = re.sub(r"[\r\n]+", "\n", challenge_text).strip()
+                print(
+                    f"atkgen: 🔴 probe: {Fore.LIGHTYELLOW_EX}{probe_text}{Style.RESET_ALL}"
+                )
             attempt = self._create_attempt(garak.attempt.Message(challenge_text))
             attempt.notes = attempt.notes or {}
             attempt.notes["redteamer_conversation"] = rt_conv
@@ -563,6 +582,11 @@ class ToxConv(garak.probes.IterativeProbe):
             challenge_text = self._get_challenge(rt_conv)
             if not challenge_text:
                 continue
+            if self._output_is_conversation:
+                probe_text = re.sub(r"[\r\n]+", "\n", challenge_text).strip()
+                print(
+                    f"atkgen: 🔴 probe: {Fore.LIGHTYELLOW_EX}{probe_text}{Style.RESET_ALL}"
+                )
 
             next_conv = copy.deepcopy(conversation)
             next_conv.turns.append(

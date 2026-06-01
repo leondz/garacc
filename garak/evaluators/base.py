@@ -198,6 +198,7 @@ class Evaluator:
             "total_evaluated": outputs_evaluated,
             "total_processed": outputs_processed,
         }
+        # per-intent pass/total counts, feeds the digest technique_intent_matrix
         if intent_counts:
             eval_record["intents"] = {
                 intent_key: dict(counts)
@@ -322,7 +323,9 @@ class Evaluator:
         zrating_symbol = ""
         if zscore is not None:
             zrating_symbol = self.SYMBOL_SET[
-                garak.analyze.score_to_defcon(zscore, garak.analyze.RELATIVE_DEFCON_BOUNDS)
+                garak.analyze.score_to_defcon(
+                    zscore, garak.analyze.RELATIVE_DEFCON_BOUNDS
+                )
             ]
         return zscore, zrating_symbol
 

@@ -22,6 +22,17 @@ the corresponding ``eval`` entry also carries an optional ``intents`` field mapp
 each intent name to its ``passed`` and ``total_evaluated`` counts. The field is omitted
 for regular probes that do not assign intents to their attempts.
 
+The ``digest`` entry (added by ``report_digest``) carries a
+``technique_intent_matrix`` field built from those ``eval`` ``intents`` counts: a
+``technique -> intent`` cross-tab keyed on each probe's ``demon:*`` tags
+(independent of ``reporting.taxonomy``). Each intent cell holds ``score``
+(``passed / total_evaluated``, or ``null`` when ``total_evaluated`` is 0),
+``passed``, ``total_evaluated`` and ``n_detectors``, plus a per-technique
+``_summary`` of ``n_intents`` and ``n_detectors``. Counts are micro-averaged
+(pooled) across contributing probes and detectors, so ``total_evaluated`` is an
+evaluation count (attempt × detector). The field is an empty object when no
+intent-bearing probes ran.
+
 Confidence Intervals (Optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

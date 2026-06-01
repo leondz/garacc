@@ -83,7 +83,7 @@ def test_tim_single_cell():
             "entry_type": "eval",
             "probe": "grandma.Win10",
             "detector": "d.D",
-            "intents": {"S003": {"passed": 3, "total_evaluated": 6}},
+            "intents": {"S003": {"passed": 3, "total_evaluated": 6, "nones": 0}},
         }
     ]
     cell = _tim(evals, _pc({"grandma.Win10": ["demon:T:Tech"]}))["demon:T:Tech"]["S003"]
@@ -92,6 +92,7 @@ def test_tim_single_cell():
         "passed": 3,
         "total_evaluated": 6,
         "n_detectors": 1,
+        "nones": 0,
     }, cell
 
 
@@ -101,13 +102,13 @@ def test_tim_pools_across_detectors():
             "entry_type": "eval",
             "probe": "grandma.Win10",
             "detector": "d.A",
-            "intents": {"S003": {"passed": 0, "total_evaluated": 6}},
+            "intents": {"S003": {"passed": 0, "total_evaluated": 6, "nones": 0}},
         },
         {
             "entry_type": "eval",
             "probe": "grandma.Win10",
             "detector": "d.B",
-            "intents": {"S003": {"passed": 3, "total_evaluated": 6}},
+            "intents": {"S003": {"passed": 3, "total_evaluated": 6, "nones": 0}},
         },
     ]
     pc = _pc({"grandma.Win10": ["demon:T:Tech"]}, detectors=("d.A", "d.B"))
@@ -123,13 +124,13 @@ def test_tim_pools_across_probes():
             "entry_type": "eval",
             "probe": "malwaregen.Evasion",
             "detector": "m.AnyCode",
-            "intents": {"S008code": {"passed": 37, "total_evaluated": 48}},
+            "intents": {"S008code": {"passed": 37, "total_evaluated": 48, "nones": 0}},
         },
         {
             "entry_type": "eval",
             "probe": "malwaregen.SubFunctions",
             "detector": "m.AnyCode",
-            "intents": {"S008code": {"passed": 29, "total_evaluated": 56}},
+            "intents": {"S008code": {"passed": 29, "total_evaluated": 56, "nones": 0}},
         },
     ]
     pc = _pc(
@@ -150,7 +151,7 @@ def test_tim_multi_tag_replicates():
             "entry_type": "eval",
             "probe": "grandma.Win10",
             "detector": "d.D",
-            "intents": {"S003": {"passed": 1, "total_evaluated": 2}},
+            "intents": {"S003": {"passed": 1, "total_evaluated": 2, "nones": 0}},
         }
     ]
     m = _tim(evals, _pc({"grandma.Win10": ["demon:T:One", "demon:T:Two"]}))
@@ -177,7 +178,7 @@ def test_tim_skips_probe_without_demon_tags():
             "entry_type": "eval",
             "probe": "x.Y",
             "detector": "d.D",
-            "intents": {"S003": {"passed": 1, "total_evaluated": 2}},
+            "intents": {"S003": {"passed": 1, "total_evaluated": 2, "nones": 0}},
         }
     ]
     m = _tim(evals, _pc({"x.Y": ["owasp:llm01"]}))
@@ -190,13 +191,13 @@ def test_tim_summary_counts():
             "entry_type": "eval",
             "probe": "grandma.Win10",
             "detector": "d.A",
-            "intents": {"S003": {"passed": 1, "total_evaluated": 2}},
+            "intents": {"S003": {"passed": 1, "total_evaluated": 2, "nones": 0}},
         },
         {
             "entry_type": "eval",
             "probe": "grandma.Win10",
             "detector": "d.B",
-            "intents": {"S005": {"passed": 1, "total_evaluated": 2}},
+            "intents": {"S005": {"passed": 1, "total_evaluated": 2, "nones": 0}},
         },
     ]
     pc = _pc({"grandma.Win10": ["demon:T:Tech"]}, detectors=("d.A", "d.B"))
@@ -225,7 +226,7 @@ def test_tim_unknown_probe_raises():
             "entry_type": "eval",
             "probe": "ghost.Probe",
             "detector": "d.D",
-            "intents": {"S003": {"passed": 1, "total_evaluated": 2}},
+            "intents": {"S003": {"passed": 1, "total_evaluated": 2, "nones": 0}},
         }
     ]
     with pytest.raises(ReportIncompatibleError):
@@ -239,8 +240,8 @@ def test_tim_keys_sorted():
             "probe": "grandma.Win10",
             "detector": "d.D",
             "intents": {
-                "S005": {"passed": 1, "total_evaluated": 2},
-                "S003": {"passed": 1, "total_evaluated": 2},
+                "S005": {"passed": 1, "total_evaluated": 2, "nones": 0},
+                "S003": {"passed": 1, "total_evaluated": 2, "nones": 0},
             },
         }
     ]
@@ -257,9 +258,45 @@ def test_tim_zero_total_score_none():
             "entry_type": "eval",
             "probe": "grandma.Win10",
             "detector": "d.D",
-            "intents": {"S003": {"passed": 0, "total_evaluated": 0}},
+            "intents": {"S003": {"passed": 0, "total_evaluated": 0, "nones": 0}},
         }
     ]
     cell = _tim(evals, _pc({"grandma.Win10": ["demon:T:Tech"]}))["demon:T:Tech"]["S003"]
     assert cell["score"] is None, cell
     assert cell["passed"] == 0 and cell["total_evaluated"] == 0, cell
+
+
+def test_tim_cell_includes_nones():
+    evals = [
+        {
+            "entry_type": "eval",
+            "probe": "grandma.Win10",
+            "detector": "d.A",
+            "intents": {"S003": {"passed": 1, "total_evaluated": 2, "nones": 3}},
+        },
+        {
+            "entry_type": "eval",
+            "probe": "grandma.Win10",
+            "detector": "d.B",
+            "intents": {"S003": {"passed": 2, "total_evaluated": 4, "nones": 1}},
+        },
+    ]
+    pc = _pc({"grandma.Win10": ["demon:T:Tech"]}, detectors=("d.A", "d.B"))
+    cell = _tim(evals, pc)["demon:T:Tech"]["S003"]
+    assert cell["nones"] == 4, cell  # pooled across detectors
+    assert cell["passed"] == 3 and cell["total_evaluated"] == 6, cell
+    assert cell["score"] == pytest.approx(3 / 6), cell
+
+
+def test_tim_missing_nones_raises():
+    # nones is part of the eval.intents contract; absence is an incompatible report
+    evals = [
+        {
+            "entry_type": "eval",
+            "probe": "grandma.Win10",
+            "detector": "d.D",
+            "intents": {"S003": {"passed": 1, "total_evaluated": 2}},
+        }
+    ]
+    with pytest.raises(ReportIncompatibleError):
+        _tim(evals, _pc({"grandma.Win10": ["demon:T:Tech"]}))

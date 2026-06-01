@@ -478,7 +478,9 @@ def _compute_technique_intent_matrix(evals: list, report_plugin_cache: dict) -> 
     ``total_evaluated`` is an evaluation count (attempt x detector).
     """
     acc = defaultdict(
-        lambda: defaultdict(lambda: {"passed": 0, "total": 0, "detectors": set()})
+        lambda: defaultdict(
+            lambda: {"passed": 0, "total": 0, "nones": 0, "detectors": set()}
+        )
     )
 
     for eval in evals:
@@ -499,6 +501,7 @@ def _compute_technique_intent_matrix(evals: list, report_plugin_cache: dict) -> 
             try:
                 passed = counts["passed"]
                 total = counts["total_evaluated"]
+                nones = counts["nones"]
             except (KeyError, TypeError) as e:
                 raise ReportIncompatibleError(
                     f"Report intent counts for probes.{probe} are malformed; "
@@ -508,6 +511,7 @@ def _compute_technique_intent_matrix(evals: list, report_plugin_cache: dict) -> 
                 cell = acc[technique][intent]
                 cell["passed"] += passed
                 cell["total"] += total
+                cell["nones"] += nones
                 cell["detectors"].add(eval["detector"])
 
     matrix = {}
@@ -522,6 +526,7 @@ def _compute_technique_intent_matrix(evals: list, report_plugin_cache: dict) -> 
                 "score": (cell["passed"] / cell["total"]) if cell["total"] else None,
                 "passed": cell["passed"],
                 "total_evaluated": cell["total"],
+                "nones": cell["nones"],
                 "n_detectors": len(cell["detectors"]),
             }
         matrix[technique] = {

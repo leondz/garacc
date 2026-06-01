@@ -72,7 +72,7 @@ class Evaluator:
         from dataclasses import asdict
 
         intent_counts: dict[str, dict[str, int]] = defaultdict(
-            lambda: {"passed": 0, "total_evaluated": 0}
+            lambda: {"passed": 0, "total_evaluated": 0, "nones": 0}
         )
 
         for attempt in attempts:
@@ -80,6 +80,8 @@ class Evaluator:
             for idx, score in enumerate(attempt.detector_results[detector_name]):
                 if score is None:
                     nones += 1
+                    if intent is not None:
+                        intent_counts[intent]["nones"] += 1
                 elif self.test(float(score)):
                     passes += 1
                     if intent is not None:

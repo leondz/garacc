@@ -120,8 +120,8 @@ def test_eval_row_includes_intents_breakdown(tmp_path):
     assert len(rows) == 1
     row = rows[0]
     assert row["intents"] == {
-        "deception": {"passed": 1, "total_evaluated": 2},
-        "manipulation": {"passed": 0, "total_evaluated": 1},
+        "deception": {"passed": 1, "total_evaluated": 2, "nones": 0},
+        "manipulation": {"passed": 0, "total_evaluated": 1, "nones": 0},
     }
     assert row["passed"] == 1
     assert row["total_evaluated"] == 3
@@ -138,7 +138,7 @@ def test_eval_row_omits_intents_when_all_null(tmp_path):
     assert "intents" not in row
 
 
-def test_eval_row_intents_excludes_none_scores(tmp_path):
+def test_eval_row_intents_buckets_none_scores(tmp_path):
     reportfile = tmp_path / "report.report.jsonl"
     with _capture_report(reportfile):
         evaluator = ThresholdEvaluator()
@@ -148,7 +148,11 @@ def test_eval_row_intents_excludes_none_scores(tmp_path):
         evaluator.evaluate(attempts)
 
     row = _eval_rows(reportfile)[0]
-    assert row["intents"]["deception"] == {"passed": 1, "total_evaluated": 1}
+    assert row["intents"]["deception"] == {
+        "passed": 1,
+        "total_evaluated": 1,
+        "nones": 1,
+    }
     assert row["nones"] == 1
 
 
@@ -167,12 +171,12 @@ def test_eval_row_intents_scoped_per_detector(tmp_path):
 
     rows = {row["detector"]: row for row in _eval_rows(reportfile)}
     assert rows["d.D1"]["intents"] == {
-        "deception": {"passed": 1, "total_evaluated": 1},
-        "manipulation": {"passed": 0, "total_evaluated": 1},
+        "deception": {"passed": 1, "total_evaluated": 1, "nones": 0},
+        "manipulation": {"passed": 0, "total_evaluated": 1, "nones": 0},
     }
     assert rows["d.D1"]["total_evaluated"] == 2
     assert rows["d.D2"]["intents"] == {
-        "deception": {"passed": 1, "total_evaluated": 2}
+        "deception": {"passed": 1, "total_evaluated": 2, "nones": 0}
     }
     assert "manipulation" not in rows["d.D2"]["intents"]
     assert rows["d.D2"]["total_evaluated"] == 2

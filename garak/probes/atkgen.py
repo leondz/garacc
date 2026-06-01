@@ -28,6 +28,7 @@ from tqdm import tqdm
 from garak import _config
 import garak._plugins
 import garak.attempt
+from garak.exception import GarakException
 import garak.probes
 
 TEMPLATE_PLACEHOLDER = "[query]"
@@ -344,6 +345,7 @@ class ToxConv(garak.probes.IterativeProbe):
     }
 
     _BRANCHING_MODES = frozenset({"linear", "branchy"})
+    MAX_CHALLENGE_TRIES = 5
 
     def __init__(self, config_root=_config):
         self.redteamer = None
@@ -411,29 +413,54 @@ class ToxConv(garak.probes.IterativeProbe):
         self.redteamer.deprefix_prompt = True
         self.redteamer.parallel_requests = False
 
-    def _get_challenge(self, rt_conv: garak.attempt.Conversation) -> Optional[str]:
+    def _get_challenge(
+        self, rt_conv: garak.attempt.Conversation, allow_none: bool = True
+    ) -> Optional[str]:
         """Generate next attack from conversation history; appends result to rt_conv.
 
         :param rt_conv: Running redteamer conversation; modified in-place with
             the generated challenge as a new ``assistant`` turn.
         :type rt_conv: garak.attempt.Conversation
+        :param allow_none: Whether an empty/missing redteamer output may be returned
+            as ``None`` instead of retried.
+        :type allow_none: bool
         :return: Post-processed challenge text, or ``None`` on failure.
         :rtype: Optional[str]
         """
-        response = self.redteamer.generate(rt_conv)
-        if not response or response[0] is None or response[0].text is None:
-            return None
-        challenge_text = response[0].text
-        if self.red_team_postproc_rm_regex:
-            challenge_text = re.sub(
-                self.red_team_postproc_rm_regex, "", challenge_text
-            ).strip()
-        if not challenge_text:
-            return None
-        rt_conv.turns.append(
-            garak.attempt.Turn("assistant", garak.attempt.Message(challenge_text))
+        for attempt_num in range(1, self.MAX_CHALLENGE_TRIES + 1):
+            response = self.redteamer.generate(rt_conv)
+            if not response or response[0] is None or response[0].text is None:
+                challenge_text = None
+            else:
+                challenge_text = response[0].text
+                if self.red_team_postproc_rm_regex:
+                    challenge_text = re.sub(
+                        self.red_team_postproc_rm_regex, "", challenge_text
+                    ).strip()
+                if not challenge_text:
+                    challenge_text = None
+
+            if challenge_text is not None:
+                rt_conv.turns.append(
+                    garak.attempt.Turn(
+                        "assistant", garak.attempt.Message(challenge_text)
+                    )
+                )
+                return challenge_text
+
+            if allow_none:
+                return None
+
+            logging.debug(
+                "atkgen.ToxConv: redteamer returned no challenge on try %d/%d",
+                attempt_num,
+                self.MAX_CHALLENGE_TRIES,
+            )
+
+        raise GarakException(
+            f"{self.__class__.__name__} redteamer failed to generate a challenge "
+            f"after {self.MAX_CHALLENGE_TRIES} tries"
         )
-        return challenge_text
 
     def _execute_attempt(self, this_attempt):
         """In ``linear`` mode each attempt generates exactly one target response,
@@ -483,7 +510,7 @@ class ToxConv(garak.probes.IterativeProbe):
             rt_conv = garak.attempt.Conversation(
                 [garak.attempt.Turn("user", garak.attempt.Message(""))]
             )
-            challenge_text = self._get_challenge(rt_conv)
+            challenge_text = self._get_challenge(rt_conv, allow_none=False)
             if not challenge_text:
                 continue
             if self._output_is_conversation:

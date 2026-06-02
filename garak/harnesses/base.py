@@ -253,7 +253,7 @@ class Harness(Configurable):
                     attempt_subset = []
                     for a in attempt_results_list:
                         mapping = intent_to_detector[a.intent]
-                        if mapping is not None and detector_name in mapping:
+                        if detector_name in mapping:
                             attempt_subset.append(a)
                     self._run_detector(attempt_subset, d)
                     del d

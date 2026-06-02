@@ -217,6 +217,9 @@ class Harness(Configurable):
                 # determine candidate detectors
                 attempt_results_list = list(attempt_results)
                 intent_to_detector = {}
+                probe_detector_names = {
+                    d.detectorname.replace("garak.detectors.", "") for d in detectors
+                }
 
                 for a in attempt_results_list:
                     intent = a.intent
@@ -236,8 +239,8 @@ class Harness(Configurable):
                         logging.warning(
                             "No detectors specified for intent %s" % intent_observed
                         )
-                    else:
-                        detectors_required.update(detectors)
+                        detectors = probe_detector_names
+                    detectors_required.update(detectors)
                     intent_to_detector[intent_observed] = detectors
 
                 logging.info(
@@ -249,7 +252,8 @@ class Harness(Configurable):
                     d = _plugins.load_plugin(f"detectors.{detector_name}")
                     attempt_subset = []
                     for a in attempt_results_list:
-                        if detector_name in intent_to_detector[a.intent]:
+                        mapping = intent_to_detector[a.intent]
+                        if detector_name in mapping:
                             attempt_subset.append(a)
                     self._run_detector(attempt_subset, d)
                     del d

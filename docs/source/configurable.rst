@@ -57,17 +57,20 @@ Let's take a look at the core config.
         deprefix: true
         eval_threshold: 0.5
         generations: 5
-        probe_tags:
+        spec:
+            include:
+                - probes.dan
+                - tag: owasp:llm01
+            exclude:
+                - probes.dan.DanInTheWild
         user_agent: "garak/{version} (LLM vulnerability scanner https://garak.ai)"
         soft_probe_prompt_cap: 256
 
     plugins:
         target_type:
         target_name:
-        probe_spec: all
         detector_spec: auto
         extended_detectors: false
-        buff_spec:
         buffs_include_original_prompt: false
         buff_max:
         detectors: {}
@@ -123,7 +126,7 @@ Run Config Items
 """"""""""""""""
 
 * ``system_prompt`` -- If given and not overriden by the probe itself, probes will pass the specified system prompt when possible for generators that support chat modality.
-* ``probe_tags`` - If given, the probe selection is filtered according to these tags; probes that don't match the tags are not selected
+* ``spec`` - The unified selection spec for probes and buffs (``run.spec``); see "Selecting probes and buffs with run.spec" below. If absent, the default is all active probes (``probes.*``)
 * ``generations`` - How many times to send each prompt for inference
 * ``deprefix`` - Remove the prompt from the start of the output (some models return the prompt as part of their output)
 * ``seed`` - An optional random seed
@@ -138,11 +141,15 @@ Plugins Config Items
 
 * ``target_type`` - The type of target generator, e.g. "nim" or "huggingface"
 * ``target_name`` - The specific name of the target to be used (optional - if blank, type-specific default is used)
-* ``probe_spec`` - A comma-separated list of probe modules or probe classnames (in ``module.classname``) format to be used. If a module is given, only ``active`` plugin in that module are chosen, this is equivalent to passing `-p` to the CLI
 * ``detector_spec`` - An optional spec of detectors to be used, if overriding those recommended in probes. Specifying ``detector_spec`` means the ``pxd`` harness will be used. This is equivalent to passing `-d` to the CLI
 * ``extended_detectors`` - Should just the primary detector be used per probe, or should the extended detectors also be run? The former is fast, the latter thorough.
-* ``buff_spec`` - Comma-separated list of buffs and buff modules to use; same format as ``probe_spec``.
 * ``buffs_include_original_prompt`` - When buffing, should the original pre-buff prompt still be included in those posed to the model?
+
+.. note::
+   ``plugins.probe_spec``, ``plugins.buff_spec`` and ``run.probe_tags`` are
+   **deprecated**. They still work (and are mapped onto ``run.spec`` with a
+   deprecation notice) but will be removed in a future release; use
+   ``run.spec`` instead (see below).
 * ``buff_max`` - Upper bound on how many items a buff should return
 * ``detectors`` - Root node for detector plugin configs
 * ``generators`` - Root note for generator plugin configs
@@ -152,6 +159,57 @@ Plugins Config Items
 
 For an example of how to use the ``detectors``, ``generators``, ``buffs``,
 ``harnesses``, and ``probes`` root entries, see :ref:`Configuring plugins with YAML <config_with_yaml>` below.
+
+Selecting probes and buffs with run.spec
+""""""""""""""""""""""""""""""""""""""""
+
+``run.spec`` is the single source of truth for selecting probes and buffs. It
+has two transports that parse to the same internal spec: a CLI string
+(``--run-spec``) and the config-file form (``include`` / ``exclude`` lists).
+
+Selectors (a category prefix is mandatory):
+
+* ``probes.*`` - all active probes (the default when no ``run.spec`` is given)
+* ``probes.<module>`` - an active family; ``probes.<module>.<Class>`` - one class
+* ``buffs.<module>[.<Class>]`` - selects buffs (no buffs are run by default)
+* ``tag:<prefix>`` - filters probes by tag (e.g. ``tag:owasp:llm01``)
+* ``tier:<N|name>`` - filters probes by tier; **inclusive** ("log level"): ``tier:N``
+  admits tiers ``1..N`` (``tier:1`` is the most critical). Names work too
+  (``tier:of_concern`` == ``tier:1``).
+
+Polarity: a bare selector (or ``+``) includes; a leading ``-`` removes. Note
+the asymmetry of ``tier``: ``tier:N`` is the inclusive filter, while ``-tier:N``
+removes *exactly* tier ``N``. Resolution applies excludes last (exclude wins),
+and if a spec resolves to no probes garak aborts with an actionable message.
+``tier:`` and ``tag:`` filters apply to the whole candidate set, including
+explicitly-named classes, so e.g. ``probes.foo.Bar, tier:1`` yields nothing when
+``foo.Bar`` is tier 3.
+
+.. code-block:: bash
+
+    # whole family minus one class
+    garak --run-spec "probes.dan, -probes.dan.DanInTheWild"
+    # family filtered by tag
+    garak --run-spec "probes.grandma, tag:owasp:llm06"
+    # all active buffs except one, over all active probes
+    garak --run-spec "probes.*, buffs.*, -buffs.paraphrase"
+    # tiers {1,3}: tier:3 admits 1..3, then -tier:2 removes exactly tier 2
+    garak --run-spec "+probes.*, +tier:3, -tier:2"
+
+.. code-block:: yaml
+
+    run:
+      spec:
+        include:
+          - probes.dan
+          - tag: owasp:llm01
+        exclude:
+          - probes.dan.DanInTheWild
+
+The deprecated ``--probes`` / ``--probe_tags`` / ``--buffs`` flags (and the
+``plugins.probe_spec`` / ``plugins.buff_spec`` / ``run.probe_tags`` config keys)
+are mapped onto ``run.spec`` with a deprecation notice; ``--run-spec`` wins if
+both are given.
 
 Reporting Config Items
 """"""""""""""""""""""
@@ -231,9 +289,9 @@ probes and run each prompt just once:
     ---
     run:
         generations: 1
-
-    plugins:
-        probe_spec: latentinjection
+        spec:
+            include:
+                - probes.latentinjection
 
 If we save this as ``latent1.yaml`` somewhere, then we can use it with ``garak --config latent1.yaml``.
 Note: YAML configs require the explicit ``.yaml`` or ``.yml`` extension (case-insensitive).
@@ -244,10 +302,11 @@ Note: YAML configs require the explicit ``.yaml`` or ``.yml`` extension (case-in
 
     {
       "run": {
-        "generations": 1
-      },
-      "plugins": {
-        "probe_spec": "latentinjection"
+        "generations": 1,
+        "spec": {
+          "include": ["probes.latentinjection"],
+          "exclude": []
+        }
       }
     }
 

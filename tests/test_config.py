@@ -76,9 +76,9 @@ OPTIONS_PARAM = [
     ("target_name", "bruce"),
 ]
 OPTIONS_SPEC = [
-    ("probes", "3,elim,gul.dukat", "probe_spec"),
+    # probes/buffs now map onto run.spec (see test_run_spec_* below); only the
+    # detector surface still writes plugins.detector_spec directly
     ("detectors", "all", "detector_spec"),
-    ("buffs", "polymorph", "buff_spec"),
 ]
 
 param_locs = {}
@@ -244,6 +244,62 @@ def test_cli_spec_settings(param):
         [f"--{option}", str(value), "--list_config"]
     )  # add list_config as the action so we don't actually run
     assert getattr(_config.plugins, configname) == value
+
+
+def test_run_spec_cli_sets_config():
+    garak.cli.main(["--run-spec", "probes.dan, -probes.dan.DanInTheWild", "--list_config"])
+    assert _config.run.spec == {
+        "include": ["probes.dan"],
+        "exclude": ["probes.dan.DanInTheWild"],
+    }, "--run-spec must populate _config.run.spec"
+
+
+def test_legacy_probes_flag_maps_to_run_spec(capsys):
+    garak.cli.main(["--probes", "dan", "--list_config"])
+    assert _config.run.spec == {
+        "include": ["probes.dan"],
+        "exclude": [],
+    }, "deprecated --probes must map onto run.spec"
+    assert "DEPRECATION" in capsys.readouterr().out, "deprecated flag must warn"
+
+
+def test_legacy_probe_tags_and_buffs_map_to_run_spec():
+    garak.cli.main(
+        ["--probes", "dan", "--probe_tags", "owasp:llm01", "--buffs", "lowercase", "--list_config"]
+    )
+    assert _config.run.spec == {
+        "include": ["probes.dan", "buffs.lowercase", {"tag": "owasp:llm01"}],
+        "exclude": [],
+    }, "deprecated --probe_tags/--buffs must merge into run.spec"
+
+
+def test_run_spec_wins_over_legacy_flags():
+    garak.cli.main(["--run-spec", "probes.encoding", "--probes", "dan", "--list_config"])
+    assert _config.run.spec == {
+        "include": ["probes.encoding"],
+        "exclude": [],
+    }, "--run-spec must win over deprecated selection flags"
+
+
+@pytest.mark.parametrize("cfg_path", ["garak/configs/fast.json", "garak/configs/bag.yaml"])
+def test_bundled_config_run_spec_resolves_without_unknowns(cfg_path):
+    # guards against hand-migration typos in the shipped run.spec configs
+    import json as _json
+    from pathlib import Path
+    import yaml as _yaml
+    from garak._spec import parse_spec_file
+
+    text = Path(cfg_path).read_text(encoding="utf-8")
+    data = _json.loads(text) if cfg_path.endswith(".json") else _yaml.safe_load(text)
+    res = parse_spec_file(data["run"]["spec"]).resolve(skip_unknown=True)
+    assert res.rejected == [], f"{cfg_path} has unknown selectors: {res.rejected}"
+    assert res.probes, f"{cfg_path} resolved to no probes"
+
+
+def test_invalid_run_spec_exits_cleanly():
+    # malformed selector should print a friendly error and exit, not traceback
+    with pytest.raises(SystemExit):
+        garak.cli.main(["--run-spec", "detectors.foo", "--list_config"])
 
 
 # test a short-form CLI assertion

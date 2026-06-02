@@ -3,7 +3,7 @@ CLI reference for garak
 
 ::
 
-  garak LLM vulnerability scanner v0.15.1.pre1 ( https://github.com/NVIDIA/garak ) at 2026-05-01T13:01:25.835551
+  garak LLM vulnerability scanner v0.15.1.pre1 ( https://github.com/NVIDIA/garak ) at 2026-06-02T11:24:39.583036
   usage: python -m garak [-h] [--verbose] [--report_prefix REPORT_PREFIX]
                          [--narrow_output]
                          [--parallel_requests PARALLEL_REQUESTS]
@@ -12,15 +12,15 @@ CLI reference for garak
                          [--eval_threshold EVAL_THRESHOLD]
                          [--generations GENERATIONS] [--config CONFIG]
                          [--target_type TARGET_TYPE] [--target_name TARGET_NAME]
-                         [--probes PROBES] [--probe_tags PROBE_TAGS]
-                         [--detectors DETECTORS] [--extended_detectors]
-                         [--buffs BUFFS]
+                         [--run-spec RUN_SPEC] [--probes PROBES]
+                         [--probe_tags PROBE_TAGS] [--detectors DETECTORS]
+                         [--extended_detectors] [--buffs BUFFS]
                          [--buff_option_file BUFF_OPTION_FILE | --buff_options BUFF_OPTIONS]
                          [--detector_option_file DETECTOR_OPTION_FILE | --detector_options DETECTOR_OPTIONS]
                          [--generator_option_file GENERATOR_OPTION_FILE | --generator_options GENERATOR_OPTIONS]
                          [--harness_option_file HARNESS_OPTION_FILE | --harness_options HARNESS_OPTIONS]
                          [--probe_option_file PROBE_OPTION_FILE | --probe_options PROBE_OPTIONS]
-                         [--taxonomy TAXONOMY]
+                         [--intents INTENTS] [--taxonomy TAXONOMY]
                          [--confidence_interval_method {bootstrap,none}]
                          [--bootstrap_num_iterations BOOTSTRAP_NUM_ITERATIONS]
                          [--bootstrap_confidence_level BOOTSTRAP_CONFIDENCE_LEVEL]
@@ -29,9 +29,9 @@ CLI reference for garak
                          [--list_detectors] [--list_generators] [--list_buffs]
                          [--list_config] [--version] [--report REPORT]
                          [--interactive] [--fix]
-  
+
   LLM safety & security scanning tool
-  
+
   options:
     -h, --help            show this help message and exit
     --verbose, -v         add one or more times to increase verbosity of output
@@ -60,12 +60,19 @@ CLI reference for garak
     --target_name TARGET_NAME, --model_name TARGET_NAME, -n TARGET_NAME
                           name of the target, e.g.
                           'timdettmers/guanaco-33b-merged'
+    --run-spec RUN_SPEC, --run_spec RUN_SPEC
+                          unified selection spec, e.g. 'probes.dan,
+                          -dan.DanInTheWild, tag:owasp:llm01'. Selectors:
+                          probes.<module>[.<Class>], buffs.<module>[.<Class>],
+                          tag:<prefix>, tier:<N|name>; '-' excludes, tier:N is
+                          inclusive (tiers 1..N).
     --probes PROBES, -p PROBES
-                          list of probe names to use, or 'all' for all
-                          (default).
+                          DEPRECATED, use --run-spec. list of probe names to
+                          use, or 'all'.
     --probe_tags PROBE_TAGS
-                          only include probes with a tag that starts with this
-                          value (e.g. owasp:llm01)
+                          DEPRECATED, use --run-spec 'tag:<value>'. only include
+                          probes with a tag starting with this value (e.g.
+                          owasp:llm01)
     --detectors DETECTORS, -d DETECTORS
                           list of detectors to use, or 'all' for all. Default is
                           to use the probe's suggestion.
@@ -73,7 +80,8 @@ CLI reference for garak
                           should we run all detectors? (default is just the
                           primary detector, if given, else everything)
     --buffs BUFFS, -b BUFFS
-                          list of buffs to use. Default is none
+                          DEPRECATED, use --run-spec 'buffs.<name>'. list of
+                          buffs to use. Default is none
     --buff_option_file BUFF_OPTION_FILE, -B BUFF_OPTION_FILE
                           path to JSON file containing options to pass to buff
     --buff_options BUFF_OPTIONS
@@ -97,6 +105,9 @@ CLI reference for garak
                           path to JSON file containing options to pass to probe
     --probe_options PROBE_OPTIONS
                           options to pass to probe, formatted as a JSON dict
+    --intents INTENTS, -i INTENTS
+                          comma-separated list of intents & intent prefixes to
+                          use. Default is empty, for all
     --taxonomy TAXONOMY   specify a MISP top-level taxonomy to be used for
                           grouping probes in reporting. e.g. 'avid-effect',
                           'owasp'
@@ -134,5 +145,5 @@ CLI reference for garak
     --fix                 Update provided configuration with fixer migrations;
                           requires one of --config / --*_option_file, /
                           --*_options
-  
+
   See https://github.com/NVIDIA/garak

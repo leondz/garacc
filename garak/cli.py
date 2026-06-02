@@ -156,19 +156,30 @@ def main(arguments=None) -> None:
         default=None,
         help="name of the target, e.g. 'timdettmers/guanaco-33b-merged'",
     )
-    # probes
+    # unified selection spec (replaces --probes/--probe_tags/--buffs)
+    parser.add_argument(
+        "--run-spec",
+        "--run_spec",
+        dest="run_spec",
+        type=str,
+        default=_config.run.spec,
+        help="unified selection spec, e.g. 'probes.dan, -dan.DanInTheWild, tag:owasp:llm01'. "
+        "Selectors: probes.<module>[.<Class>], buffs.<module>[.<Class>], tag:<prefix>, "
+        "tier:<N|name>; '-' excludes, tier:N is inclusive (tiers 1..N).",
+    )
+    # probes (DEPRECATED: use --run-spec)
     parser.add_argument(
         "--probes",
         "-p",
         type=str,
-        default=_config.plugins.probe_spec,
-        help="list of probe names to use, or 'all' for all (default).",
+        default=argparse.SUPPRESS,
+        help="DEPRECATED, use --run-spec. list of probe names to use, or 'all'.",
     )
     parser.add_argument(
         "--probe_tags",
-        default=_config.run.probe_tags,
+        default=argparse.SUPPRESS,
         type=str,
-        help="only include probes with a tag that starts with this value (e.g. owasp:llm01)",
+        help="DEPRECATED, use --run-spec 'tag:<value>'. only include probes with a tag starting with this value (e.g. owasp:llm01)",
     )
     # detectors
     parser.add_argument(
@@ -183,13 +194,13 @@ def main(arguments=None) -> None:
         action="store_true",
         help="If detectors aren't specified on the command line, should we run all detectors? (default is just the primary detector, if given, else everything)",
     )
-    # buffs
+    # buffs (DEPRECATED: use --run-spec)
     parser.add_argument(
         "--buffs",
         "-b",
         type=str,
-        default=_config.plugins.buff_spec,
-        help="list of buffs to use. Default is none",
+        default=argparse.SUPPRESS,
+        help="DEPRECATED, use --run-spec 'buffs.<name>'. list of buffs to use. Default is none",
     )
     # file or json based config options
     plugin_types = sorted(
@@ -262,7 +273,7 @@ def main(arguments=None) -> None:
         "--list_probes",
         action="store_true",
         help="list available probes. Use -v for a detailed markdown table with tier and description. "
-        "Combine with --probes/-p to filter by probe_spec, e.g. '--list_probes -p dan'.",
+        "Combine with --run-spec to filter, e.g. '--list_probes --run-spec probes.dan'.",
     )
     parser.add_argument(
         "--list_detectors",
@@ -401,13 +412,34 @@ def main(arguments=None) -> None:
             ignored_params.append((param, value))
     logging.debug("non-config params: %s", ignored_params)
 
-    # put plugin spec into the _spec config value, if set at cli
-    if "probes" in args:
-        _config.plugins.probe_spec = args.probes
+    # detectors are not part of run.spec; they keep their own legacy spec surface
     if "detectors" in args:
         _config.plugins.detector_spec = args.detectors
-    if "buffs" in args:
-        _config.plugins.buff_spec = args.buffs
+
+    # unified run.spec: --run-spec wins; deprecated --probes/--probe_tags/--buffs map onto it
+    from garak._spec import parse_spec_string, _legacy_path_selectors
+
+    _legacy_selection_flags = [f for f in ("probes", "probe_tags", "buffs") if f in args]
+    for legacy_flag in _legacy_selection_flags:
+        command.deprecation_notice(f"--{legacy_flag} on CLI", "0.15.1.pre1")
+    if "run_spec" in args and args.run_spec is not None:
+        try:
+            _config.run.spec = parse_spec_string(args.run_spec).to_file_dict()
+        except ValueError as e:
+            logging.error(e)
+            print(f"❌ invalid --run-spec: {e}")
+            exit(1)
+        if _legacy_selection_flags:
+            logging.info(
+                "both --run-spec and deprecated selection flags given; --run-spec wins"
+            )
+    elif _legacy_selection_flags:
+        include = [s.value for s in _legacy_path_selectors(getattr(args, "probes", None), "probes")]
+        include += [s.value for s in _legacy_path_selectors(getattr(args, "buffs", None), "buffs")]
+        probe_tags = getattr(args, "probe_tags", None)
+        if probe_tags not in (None, ""):
+            include.append({"tag": probe_tags})
+        _config.run.spec = {"include": include, "exclude": []}
 
     # base config complete
 
@@ -512,10 +544,13 @@ def main(arguments=None) -> None:
             command.plugin_info(args.plugin_info)
 
         elif args.list_probes:
+            from garak._spec import parse_spec_file
+
             selected_probes = None
-            probe_spec = getattr(args, "probes", None)
-            if probe_spec and probe_spec.lower() not in ("", "auto", "all", "*"):
-                selected_probes, _ = _config.parse_plugin_spec(probe_spec, "probes")
+            if _config.run.spec:
+                selected_probes = parse_spec_file(_config.run.spec).resolve(
+                    skip_unknown=True
+                ).probes
             command.print_probes(selected_probes, verbose=_config.system.verbose)
 
         elif args.list_detectors:
@@ -528,7 +563,14 @@ def main(arguments=None) -> None:
             command.print_detectors(selected_detectors)
 
         elif args.list_buffs:
-            command.print_buffs()
+            from garak._spec import parse_spec_file
+
+            selected_buffs = None
+            if _config.run.spec:
+                selected_buffs = parse_spec_file(_config.run.spec).resolve(
+                    skip_unknown=True
+                ).buffs
+            command.print_buffs(selected_buffs)
 
         elif args.list_generators:
             command.print_generators()
@@ -627,28 +669,41 @@ def main(arguments=None) -> None:
                 logging.error(message)
                 raise ValueError(message)
 
-            parsable_specs = ["probe", "detector", "buff"]
-            parsed_specs = {}
-            for spec_type in parsable_specs:
-                spec_namespace = f"{spec_type}s"
-                config_spec = getattr(_config.plugins, f"{spec_type}_spec", "")
-                config_tags = getattr(_config.run, f"{spec_type}_tags", "")
-                names, rejected = _config.parse_plugin_spec(
-                    config_spec, spec_namespace, config_tags
-                )
-                parsed_specs[spec_type] = names
-                if rejected is not None and len(rejected) > 0:
-                    if hasattr(args, "skip_unknown"):  # attribute only set when True
-                        header = f"Unknown {spec_namespace}:"
-                        skip_msg = Fore.LIGHTYELLOW_EX + "SKIP" + Style.RESET_ALL
-                        msg = f"{Fore.LIGHTYELLOW_EX}{header}\n" + "\n".join(
-                            [f"{skip_msg} {spec}" for spec in rejected]
-                        )
-                        logging.warning(f"{header} " + ",".join(rejected))
-                        print(msg)
-                    else:
-                        msg_list = ",".join(rejected)
-                        raise ValueError(f"❌Unknown {spec_namespace}❌: {msg_list}")
+            from garak._spec import parse_spec_file
+
+            def _check_rejected(rejected, namespace):
+                if not rejected:
+                    return
+                if hasattr(args, "skip_unknown"):  # attribute only set when True
+                    header = f"Unknown {namespace}:"
+                    skip_msg = Fore.LIGHTYELLOW_EX + "SKIP" + Style.RESET_ALL
+                    msg = f"{Fore.LIGHTYELLOW_EX}{header}\n" + "\n".join(
+                        [f"{skip_msg} {spec}" for spec in rejected]
+                    )
+                    logging.warning(f"{header} " + ",".join(rejected))
+                    print(msg)
+                else:
+                    raise ValueError(f"❌Unknown {namespace}❌: {','.join(rejected)}")
+
+            # probes + buffs come from the unified run.spec (default: probes.*)
+            resolved = parse_spec_file(_config.run.spec).resolve(skip_unknown=True)
+            _check_rejected(resolved.rejected, "run.spec")
+            if not resolved.probes and resolved.empty_reason:
+                message = f"❌ No probes selected: {resolved.empty_reason}"
+                logging.error(message)
+                raise ValueError(message)
+
+            # detectors are not part of run.spec; resolve via the legacy spec surface
+            detector_names, detector_rejected = _config.parse_plugin_spec(
+                _config.plugins.detector_spec, "detectors"
+            )
+            _check_rejected(detector_rejected, "detectors")
+
+            parsed_specs = {
+                "probe": resolved.probes,
+                "detector": detector_names,
+                "buff": resolved.buffs,
+            }
 
             evaluator = garak.evaluators.ThresholdEvaluator(_config.run.eval_threshold)
 

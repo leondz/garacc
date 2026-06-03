@@ -245,14 +245,21 @@ class Harness(Configurable):
                     % (probe.probename, repr(detectors_required))
                 )
 
+                intent_detectors = []
                 for detector_name in detectors_required:
                     d = _plugins.load_plugin(f"detectors.{detector_name}")
+                    intent_detectors.append(d)
                     attempt_subset = []
                     for a in attempt_results_list:
                         if detector_name in intent_to_detector[a.intent]:
                             attempt_subset.append(a)
                     self._run_detector(attempt_subset, d)
-                    del d
+
+                # detectors resolved via the intent path are not in the
+                # harness-level detector list snapshotted at run start, so emit
+                # them here to keep report.jsonl plugin_cache complete
+                _emit_plugin_cache_entry(*intent_detectors)
+                del intent_detectors
 
             for attempt in attempt_results:
                 attempt.status = garak.attempt.ATTEMPT_COMPLETE

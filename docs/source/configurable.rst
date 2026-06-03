@@ -144,18 +144,18 @@ Plugins Config Items
 * ``detector_spec`` - An optional spec of detectors to be used, if overriding those recommended in probes. Specifying ``detector_spec`` means the ``pxd`` harness will be used. This is equivalent to passing `-d` to the CLI
 * ``extended_detectors`` - Should just the primary detector be used per probe, or should the extended detectors also be run? The former is fast, the latter thorough.
 * ``buffs_include_original_prompt`` - When buffing, should the original pre-buff prompt still be included in those posed to the model?
-
-.. note::
-   ``plugins.probe_spec``, ``plugins.buff_spec`` and ``run.probe_tags`` are
-   **deprecated**. They still work (and are mapped onto ``run.spec`` with a
-   deprecation notice) but will be removed in a future release; use
-   ``run.spec`` instead (see below).
 * ``buff_max`` - Upper bound on how many items a buff should return
 * ``detectors`` - Root node for detector plugin configs
 * ``generators`` - Root note for generator plugin configs
 * ``buffs`` - Root note for buff plugin configs
 * ``harnesses`` - Root note for harness plugin configs
 * ``probes`` - Root note for probe plugin configs
+
+.. note::
+   ``plugins.probe_spec``, ``plugins.buff_spec`` and ``run.probe_tags`` are
+   **deprecated**. They still work (and are mapped onto ``run.spec`` with a
+   deprecation notice) but will be removed in a future release; use
+   ``run.spec`` instead (see below).
 
 For an example of how to use the ``detectors``, ``generators``, ``buffs``,
 ``harnesses``, and ``probes`` root entries, see :ref:`Configuring plugins with YAML <config_with_yaml>` below.

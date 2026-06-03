@@ -252,10 +252,12 @@ def _map_legacy_selection(config: dict) -> None:
     buff_spec = plugins.pop("buff_spec", None)
     probe_tags = run.pop("probe_tags", None)
 
-    # values that selected nothing under the legacy grammar are treated as absent
-    # (no deprecation noise, no empty run.spec that would default to probes.*)
+    # vacuous values (absent / empty / ``auto``) are treated as unspecified:
+    # no deprecation noise and no run.spec, so resolution falls back to the
+    # default ``probes.*``. ``none`` is *not* vacuous - it is an explicit empty
+    # selection (maps to ``probes.none``), mirroring ``--probes none`` on the CLI.
     def _meaningful(value) -> bool:
-        return value is not None and str(value).strip().lower() not in ("", "auto", "none")
+        return value is not None and str(value).strip().lower() not in ("", "auto")
 
     legacy = {
         "plugins.probe_spec": probe_spec,

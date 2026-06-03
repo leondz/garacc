@@ -34,10 +34,13 @@ _DEFAULT_TIER = 9
 class Selector:
     """A single selection clause.
 
-    ``kind`` is one of ``"plugin_path"``, ``"tag"`` or ``"tier"``. For
-    ``plugin_path`` selectors ``value`` carries the category-prefixed path
-    (e.g. ``"probes.dan"``) and ``category`` is set; for ``tag``/``tier`` the
-    filter applies to probes and ``category`` is ``None``.
+    ``kind`` is one of ``"plugin_path"``, ``"none"``, ``"tag"`` or ``"tier"``.
+    For ``plugin_path`` and ``none`` selectors ``value`` carries the
+    category-prefixed token (e.g. ``"probes.dan"`` / ``"probes.none"``) and
+    ``category`` is set; for ``tag``/``tier`` the filter applies to probes and
+    ``category`` is ``None``. A ``none`` selector is an explicit empty
+    selection for its category, distinct from an unspecified spec (which
+    defaults to all active probes at resolve time).
     """
 
     kind: str
@@ -57,7 +60,7 @@ class Spec:
         """Serialise to the config-file form (``include``/``exclude`` lists)."""
 
         def _token(selector: Selector):
-            if selector.kind == "plugin_path":
+            if selector.kind in ("plugin_path", "none"):
                 return selector.value
             return {selector.kind: selector.value}
 
@@ -130,12 +133,18 @@ def _classify(token: str, include: bool) -> Selector:
         return Selector("tag", token[4:], include, None)
     if token.startswith("tier:"):
         return Selector("tier", _normalize_tier(token[5:]), include, None)
+    # explicit empty selection: bare ``none`` (probes) or ``<category>.none``
+    # selects nothing for that category, distinct from an unspecified spec.
+    if token.lower() == "none":
+        return Selector("none", "probes.none", include, "probes")
     category = token.split(".", 1)[0]
     if category not in _CATEGORIES:
         raise ValueError(
             f"run.spec selector {token!r}: category prefix must be one of "
             f"{_CATEGORIES}"
         )
+    if token.lower() == f"{category}.none":
+        return Selector("none", f"{category}.none", include, category)
     return Selector("plugin_path", token, include, category)
 
 
@@ -164,9 +173,15 @@ def _normalize_tier(value: str) -> str:
 
 def _legacy_path_selectors(spec: Optional[str], category: str) -> List[Selector]:
     """Translate a legacy spec string (unprefixed ``dan`` / ``dan.AutoDAN`` /
-    ``all`` / ``auto`` / ``none``) into plugin-path :class:`Selector` objects."""
-    if spec is None or str(spec).lower() in ("", "auto", "none"):
+    ``all`` / ``auto`` / ``none``) into :class:`Selector` objects.
+
+    ``none`` yields an explicit empty-selection sentinel for the category,
+    distinct from an unspecified spec (``None``/``""``/``auto``), which defaults
+    to all active probes at resolve time."""
+    if spec is None or str(spec).lower() in ("", "auto"):
         return []
+    if str(spec).lower() == "none":
+        return [Selector("none", f"{category}.none", True, category)]
     if str(spec).lower() in ("all", "*"):
         return [Selector("plugin_path", f"{category}.*", True, category)]
     selectors = []
@@ -195,6 +210,9 @@ def _resolve_plugin_paths(
     rejected: List[str] = []
     prefix = f"{category}."
     for selector in selectors:
+        if selector.kind == "none":
+            # explicit empty selection contributes nothing (and is not unknown)
+            continue
         token = selector.value
         body = token[len(prefix):] if token.startswith(prefix) else token
         if body == "*":
@@ -259,12 +277,18 @@ def _resolve_spec(spec: "Spec", skip_unknown: bool) -> "Resolution":
     rejected: List[str] = []
 
     # Layer 1: probe candidate set from plugin-path includes; default probes.*
+    # unless an explicit ``none`` selector requests an empty probe selection.
     probe_includes = [
         s for s in spec.include if s.kind == "plugin_path" and s.category == "probes"
     ]
+    probe_none = any(
+        s.kind == "none" and s.category == "probes" for s in spec.include
+    )
     if probe_includes:
         candidate, rej = _resolve_plugin_paths(probe_includes, "probes")
         rejected += rej
+    elif probe_none:
+        candidate = set()
     else:
         candidate = {
             p for p, active in enumerate_plugins(category="probes") if active is True
@@ -314,5 +338,6 @@ def _resolve_spec(spec: "Spec", skip_unknown: bool) -> "Resolution":
     if rejected and not skip_unknown:
         raise ValueError(f"unknown run.spec selectors: {rejected}")
 
-    empty_reason = None if candidate else _empty_reason(spec)
+    # an explicit ``none`` selection is intentionally empty, not an error
+    empty_reason = None if (candidate or probe_none) else _empty_reason(spec)
     return Resolution(sorted(candidate), sorted(buffs), rejected, empty_reason)

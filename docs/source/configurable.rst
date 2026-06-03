@@ -126,7 +126,7 @@ Run Config Items
 """"""""""""""""
 
 * ``system_prompt`` -- If given and not overriden by the probe itself, probes will pass the specified system prompt when possible for generators that support chat modality.
-* ``spec`` - The unified selection spec for probes and buffs (``run.spec``); see "Selecting probes and buffs with run.spec" below. If absent, the default is all active probes (``probes.*``)
+* ``spec`` - The unified selection spec for probes and buffs (``run.spec``); see "Selecting probes and buffs with run.spec" below. If absent, the default is all active probes (``probes.*``); use ``none`` to select no probes explicitly
 * ``generations`` - How many times to send each prompt for inference
 * ``deprefix`` - Remove the prompt from the start of the output (some models return the prompt as part of their output)
 * ``seed`` - An optional random seed
@@ -171,6 +171,8 @@ Selectors (a category prefix is mandatory):
 
 * ``probes.*`` - all active probes (the default when no ``run.spec`` is given)
 * ``probes.<module>`` - an active family; ``probes.<module>.<Class>`` - one class
+* ``none`` (or ``probes.none``) - selects no probes; an explicit empty selection,
+  distinct from an unspecified spec (which defaults to ``probes.*``)
 * ``buffs.<module>[.<Class>]`` - selects buffs (no buffs are run by default)
 * ``tag:<prefix>`` - filters probes by tag (e.g. ``tag:owasp:llm01``)
 * ``tier:<N|name>`` - filters probes by tier; **inclusive** ("log level"): ``tier:N``
@@ -179,8 +181,9 @@ Selectors (a category prefix is mandatory):
 
 Polarity: a bare selector (or ``+``) includes; a leading ``-`` removes. Note
 the asymmetry of ``tier``: ``tier:N`` is the inclusive filter, while ``-tier:N``
-removes *exactly* tier ``N``. Resolution applies excludes last (exclude wins),
-and if a spec resolves to no probes garak aborts with an actionable message.
+removes *exactly* tier ``N``. Resolution applies excludes last (exclude wins).
+If a spec resolves to no probes garak aborts with an actionable message, unless
+``none`` was requested explicitly, in which case the run is a deliberate no-op.
 ``tier:`` and ``tag:`` filters apply to the whole candidate set, including
 explicitly-named classes, so e.g. ``probes.foo.Bar, tier:1`` yields nothing when
 ``foo.Bar`` is tier 3.
@@ -209,7 +212,10 @@ explicitly-named classes, so e.g. ``probes.foo.Bar, tier:1`` yields nothing when
 The deprecated ``--probes`` / ``--probe_tags`` / ``--buffs`` flags (and the
 ``plugins.probe_spec`` / ``plugins.buff_spec`` / ``run.probe_tags`` config keys)
 are mapped onto ``run.spec`` with a deprecation notice; ``--run-spec`` wins if
-both are given.
+both are given. A legacy ``none`` value (e.g. ``--probes none`` or
+``probe_spec: none``) maps to the explicit empty selection ``probes.none``;
+vacuous values (empty, ``auto``, or omitted) are treated as unspecified and
+default to all active probes.
 
 Reporting Config Items
 """"""""""""""""""""""

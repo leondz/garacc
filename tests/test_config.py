@@ -281,6 +281,50 @@ def test_run_spec_wins_over_legacy_flags():
     }, "--run-spec must win over deprecated selection flags"
 
 
+def test_legacy_probes_none_selects_no_probes():
+    from garak._spec import parse_spec_file
+
+    garak.cli.main(["--probes", "none", "--list_config"])
+    assert _config.run.spec == {
+        "include": ["probes.none"],
+        "exclude": [],
+    }, "deprecated --probes none must map to an explicit empty selection"
+    assert (
+        parse_spec_file(_config.run.spec).resolve(skip_unknown=True).probes == []
+    ), "--probes none must resolve to no probes, not the default-all universe"
+
+
+def test_legacy_config_probe_spec_none_selects_no_probes(tmp_path):
+    from garak._spec import parse_spec_file
+
+    cfg = tmp_path / "none_spec.yaml"
+    cfg.write_text("---\nplugins:\n  probe_spec: none\n", encoding="utf-8")
+    garak.cli.main(["--config", str(cfg), "--list_config"])
+    assert _config.run.spec == {
+        "include": ["probes.none"],
+        "exclude": [],
+    }, "config probe_spec none must map to an explicit empty selection (parity with CLI)"
+    assert (
+        parse_spec_file(_config.run.spec).resolve(skip_unknown=True).probes == []
+    ), "config probe_spec none must resolve to no probes, not the default-all universe"
+
+
+@pytest.mark.parametrize("vacuous", ["auto", ""])
+def test_legacy_config_probe_spec_vacuous_defaults_to_all(tmp_path, vacuous):
+    from garak._spec import parse_spec_file
+
+    cfg = tmp_path / "vacuous_spec.yaml"
+    cfg.write_text(
+        f"---\nplugins:\n  probe_spec: {vacuous!r}\n", encoding="utf-8"
+    )
+    garak.cli.main(["--config", str(cfg), "--list_config"])
+    assert (
+        _config.run.spec is None
+    ), f"vacuous probe_spec {vacuous!r} must be treated as unspecified (no run.spec)"
+    resolved = parse_spec_file(_config.run.spec).resolve(skip_unknown=True)
+    assert resolved.probes, f"unspecified probe_spec {vacuous!r} must default to all active probes"
+
+
 @pytest.mark.parametrize("cfg_path", ["garak/configs/fast.json", "garak/configs/bag.yaml"])
 def test_bundled_config_run_spec_resolves_without_unknowns(cfg_path):
     # guards against hand-migration typos in the shipped run.spec configs

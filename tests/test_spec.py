@@ -137,6 +137,48 @@ def test_fully_excluded_include_empty_with_reason():
     assert res.empty_reason, "empty result must carry a reason"
 
 
+def test_none_selects_no_probes():
+    res = resolve("probes.none")
+    assert res.probes == [], "probes.none must select no probes"
+    assert (
+        res.empty_reason is None
+    ), "explicit none is intentionally empty, not an error"
+
+
+def test_bare_none_is_probes_none():
+    assert resolve("none").probes == resolve("probes.none").probes == [], (
+        "bare 'none' must behave as probes.none (empty selection)"
+    )
+
+
+def test_none_distinct_from_unspecified():
+    assert set(resolve("").probes) == _active("probes"), "unspecified -> all active"
+    assert resolve("none").probes == [], "none -> empty, not the default-all universe"
+
+
+def test_none_round_trips_through_file_form():
+    from_cli = parse_spec_string("none")
+    round_trip = parse_spec_file(from_cli.to_file_dict())
+    assert from_cli.to_file_dict()["include"] == [
+        "probes.none"
+    ], "none must serialise to the 'probes.none' token"
+    assert (
+        round_trip.resolve().probes == []
+    ), "none must still resolve to no probes after a file round-trip"
+
+
+def test_legacy_none_maps_to_empty_selection():
+    from garak._spec import _legacy_path_selectors
+
+    selectors = _legacy_path_selectors("none", "probes")
+    assert [s.kind for s in selectors] == [
+        "none"
+    ], "legacy 'none' must yield a single none selector"
+    assert (
+        _legacy_path_selectors(None, "probes") == []
+    ), "unspecified legacy spec must yield no selectors (defaults to all)"
+
+
 # --- T8: prefix required / scope ------------------------------------------
 
 

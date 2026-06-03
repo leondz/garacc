@@ -688,7 +688,13 @@ def main(arguments=None) -> None:
             # probes + buffs come from the unified run.spec (default: probes.*)
             resolved = parse_spec_file(_config.run.spec).resolve(skip_unknown=True)
             _check_rejected(resolved.rejected, "run.spec")
-            if not resolved.probes and resolved.empty_reason:
+            # --skip_unknown tolerates an empty selection (e.g. every include was an
+            # unknown selector that was skipped); only guard when not skipping.
+            if (
+                not hasattr(args, "skip_unknown")  # attribute only set when True
+                and not resolved.probes
+                and resolved.empty_reason
+            ):
                 message = f"❌ No probes selected: {resolved.empty_reason}"
                 logging.error(message)
                 raise ValueError(message)

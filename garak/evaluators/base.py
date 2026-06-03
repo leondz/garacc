@@ -18,7 +18,6 @@ import garak.analyze
 import garak.analyze.calibration
 import garak.analyze.detector_metrics
 from garak.analyze.bootstrap_ci import calculate_bootstrap_ci
-import garak.resources.scoring
 import garak.resources.theme
 
 
@@ -71,14 +70,26 @@ class Evaluator:
 
         from dataclasses import asdict
 
+        intent_counts: dict[str, dict[str, int]] = defaultdict(
+            lambda: {"passed": 0, "total_evaluated": 0, "nones": 0}
+        )
+
         for attempt in attempts:
+            intent = attempt.intent
             for idx, score in enumerate(attempt.detector_results[detector_name]):
                 if score is None:
                     nones += 1
+                    if intent is not None:
+                        intent_counts[intent]["nones"] += 1
                 elif self.test(float(score)):
                     passes += 1
+                    if intent is not None:
+                        intent_counts[intent]["passed"] += 1
+                        intent_counts[intent]["total_evaluated"] += 1
                 else:  # if we don't pass
                     fails += 1
+                    if intent is not None:
+                        intent_counts[intent]["total_evaluated"] += 1
                     messages.append(
                         attempt.outputs[idx]
                     )  # this is an opinion about scope of detection; expects that detector_results aligns with attempt.outputs (not all_outputs)
@@ -188,6 +199,12 @@ class Evaluator:
             "total_evaluated": outputs_evaluated,
             "total_processed": outputs_processed,
         }
+        # per-intent pass/total counts, feeds the digest technique_intent_matrix
+        if intent_counts:
+            eval_record["intents"] = {
+                intent_key: dict(counts)
+                for intent_key, counts in sorted(intent_counts.items())
+            }
 
         # Add CI fields if calculation succeeded
         if ci_lower is not None and ci_upper is not None:
@@ -223,8 +240,6 @@ class Evaluator:
             attempts
         )  # iterable is preferred but we select them by idx later
 
-        intent_detector_groups = defaultdict(set)
-
         detectors_to_eval = set()
         detector_to_attempt_ids = defaultdict(list)
         self.probename = None  # short term clear on each call to avoid stale state, this should be refactored to avoid stored state
@@ -247,52 +262,12 @@ class Evaluator:
             detectors_to_eval.update(attempt_detectors)
             for attempt_detector in attempt_detectors:
                 detector_to_attempt_ids[attempt_detector].append(idx)
-                if attempt.intent:
-                    intent_detector_groups[attempt.intent].add(attempt_detector)
-
-        detector_results = {}
 
         for detector_to_eval in sorted(detectors_to_eval):
             attempt_subset = [
                 attempts[i] for i in detector_to_attempt_ids[detector_to_eval]
             ]
-            detector_results[detector_to_eval] = self._evaluate_one_detector(
-                attempt_subset, detector_to_eval
-            )
-
-        for intent in intent_detector_groups:
-            evaluation_count = 0
-            pass_rates = []
-            intent_relevant_detectors = intent_detector_groups[intent]
-            for detector_name in intent_relevant_detectors:
-                total_evaluated = detector_results[detector_name]["total_evaluated"]
-                evaluation_count += total_evaluated
-                if total_evaluated > 0:
-                    pass_rate = (
-                        detector_results[detector_name]["passed"] / total_evaluated
-                    )
-                    pass_rates.append(pass_rate)
-
-            if len(pass_rates):
-                intent_score, _ = garak.resources.scoring.aggregate(
-                    pass_rates, _config.reporting.group_aggregation_function
-                )
-            else:
-                intent_score = None
-
-            # write intent log entry
-            intent_log_entry = {
-                "entry_type": "eval_intent",
-                "probe": self.probename,
-                "intent": intent,
-                "score": intent_score,
-                "aggregation": _config.reporting.group_aggregation_function,
-                "n_detectors": len(pass_rates),
-                "n_evaluations": evaluation_count,
-                "detectors_used": list(intent_relevant_detectors),
-            }
-
-            _config.transient.reportfile.write(json.dumps(intent_log_entry) + "\n")
+            self._evaluate_one_detector(attempt_subset, detector_to_eval)
 
     def get_z_rating(self, probe_name, detector_name, asr_pct) -> str:
         probe_module, probe_classname = probe_name.split(".")
@@ -307,7 +282,9 @@ class Evaluator:
         zrating_symbol = ""
         if zscore is not None:
             zrating_symbol = self.SYMBOL_SET[
-                garak.analyze.score_to_defcon(zscore, garak.analyze.RELATIVE_DEFCON_BOUNDS)
+                garak.analyze.score_to_defcon(
+                    zscore, garak.analyze.RELATIVE_DEFCON_BOUNDS
+                )
             ]
         return zscore, zrating_symbol
 

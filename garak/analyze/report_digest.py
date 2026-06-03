@@ -41,6 +41,9 @@ if os.path.isfile(misp_resource_file):
             key, title, descr = line.strip().split("\t")
             tag_descriptions[key] = (title, descr)
 
+# probe tag namespace that defines a technique for the technique_intent_matrix
+TECHNIQUE_TAG_PREFIX = "demon:"
+
 
 def plugin_docstring_to_description(docstring):
     return docstring.split("\n")[0]
@@ -83,6 +86,7 @@ def _parse_report(reportfile: IO):
 
     if plugin_cache is None or len(plugin_cache) <= 0:
         from copy import deepcopy
+
         plugin_cache = deepcopy(garak._plugins.PluginCache.instance())
         plugin_cache["version"] = garak.__version__
     return init, setup, payloads, evals, plugin_cache
@@ -467,6 +471,74 @@ def append_report_object(reportfile: IO, object: dict):
     reportfile.write(json.dumps(object, ensure_ascii=False))
 
 
+def _compute_technique_intent_matrix(evals: list, report_plugin_cache: dict) -> dict:
+    """Pool eval intent counts into a demon:* technique -> intent matrix.
+
+    Counts are pooled across contributing probes and detectors, so
+    ``total_evaluated`` is an evaluation count (attempt x detector).
+    """
+    acc = defaultdict(
+        lambda: defaultdict(
+            lambda: {"passed": 0, "total": 0, "nones": 0, "detectors": set()}
+        )
+    )
+
+    for eval in evals:
+        if "intents" not in eval:
+            continue
+        probe = eval["probe"].replace("probes.", "")
+        try:
+            tags = _resolve_plugin_info(
+                f"probes.{probe}", report_plugin_cache, required_fields=("tags",)
+            )["tags"]
+        except (KeyError, TypeError, ValueError) as e:
+            raise ReportIncompatibleError(
+                f"Report references unknown probe probes.{probe}; "
+                "the report was likely generated with a different garak version"
+            ) from e
+        techniques = [tag for tag in tags if tag.startswith(TECHNIQUE_TAG_PREFIX)]
+        for intent, counts in eval["intents"].items():
+            try:
+                passed = counts["passed"]
+                total = counts["total_evaluated"]
+                nones = counts["nones"]
+            except (KeyError, TypeError) as e:
+                raise ReportIncompatibleError(
+                    f"Report intent counts for probes.{probe} are malformed; "
+                    "the report was likely generated with a different garak version"
+                ) from e
+            for technique in techniques:
+                cell = acc[technique][intent]
+                cell["passed"] += passed
+                cell["total"] += total
+                cell["nones"] += nones
+                cell["detectors"].add(eval["detector"])
+
+    matrix = {}
+    for technique in sorted(acc):
+        intents = acc[technique]
+        technique_detectors: set = set()
+        cells = {}
+        for intent in sorted(intents):
+            cell = intents[intent]
+            technique_detectors |= cell["detectors"]
+            cells[intent] = {
+                "score": (cell["passed"] / cell["total"]) if cell["total"] else None,
+                "passed": cell["passed"],
+                "total_evaluated": cell["total"],
+                "nones": cell["nones"],
+                "n_detectors": len(cell["detectors"]),
+            }
+        matrix[technique] = {
+            "_summary": {
+                "n_intents": len(intents),
+                "n_detectors": len(technique_detectors),
+            },
+            **cells,
+        }
+    return matrix
+
+
 def build_digest(report_filename: str, config=_config):
 
     # taxonomy = config.reporting.taxonomy
@@ -563,11 +635,14 @@ def build_digest(report_filename: str, config=_config):
     report_digest["meta"]["setup"]["reporting.taxonomy"] = taxonomy
     report_digest["meta"]["calibration_used"] = calibration_used
     report_digest["meta"]["aggregation_unknown"] = aggregation_unknown
-    report_digest["meta"]["plugin_cache_source"] = (
-        report_plugin_cache["version"]
-    )
+    report_digest["meta"]["plugin_cache_source"] = report_plugin_cache["version"]
     if calibration_used:
         report_digest["meta"]["calibration"] = _get_calibration_info(calibration)
+
+    # technique -> intent breakdown, pooled from each eval's intents field
+    report_digest["technique_intent_matrix"] = _compute_technique_intent_matrix(
+        evals, report_plugin_cache
+    )
 
     return report_digest
 

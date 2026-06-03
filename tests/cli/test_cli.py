@@ -83,3 +83,57 @@ def test_run_all_active_detectors(capsys):
     result = capsys.readouterr()
     last_line = result.out.strip().split("\n")[-1]
     assert re.match("^✔️  garak run complete in [0-9]+\\.[0-9]+s$", last_line)
+
+
+def test_legacy_probes_and_run_spec_select_same_run(capsys):
+    """The deprecated -p flag and the unified --run_spec must drive the same
+    end-to-end run: identical probe + detector selection, both completing."""
+    complete = "^✔️  garak run complete in [0-9]+\\.[0-9]+s$"
+
+    cli.main(
+        [
+            "-m",
+            "test",
+            "-p",
+            "test.Blank",
+            "-d",
+            "always.Pass",
+            "-g",
+            "1",
+            "--narrow_output",
+        ]
+    )
+    legacy_last = capsys.readouterr().out.strip().split("\n")[-1]
+    legacy_spec = dict(_config.run.spec)
+    legacy_detector = _config.plugins.detector_spec
+
+    cli.main(
+        [
+            "-m",
+            "test",
+            "--run_spec",
+            "probes.test.Blank",
+            "-d",
+            "always.Pass",
+            "-g",
+            "1",
+            "--narrow_output",
+        ]
+    )
+    new_last = capsys.readouterr().out.strip().split("\n")[-1]
+    new_spec = dict(_config.run.spec)
+    new_detector = _config.plugins.detector_spec
+
+    assert re.match(
+        complete, legacy_last
+    ), f"legacy -p run did not complete; last line: {legacy_last!r}"
+    assert re.match(
+        complete, new_last
+    ), f"--run_spec run did not complete; last line: {new_last!r}"
+    assert legacy_spec == new_spec == {
+        "include": ["probes.test.Blank"],
+        "exclude": [],
+    }, f"old and new formats must resolve to the same run.spec; got {legacy_spec!r} vs {new_spec!r}"
+    assert (
+        legacy_detector == new_detector == "always.Pass"
+    ), f"both formats must select the same detector; got {legacy_detector!r} vs {new_detector!r}"

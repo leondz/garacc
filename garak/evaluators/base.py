@@ -18,7 +18,6 @@ import garak.analyze
 import garak.analyze.calibration
 import garak.analyze.detector_metrics
 from garak.analyze.bootstrap_ci import calculate_bootstrap_ci
-import garak.resources.scoring
 import garak.resources.theme
 
 
@@ -241,8 +240,6 @@ class Evaluator:
             attempts
         )  # iterable is preferred but we select them by idx later
 
-        intent_detector_groups = defaultdict(set)
-
         detectors_to_eval = set()
         detector_to_attempt_ids = defaultdict(list)
         self.probename = None  # short term clear on each call to avoid stale state, this should be refactored to avoid stored state
@@ -265,52 +262,12 @@ class Evaluator:
             detectors_to_eval.update(attempt_detectors)
             for attempt_detector in attempt_detectors:
                 detector_to_attempt_ids[attempt_detector].append(idx)
-                if attempt.intent:
-                    intent_detector_groups[attempt.intent].add(attempt_detector)
-
-        detector_results = {}
 
         for detector_to_eval in sorted(detectors_to_eval):
             attempt_subset = [
                 attempts[i] for i in detector_to_attempt_ids[detector_to_eval]
             ]
-            detector_results[detector_to_eval] = self._evaluate_one_detector(
-                attempt_subset, detector_to_eval
-            )
-
-        for intent in intent_detector_groups:
-            evaluation_count = 0
-            pass_rates = []
-            intent_relevant_detectors = intent_detector_groups[intent]
-            for detector_name in intent_relevant_detectors:
-                total_evaluated = detector_results[detector_name]["total_evaluated"]
-                evaluation_count += total_evaluated
-                if total_evaluated > 0:
-                    pass_rate = (
-                        detector_results[detector_name]["passed"] / total_evaluated
-                    )
-                    pass_rates.append(pass_rate)
-
-            if len(pass_rates):
-                intent_score, _ = garak.resources.scoring.aggregate(
-                    pass_rates, _config.reporting.group_aggregation_function
-                )
-            else:
-                intent_score = None
-
-            # write intent log entry
-            intent_log_entry = {
-                "entry_type": "eval_intent",
-                "probe": self.probename,
-                "intent": intent,
-                "score": intent_score,
-                "aggregation": _config.reporting.group_aggregation_function,
-                "n_detectors": len(pass_rates),
-                "n_evaluations": evaluation_count,
-                "detectors_used": list(intent_relevant_detectors),
-            }
-
-            _config.transient.reportfile.write(json.dumps(intent_log_entry) + "\n")
+            self._evaluate_one_detector(attempt_subset, detector_to_eval)
 
     def get_z_rating(self, probe_name, detector_name, asr_pct) -> str:
         probe_module, probe_classname = probe_name.split(".")

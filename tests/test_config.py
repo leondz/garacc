@@ -247,11 +247,13 @@ def test_cli_spec_settings(param):
 
 
 def test_run_spec_cli_sets_config():
-    garak.cli.main(["--run-spec", "probes.dan, -probes.dan.DanInTheWild", "--list_config"])
+    garak.cli.main(
+        ["--run_spec", "probes.dan, -probes.dan.DanInTheWild", "--list_config"]
+    )
     assert _config.run.spec == {
         "include": ["probes.dan"],
         "exclude": ["probes.dan.DanInTheWild"],
-    }, "--run-spec must populate _config.run.spec"
+    }, "--run_spec must populate _config.run.spec"
 
 
 def test_legacy_probes_flag_maps_to_run_spec(capsys):
@@ -265,7 +267,15 @@ def test_legacy_probes_flag_maps_to_run_spec(capsys):
 
 def test_legacy_probe_tags_and_buffs_map_to_run_spec():
     garak.cli.main(
-        ["--probes", "dan", "--probe_tags", "owasp:llm01", "--buffs", "lowercase", "--list_config"]
+        [
+            "--probes",
+            "dan",
+            "--probe_tags",
+            "owasp:llm01",
+            "--buffs",
+            "lowercase",
+            "--list_config",
+        ]
     )
     assert _config.run.spec == {
         "include": ["probes.dan", "buffs.lowercase", {"tag": "owasp:llm01"}],
@@ -274,11 +284,13 @@ def test_legacy_probe_tags_and_buffs_map_to_run_spec():
 
 
 def test_run_spec_wins_over_legacy_flags():
-    garak.cli.main(["--run-spec", "probes.encoding", "--probes", "dan", "--list_config"])
+    garak.cli.main(
+        ["--run_spec", "probes.encoding", "--probes", "dan", "--list_config"]
+    )
     assert _config.run.spec == {
         "include": ["probes.encoding"],
         "exclude": [],
-    }, "--run-spec must win over deprecated selection flags"
+    }, "--run_spec must win over deprecated selection flags"
 
 
 def test_legacy_probes_none_selects_no_probes():
@@ -314,18 +326,20 @@ def test_legacy_config_probe_spec_vacuous_defaults_to_all(tmp_path, vacuous):
     from garak._spec import parse_spec_file
 
     cfg = tmp_path / "vacuous_spec.yaml"
-    cfg.write_text(
-        f"---\nplugins:\n  probe_spec: {vacuous!r}\n", encoding="utf-8"
-    )
+    cfg.write_text(f"---\nplugins:\n  probe_spec: {vacuous!r}\n", encoding="utf-8")
     garak.cli.main(["--config", str(cfg), "--list_config"])
     assert (
         _config.run.spec is None
     ), f"vacuous probe_spec {vacuous!r} must be treated as unspecified (no run.spec)"
     resolved = parse_spec_file(_config.run.spec).resolve(skip_unknown=True)
-    assert resolved.probes, f"unspecified probe_spec {vacuous!r} must default to all active probes"
+    assert (
+        resolved.probes
+    ), f"unspecified probe_spec {vacuous!r} must default to all active probes"
 
 
-@pytest.mark.parametrize("cfg_path", ["garak/configs/fast.json", "garak/configs/bag.yaml"])
+@pytest.mark.parametrize(
+    "cfg_path", ["garak/configs/fast.json", "garak/configs/bag.yaml"]
+)
 def test_bundled_config_run_spec_resolves_without_unknowns(cfg_path):
     # guards against hand-migration typos in the shipped run.spec configs
     import json as _json
@@ -343,7 +357,7 @@ def test_bundled_config_run_spec_resolves_without_unknowns(cfg_path):
 def test_invalid_run_spec_exits_cleanly():
     # malformed selector should print a friendly error and exit, not traceback
     with pytest.raises(SystemExit):
-        garak.cli.main(["--run-spec", "detectors.foo", "--list_config"])
+        garak.cli.main(["--run_spec", "detectors.foo", "--list_config"])
 
 
 # test a short-form CLI assertion

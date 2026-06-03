@@ -12,7 +12,7 @@ CLI reference for garak
                          [--eval_threshold EVAL_THRESHOLD]
                          [--generations GENERATIONS] [--config CONFIG]
                          [--target_type TARGET_TYPE] [--target_name TARGET_NAME]
-                         [--run-spec RUN_SPEC] [--probes PROBES]
+                         [--run_spec RUN_SPEC] [--probes PROBES]
                          [--probe_tags PROBE_TAGS] [--detectors DETECTORS]
                          [--extended_detectors] [--buffs BUFFS]
                          [--buff_option_file BUFF_OPTION_FILE | --buff_options BUFF_OPTIONS]
@@ -60,17 +60,16 @@ CLI reference for garak
     --target_name TARGET_NAME, --model_name TARGET_NAME, -n TARGET_NAME
                           name of the target, e.g.
                           'timdettmers/guanaco-33b-merged'
-    --run-spec RUN_SPEC, --run_spec RUN_SPEC
-                          unified selection spec, e.g. 'probes.dan,
+    --run_spec RUN_SPEC   unified selection spec, e.g. 'probes.dan,
                           -dan.DanInTheWild, tag:owasp:llm01'. Selectors:
                           probes.<module>[.<Class>], buffs.<module>[.<Class>],
                           tag:<prefix>, tier:<N|name>; '-' excludes, tier:N is
                           inclusive (tiers 1..N).
     --probes PROBES, -p PROBES
-                          DEPRECATED, use --run-spec. list of probe names to
+                          DEPRECATED, use --run_spec. list of probe names to
                           use, or 'all'.
     --probe_tags PROBE_TAGS
-                          DEPRECATED, use --run-spec 'tag:<value>'. only include
+                          DEPRECATED, use --run_spec 'tag:<value>'. only include
                           probes with a tag starting with this value (e.g.
                           owasp:llm01)
     --detectors DETECTORS, -d DETECTORS
@@ -80,7 +79,7 @@ CLI reference for garak
                           should we run all detectors? (default is just the
                           primary detector, if given, else everything)
     --buffs BUFFS, -b BUFFS
-                          DEPRECATED, use --run-spec 'buffs.<name>'. list of
+                          DEPRECATED, use --run_spec 'buffs.<name>'. list of
                           buffs to use. Default is none
     --buff_option_file BUFF_OPTION_FILE, -B BUFF_OPTION_FILE
                           path to JSON file containing options to pass to buff

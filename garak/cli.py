@@ -158,7 +158,6 @@ def main(arguments=None) -> None:
     )
     # unified selection spec (replaces --probes/--probe_tags/--buffs)
     parser.add_argument(
-        "--run-spec",
         "--run_spec",
         dest="run_spec",
         type=str,
@@ -167,19 +166,19 @@ def main(arguments=None) -> None:
         "Selectors: probes.<module>[.<Class>], buffs.<module>[.<Class>], tag:<prefix>, "
         "tier:<N|name>; '-' excludes, tier:N is inclusive (tiers 1..N).",
     )
-    # probes (DEPRECATED: use --run-spec)
+    # probes (DEPRECATED: use --run_spec)
     parser.add_argument(
         "--probes",
         "-p",
         type=str,
         default=argparse.SUPPRESS,
-        help="DEPRECATED, use --run-spec. list of probe names to use, or 'all'.",
+        help="DEPRECATED, use --run_spec. list of probe names to use, or 'all'.",
     )
     parser.add_argument(
         "--probe_tags",
         default=argparse.SUPPRESS,
         type=str,
-        help="DEPRECATED, use --run-spec 'tag:<value>'. only include probes with a tag starting with this value (e.g. owasp:llm01)",
+        help="DEPRECATED, use --run_spec 'tag:<value>'. only include probes with a tag starting with this value (e.g. owasp:llm01)",
     )
     # detectors
     parser.add_argument(
@@ -194,13 +193,13 @@ def main(arguments=None) -> None:
         action="store_true",
         help="If detectors aren't specified on the command line, should we run all detectors? (default is just the primary detector, if given, else everything)",
     )
-    # buffs (DEPRECATED: use --run-spec)
+    # buffs (DEPRECATED: use --run_spec)
     parser.add_argument(
         "--buffs",
         "-b",
         type=str,
         default=argparse.SUPPRESS,
-        help="DEPRECATED, use --run-spec 'buffs.<name>'. list of buffs to use. Default is none",
+        help="DEPRECATED, use --run_spec 'buffs.<name>'. list of buffs to use. Default is none",
     )
     # file or json based config options
     plugin_types = sorted(
@@ -273,7 +272,7 @@ def main(arguments=None) -> None:
         "--list_probes",
         action="store_true",
         help="list available probes. Use -v for a detailed markdown table with tier and description. "
-        "Combine with --run-spec to filter, e.g. '--list_probes --run-spec probes.dan'.",
+        "Combine with --run_spec to filter, e.g. '--list_probes --run_spec probes.dan'.",
     )
     parser.add_argument(
         "--list_detectors",
@@ -416,10 +415,12 @@ def main(arguments=None) -> None:
     if "detectors" in args:
         _config.plugins.detector_spec = args.detectors
 
-    # unified run.spec: --run-spec wins; deprecated --probes/--probe_tags/--buffs map onto it
+    # unified run.spec: --run_spec wins; deprecated --probes/--probe_tags/--buffs map onto it
     from garak._spec import parse_spec_string, _legacy_path_selectors
 
-    _legacy_selection_flags = [f for f in ("probes", "probe_tags", "buffs") if f in args]
+    _legacy_selection_flags = [
+        f for f in ("probes", "probe_tags", "buffs") if f in args
+    ]
     for legacy_flag in _legacy_selection_flags:
         command.deprecation_notice(f"--{legacy_flag} on CLI", "0.15.1.pre1")
     if "run_spec" in args and args.run_spec is not None:
@@ -427,15 +428,21 @@ def main(arguments=None) -> None:
             _config.run.spec = parse_spec_string(args.run_spec).to_file_dict()
         except ValueError as e:
             logging.error(e)
-            print(f"❌ invalid --run-spec: {e}")
+            print(f"❌ invalid --run_spec: {e}")
             exit(1)
         if _legacy_selection_flags:
             logging.info(
-                "both --run-spec and deprecated selection flags given; --run-spec wins"
+                "both --run_spec and deprecated selection flags given; --run_spec wins"
             )
     elif _legacy_selection_flags:
-        include = [s.value for s in _legacy_path_selectors(getattr(args, "probes", None), "probes")]
-        include += [s.value for s in _legacy_path_selectors(getattr(args, "buffs", None), "buffs")]
+        include = [
+            s.value
+            for s in _legacy_path_selectors(getattr(args, "probes", None), "probes")
+        ]
+        include += [
+            s.value
+            for s in _legacy_path_selectors(getattr(args, "buffs", None), "buffs")
+        ]
         probe_tags = getattr(args, "probe_tags", None)
         if probe_tags not in (None, ""):
             include.append({"tag": probe_tags})
@@ -476,9 +483,8 @@ def main(arguments=None) -> None:
                 f"bootstrap_num_iterations must be > 0, got {_config.reporting.bootstrap_num_iterations}"
             )
 
-        if (
-            _config.reporting.bootstrap_confidence_level is not None
-            and not (0.0 < _config.reporting.bootstrap_confidence_level < 1.0)
+        if _config.reporting.bootstrap_confidence_level is not None and not (
+            0.0 < _config.reporting.bootstrap_confidence_level < 1.0
         ):
             raise ValueError(
                 f"bootstrap_confidence_level must be in (0, 1), got {_config.reporting.bootstrap_confidence_level}"
@@ -548,9 +554,9 @@ def main(arguments=None) -> None:
 
             selected_probes = None
             if _config.run.spec:
-                selected_probes = parse_spec_file(_config.run.spec).resolve(
-                    skip_unknown=True
-                ).probes
+                selected_probes = (
+                    parse_spec_file(_config.run.spec).resolve(skip_unknown=True).probes
+                )
             command.print_probes(selected_probes, verbose=_config.system.verbose)
 
         elif args.list_detectors:
@@ -567,9 +573,9 @@ def main(arguments=None) -> None:
 
             selected_buffs = None
             if _config.run.spec:
-                selected_buffs = parse_spec_file(_config.run.spec).resolve(
-                    skip_unknown=True
-                ).buffs
+                selected_buffs = (
+                    parse_spec_file(_config.run.spec).resolve(skip_unknown=True).buffs
+                )
             command.print_buffs(selected_buffs)
 
         elif args.list_generators:

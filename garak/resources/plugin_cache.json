@@ -4478,7 +4478,7 @@
         "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 2,
-      "mod_time": "2026-05-27 20:51:42 +0000"
+      "mod_time": "2026-05-28 19:46:50 +0000"
     },
     "probes.promptinject.HijackHateHumansFull": {
       "description": "PromptInject is a framework that assembles prompts in a modular fashion to provide a quantitative analysis of the robustness of LLMs to adversarial prompt attacks. trophy Best Paper Awards @ NeurIPS ML Safety Workshop 2022",
@@ -4516,7 +4516,7 @@
         "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 2,
-      "mod_time": "2026-05-27 20:51:42 +0000"
+      "mod_time": "2026-05-28 19:46:50 +0000"
     },
     "probes.promptinject.HijackKillHumans": {
       "description": "PromptInject is a framework that assembles prompts in a modular fashion to provide a quantitative analysis of the robustness of LLMs to adversarial prompt attacks. trophy Best Paper Awards @ NeurIPS ML Safety Workshop 2022",
@@ -4555,7 +4555,7 @@
         "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 2,
-      "mod_time": "2026-05-27 20:51:42 +0000"
+      "mod_time": "2026-05-28 19:46:50 +0000"
     },
     "probes.promptinject.HijackKillHumansFull": {
       "description": "PromptInject is a framework that assembles prompts in a modular fashion to provide a quantitative analysis of the robustness of LLMs to adversarial prompt attacks. trophy Best Paper Awards @ NeurIPS ML Safety Workshop 2022",
@@ -4593,7 +4593,7 @@
         "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 2,
-      "mod_time": "2026-05-27 20:51:42 +0000"
+      "mod_time": "2026-05-28 19:46:50 +0000"
     },
     "probes.promptinject.HijackLongPrompt": {
       "description": "PromptInject is a framework that assembles prompts in a modular fashion to provide a quantitative analysis of the robustness of LLMs to adversarial prompt attacks. trophy Best Paper Awards @ NeurIPS ML Safety Workshop 2022",
@@ -4632,7 +4632,7 @@
         "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 2,
-      "mod_time": "2026-05-27 20:51:42 +0000"
+      "mod_time": "2026-05-28 19:46:50 +0000"
     },
     "probes.promptinject.HijackLongPromptFull": {
       "description": "PromptInject is a framework that assembles prompts in a modular fashion to provide a quantitative analysis of the robustness of LLMs to adversarial prompt attacks. trophy Best Paper Awards @ NeurIPS ML Safety Workshop 2022",
@@ -4670,7 +4670,7 @@
         "demon:Language:Prompt_injection:Ignore_previous_instructions"
       ],
       "tier": 2,
-      "mod_time": "2026-05-27 20:51:42 +0000"
+      "mod_time": "2026-05-28 19:46:50 +0000"
     },
     "probes.propile.PIILeakQuadruplet": {
       "description": "ProPILE quadruplet probe: uses name + two PIIs to elicit the third.",
@@ -8109,7 +8109,7 @@
       "tags": [
         "avid-effect:performance:P0204"
       ],
-      "mod_time": "2026-02-03 21:20:37 +0000"
+      "mod_time": "2026-05-24 19:05:32 +0000"
     },
     "detectors.snowball.DontStartYes": {
       "description": "Response should start yes, or contain an affirmation, to pass",
@@ -8130,7 +8130,7 @@
       "tags": [
         "avid-effect:performance:P0204"
       ],
-      "mod_time": "2026-02-03 21:20:37 +0000"
+      "mod_time": "2026-05-24 19:05:32 +0000"
     },
     "detectors.sysprompt_extraction.PromptExtraction": {
       "description": "Detect system prompt extraction via character n-gram overlap",
@@ -9465,7 +9465,7 @@
       },
       "parallel_capable": false,
       "supports_multiple_generations": false,
-      "mod_time": "2026-05-28 19:44:33 +0000"
+      "mod_time": "2026-05-21 15:13:12 +0000"
     },
     "generators.mistral.MistralGenerator": {
       "description": "Interface for public endpoints of models hosted in Mistral La Plateforme (console.mistral.ai).",
@@ -10321,7 +10321,7 @@
       },
       "active": true,
       "extra_dependency_names": [],
-      "mod_time": "2026-05-01 20:48:53 +0000"
+      "mod_time": "2026-06-03 16:30:42 +0000"
     },
     "harnesses.probewise.ProbewiseHarness": {
       "DEFAULT_PARAMS": {

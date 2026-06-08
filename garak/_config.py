@@ -481,7 +481,7 @@ def parse_plugin_spec(
         _has_any_tag,
     )
 
-    names, rejected = _resolve_plugin_paths(
+    names, rejected, _ = _resolve_plugin_paths(
         _legacy_path_selectors(spec, category), category
     )
     if probe_tag_filter is not None and len(probe_tag_filter) > 1:

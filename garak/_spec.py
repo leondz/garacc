@@ -195,19 +195,22 @@ def _legacy_path_selectors(spec: Optional[str], category: str) -> List[Selector]
 
 def _resolve_plugin_paths(
     selectors: List[Selector], category: str
-) -> Tuple[set, List[str]]:
+) -> Tuple[set, List[str], List[str]]:
     """Single plugin-path resolution core (category generic).
 
     Mirrors the legacy ``parse_plugin_spec`` name resolution:
     ``<category>.*`` -> active plugins; ``<category>.<module>`` -> active
     family; ``<category>.<module>.<Class>`` -> exact match (ignores ``active``).
-    Returns the resolved name set plus the list of unknown selector values.
+    Returns ``(names, unknown, inactive)``: the resolved name set, selectors
+    naming nothing recognised, and bare-module selectors that exist but whose
+    plugins are all inactive (known-but-empty, distinct from unknown).
     """
     from garak._plugins import enumerate_plugins
 
     enumerated = enumerate_plugins(category=category)
     names: set = set()
     rejected: List[str] = []
+    inactive: List[str] = []
     prefix = f"{category}."
     for selector in selectors:
         if selector.kind == "none":
@@ -218,13 +221,16 @@ def _resolve_plugin_paths(
         if body == "*":
             names |= {p for p, active in enumerated if active is True}
         elif body.count(".") < 1:
-            found = {
-                p
+            family = [
+                (p, active)
                 for p, active in enumerated
-                if p.startswith(f"{category}.{body}.") and active is True
-            }
-            if found:
-                names |= found
+                if p.startswith(f"{category}.{body}.")
+            ]
+            active_names = {p for p, active in family if active is True}
+            if active_names:
+                names |= active_names
+            elif family:  # module exists but every plugin is inactive
+                inactive.append(token)
             else:
                 rejected.append(token)
         else:
@@ -233,7 +239,7 @@ def _resolve_plugin_paths(
                 names |= found
             else:
                 rejected.append(token)
-    return names, rejected
+    return names, rejected, inactive
 
 
 def _has_any_tag(name: str, prefixes: List[str]) -> bool:
@@ -275,6 +281,7 @@ def _resolve_spec(spec: "Spec", skip_unknown: bool) -> "Resolution":
     from garak._plugins import enumerate_plugins
 
     rejected: List[str] = []
+    inactive_modules: List[str] = []
 
     # Layer 1: probe candidate set from plugin-path includes; default probes.*
     # unless an explicit ``none`` selector requests an empty probe selection.
@@ -285,7 +292,9 @@ def _resolve_spec(spec: "Spec", skip_unknown: bool) -> "Resolution":
         s.kind == "none" and s.category == "probes" for s in spec.include
     )
     if probe_includes:
-        candidate, rej = _resolve_plugin_paths(probe_includes, "probes")
+        candidate, rej, inactive_modules = _resolve_plugin_paths(
+            probe_includes, "probes"
+        )
         rejected += rej
     elif probe_none:
         candidate = set()
@@ -308,7 +317,7 @@ def _resolve_spec(spec: "Spec", skip_unknown: bool) -> "Resolution":
         s for s in spec.include if s.kind == "plugin_path" and s.category == "buffs"
     ]
     if buff_includes:
-        buffs, rej = _resolve_plugin_paths(buff_includes, "buffs")
+        buffs, rej, _ = _resolve_plugin_paths(buff_includes, "buffs")
         rejected += rej
     else:
         buffs = set()
@@ -316,11 +325,11 @@ def _resolve_spec(spec: "Spec", skip_unknown: bool) -> "Resolution":
     # Excludes applied last (exclude wins)
     for selector in spec.exclude:
         if selector.kind == "plugin_path" and selector.category == "probes":
-            removed, rej = _resolve_plugin_paths([selector], "probes")
+            removed, rej, _ = _resolve_plugin_paths([selector], "probes")
             rejected += rej
             candidate -= removed
         elif selector.kind == "plugin_path" and selector.category == "buffs":
-            removed, rej = _resolve_plugin_paths([selector], "buffs")
+            removed, rej, _ = _resolve_plugin_paths([selector], "buffs")
             rejected += rej
             buffs -= removed
         elif selector.kind == "tier":
@@ -335,9 +344,19 @@ def _resolve_spec(spec: "Spec", skip_unknown: bool) -> "Resolution":
             candidate = {p for p in candidate if not _has_any_tag(p, [selector.value])}
 
     rejected = sorted(set(rejected))
+    inactive_modules = sorted(set(inactive_modules))
     if rejected and not skip_unknown:
         raise ValueError(f"unknown run.spec selectors: {rejected}")
 
     # an explicit ``none`` selection is intentionally empty, not an error
-    empty_reason = None if (candidate or probe_none) else _empty_reason(spec)
+    if candidate or probe_none:
+        empty_reason = None
+    elif inactive_modules:
+        names = ", ".join(inactive_modules)
+        empty_reason = (
+            f"all plugins in '{names}' are marked inactive; select one or more "
+            f"by name (e.g. {inactive_modules[0]}.<ClassName>) to continue"
+        )
+    else:
+        empty_reason = _empty_reason(spec)
     return Resolution(sorted(candidate), sorted(buffs), rejected, empty_reason)

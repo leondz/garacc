@@ -97,7 +97,7 @@ def test_run_all_active_detectors(capsys):
 
 
 def test_legacy_probes_and_run_spec_select_same_run(capsys):
-    """The deprecated -p flag and the unified --run_spec must drive the same
+    """The deprecated -p flag and the unified --spec must drive the same
     end-to-end run: identical probe + detector selection, both completing."""
     complete = "^✔️  garak run complete in [0-9]+\\.[0-9]+s$"
 
@@ -122,7 +122,7 @@ def test_legacy_probes_and_run_spec_select_same_run(capsys):
         [
             "-m",
             "test",
-            "--run_spec",
+            "--spec",
             "probes.test.Blank",
             "-d",
             "always.Pass",
@@ -140,7 +140,7 @@ def test_legacy_probes_and_run_spec_select_same_run(capsys):
     ), f"legacy -p run did not complete; last line: {legacy_last!r}"
     assert re.match(
         complete, new_last
-    ), f"--run_spec run did not complete; last line: {new_last!r}"
+    ), f"--spec run did not complete; last line: {new_last!r}"
     assert legacy_spec == new_spec == {
         "include": ["probes.test.Blank"],
         "exclude": [],

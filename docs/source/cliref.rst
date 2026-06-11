@@ -3,7 +3,7 @@ CLI reference for garak
 
 ::
 
-  garak LLM vulnerability scanner v0.15.1.pre1 ( https://github.com/NVIDIA/garak ) at 2026-06-02T11:24:39.583036
+  garak LLM vulnerability scanner v0.15.2.pre1 ( https://github.com/NVIDIA/garak ) at 2026-06-11T08:56:05.589564
   usage: python -m garak [-h] [--verbose] [--report_prefix REPORT_PREFIX]
                          [--narrow_output]
                          [--parallel_requests PARALLEL_REQUESTS]
@@ -12,7 +12,7 @@ CLI reference for garak
                          [--eval_threshold EVAL_THRESHOLD]
                          [--generations GENERATIONS] [--config CONFIG]
                          [--target_type TARGET_TYPE] [--target_name TARGET_NAME]
-                         [--run_spec RUN_SPEC] [--probes PROBES]
+                         [--spec SPEC] [--probes PROBES]
                          [--probe_tags PROBE_TAGS] [--detectors DETECTORS]
                          [--extended_detectors] [--buffs BUFFS]
                          [--buff_option_file BUFF_OPTION_FILE | --buff_options BUFF_OPTIONS]
@@ -29,9 +29,9 @@ CLI reference for garak
                          [--list_detectors] [--list_generators] [--list_buffs]
                          [--list_config] [--version] [--report REPORT]
                          [--interactive] [--fix]
-
+  
   LLM safety & security scanning tool
-
+  
   options:
     -h, --help            show this help message and exit
     --verbose, -v         add one or more times to increase verbosity of output
@@ -60,16 +60,16 @@ CLI reference for garak
     --target_name TARGET_NAME, --model_name TARGET_NAME, -n TARGET_NAME
                           name of the target, e.g.
                           'timdettmers/guanaco-33b-merged'
-    --run_spec RUN_SPEC   unified selection spec, e.g. 'probes.dan,
+    --spec SPEC           unified selection spec, e.g. 'probes.dan,
                           -dan.DanInTheWild, tag:owasp:llm01'. Selectors:
                           probes.<module>[.<Class>], buffs.<module>[.<Class>],
                           tag:<prefix>, tier:<N|name>; '-' excludes, tier:N is
                           inclusive (tiers 1..N).
     --probes PROBES, -p PROBES
-                          DEPRECATED, use --run_spec. list of probe names to
-                          use, or 'all'.
+                          DEPRECATED, use --spec. list of probe names to use, or
+                          'all'.
     --probe_tags PROBE_TAGS
-                          DEPRECATED, use --run_spec 'tag:<value>'. only include
+                          DEPRECATED, use --spec 'tag:<value>'. only include
                           probes with a tag starting with this value (e.g.
                           owasp:llm01)
     --detectors DETECTORS, -d DETECTORS
@@ -79,8 +79,8 @@ CLI reference for garak
                           should we run all detectors? (default is just the
                           primary detector, if given, else everything)
     --buffs BUFFS, -b BUFFS
-                          DEPRECATED, use --run_spec 'buffs.<name>'. list of
-                          buffs to use. Default is none
+                          DEPRECATED, use --spec 'buffs.<name>'. list of buffs
+                          to use. Default is none
     --buff_option_file BUFF_OPTION_FILE, -B BUFF_OPTION_FILE
                           path to JSON file containing options to pass to buff
     --buff_options BUFF_OPTIONS
@@ -126,9 +126,8 @@ CLI reference for garak
                           show info about one plugin; format as
                           type.plugin.class, e.g. probes.lmrc.Profanity
     --list_probes         list available probes. Use -v for a detailed markdown
-                          table with tier and description. Combine with
-                          --probes/-p to filter by probe_spec, e.g. '--
-                          list_probes -p dan'.
+                          table with tier and description. Combine with --spec
+                          to filter, e.g. '--list_probes --spec probes.dan'.
     --list_detectors      list available detectors. Usage: combine with
                           --detectors/-d to filter for detectors that will be
                           activated based on a `detector_spec`, e.g. '--
@@ -144,5 +143,5 @@ CLI reference for garak
     --fix                 Update provided configuration with fixer migrations;
                           requires one of --config / --*_option_file, /
                           --*_options
-
+  
   See https://github.com/NVIDIA/garak

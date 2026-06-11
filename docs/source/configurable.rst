@@ -165,7 +165,7 @@ Selecting probes and buffs with run.spec
 
 ``run.spec`` is the single source of truth for selecting probes and buffs. It
 has two transports that parse to the same internal spec: a CLI string
-(``--run_spec``) and the config-file form (``include`` / ``exclude`` lists).
+(``--spec``) and the config-file form (``include`` / ``exclude`` lists).
 
 Selectors (a category prefix is mandatory):
 
@@ -191,13 +191,13 @@ explicitly-named classes, so e.g. ``probes.foo.Bar, tier:1`` yields nothing when
 .. code-block:: bash
 
     # whole family minus one class
-    garak --run_spec "probes.dan, -probes.dan.DanInTheWild"
+    garak --spec "probes.dan, -probes.dan.DanInTheWild"
     # family filtered by tag
-    garak --run_spec "probes.grandma, tag:owasp:llm06"
+    garak --spec "probes.grandma, tag:owasp:llm06"
     # all active buffs except one, over all active probes
-    garak --run_spec "probes.*, buffs.*, -buffs.paraphrase"
+    garak --spec "probes.*, buffs.*, -buffs.paraphrase"
     # tiers {1,3}: tier:3 admits 1..3, then -tier:2 removes exactly tier 2
-    garak --run_spec "+probes.*, +tier:3, -tier:2"
+    garak --spec "+probes.*, +tier:3, -tier:2"
 
 .. code-block:: yaml
 
@@ -211,7 +211,7 @@ explicitly-named classes, so e.g. ``probes.foo.Bar, tier:1`` yields nothing when
 
 The deprecated ``--probes`` / ``--probe_tags`` / ``--buffs`` flags (and the
 ``plugins.probe_spec`` / ``plugins.buff_spec`` / ``run.probe_tags`` config keys)
-are mapped onto ``run.spec`` with a deprecation notice; ``--run_spec`` wins if
+are mapped onto ``run.spec`` with a deprecation notice; ``--spec`` wins if
 both are given. A legacy ``none`` value (e.g. ``--probes none`` or
 ``probe_spec: none``) maps to the explicit empty selection ``probes.none``;
 vacuous values (empty, ``auto``, or omitted) are treated as unspecified and

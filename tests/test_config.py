@@ -248,12 +248,12 @@ def test_cli_spec_settings(param):
 
 def test_run_spec_cli_sets_config():
     garak.cli.main(
-        ["--run_spec", "probes.dan, -probes.dan.DanInTheWild", "--list_config"]
+        ["--spec", "probes.dan, -probes.dan.DanInTheWild", "--list_config"]
     )
     assert _config.run.spec == {
         "include": ["probes.dan"],
         "exclude": ["probes.dan.DanInTheWild"],
-    }, "--run_spec must populate _config.run.spec"
+    }, "--spec must populate _config.run.spec"
 
 
 def test_legacy_probes_flag_maps_to_run_spec(capsys):
@@ -285,12 +285,12 @@ def test_legacy_probe_tags_and_buffs_map_to_run_spec():
 
 def test_run_spec_wins_over_legacy_flags():
     garak.cli.main(
-        ["--run_spec", "probes.encoding", "--probes", "dan", "--list_config"]
+        ["--spec", "probes.encoding", "--probes", "dan", "--list_config"]
     )
     assert _config.run.spec == {
         "include": ["probes.encoding"],
         "exclude": [],
-    }, "--run_spec must win over deprecated selection flags"
+    }, "--spec must win over deprecated selection flags"
 
 
 def test_legacy_probes_none_selects_no_probes():
@@ -357,7 +357,7 @@ def test_bundled_config_run_spec_resolves_without_unknowns(cfg_path):
 def test_invalid_run_spec_exits_cleanly():
     # malformed selector should print a friendly error and exit, not traceback
     with pytest.raises(SystemExit):
-        garak.cli.main(["--run_spec", "detectors.foo", "--list_config"])
+        garak.cli.main(["--spec", "detectors.foo", "--list_config"])
 
 
 # test a short-form CLI assertion

@@ -158,27 +158,26 @@ def main(arguments=None) -> None:
     )
     # unified selection spec (replaces --probes/--probe_tags/--buffs)
     parser.add_argument(
-        "--run_spec",
-        dest="run_spec",
+        "--spec",
         type=str,
         default=_config.run.spec,
         help="unified selection spec, e.g. 'probes.dan, -dan.DanInTheWild, tag:owasp:llm01'. "
         "Selectors: probes.<module>[.<Class>], buffs.<module>[.<Class>], tag:<prefix>, "
         "tier:<N|name>; '-' excludes, tier:N is inclusive (tiers 1..N).",
     )
-    # probes (DEPRECATED: use --run_spec)
+    # probes (DEPRECATED: use --spec)
     parser.add_argument(
         "--probes",
         "-p",
         type=str,
         default=argparse.SUPPRESS,
-        help="DEPRECATED, use --run_spec. list of probe names to use, or 'all'.",
+        help="DEPRECATED, use --spec. list of probe names to use, or 'all'.",
     )
     parser.add_argument(
         "--probe_tags",
         default=argparse.SUPPRESS,
         type=str,
-        help="DEPRECATED, use --run_spec 'tag:<value>'. only include probes with a tag starting with this value (e.g. owasp:llm01)",
+        help="DEPRECATED, use --spec 'tag:<value>'. only include probes with a tag starting with this value (e.g. owasp:llm01)",
     )
     # detectors
     parser.add_argument(
@@ -193,13 +192,13 @@ def main(arguments=None) -> None:
         action="store_true",
         help="If detectors aren't specified on the command line, should we run all detectors? (default is just the primary detector, if given, else everything)",
     )
-    # buffs (DEPRECATED: use --run_spec)
+    # buffs (DEPRECATED: use --spec)
     parser.add_argument(
         "--buffs",
         "-b",
         type=str,
         default=argparse.SUPPRESS,
-        help="DEPRECATED, use --run_spec 'buffs.<name>'. list of buffs to use. Default is none",
+        help="DEPRECATED, use --spec 'buffs.<name>'. list of buffs to use. Default is none",
     )
     # file or json based config options
     plugin_types = sorted(
@@ -272,7 +271,7 @@ def main(arguments=None) -> None:
         "--list_probes",
         action="store_true",
         help="list available probes. Use -v for a detailed markdown table with tier and description. "
-        "Combine with --run_spec to filter, e.g. '--list_probes --run_spec probes.dan'.",
+        "Combine with --spec to filter, e.g. '--list_probes --spec probes.dan'.",
     )
     parser.add_argument(
         "--list_detectors",
@@ -415,7 +414,7 @@ def main(arguments=None) -> None:
     if "detectors" in args:
         _config.plugins.detector_spec = args.detectors
 
-    # unified run.spec: --run_spec wins; deprecated --probes/--probe_tags/--buffs map onto it
+    # unified run.spec: --spec wins; deprecated --probes/--probe_tags/--buffs map onto it
     from garak._spec import parse_spec_string, _legacy_path_selectors
 
     _legacy_selection_flags = [
@@ -423,16 +422,16 @@ def main(arguments=None) -> None:
     ]
     for legacy_flag in _legacy_selection_flags:
         command.deprecation_notice(f"--{legacy_flag} on CLI", "0.15.1.pre1")
-    if "run_spec" in args and args.run_spec is not None:
+    if "spec" in args and args.spec is not None:
         try:
-            _config.run.spec = parse_spec_string(args.run_spec).to_file_dict()
+            _config.run.spec = parse_spec_string(args.spec).to_file_dict()
         except ValueError as e:
             logging.error(e)
-            print(f"❌ invalid --run_spec: {e}")
+            print(f"❌ invalid --spec: {e}")
             exit(1)
         if _legacy_selection_flags:
             logging.info(
-                "both --run_spec and deprecated selection flags given; --run_spec wins"
+                "both --spec and deprecated selection flags given; --spec wins"
             )
     elif _legacy_selection_flags:
         include = [

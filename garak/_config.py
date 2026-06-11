@@ -468,24 +468,21 @@ def parse_plugin_spec(
 ) -> tuple[List[str], List[str]]:
     """Resolve a legacy (unprefixed) plugin spec to names + unknown clauses.
 
-    Thin adapter over the unified resolution core in ``garak._spec``; the same
-    ``_resolve_plugin_paths`` core backs ``run.spec``. Kept for detector
+    Thin adapter over the unified resolution core in ``garak._selection``; the
+    same ``_resolve_plugin_paths`` core backs ``run.spec``. Kept for detector
     resolution (``plugins.detector_spec``), which still uses the legacy spec
     string until detectors are folded into ``run.spec``. Returns
     ``(sorted names, unknown clauses)`` where unknown clauses preserve the bare
     (unprefixed) form for backward compatibility.
     """
-    from garak._spec import (
-        _legacy_path_selectors,
-        _resolve_plugin_paths,
-        _has_any_tag,
-    )
+    from garak._spec import _legacy_path_selectors
+    from garak import _selection
 
-    names, rejected, _ = _resolve_plugin_paths(
+    names, rejected, _ = _selection._resolve_plugin_paths(
         _legacy_path_selectors(spec, category), category
     )
     if probe_tag_filter is not None and len(probe_tag_filter) > 1:
-        names = {n for n in names if _has_any_tag(n, [probe_tag_filter])}
+        names = {n for n in names if _selection._has_any_tag(n, [probe_tag_filter])}
     prefix = f"{category}."
     unknown = [r[len(prefix):] if r.startswith(prefix) else r for r in rejected]
     return sorted(names), unknown

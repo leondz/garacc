@@ -6,6 +6,7 @@
 import pytest
 
 from garak._plugins import enumerate_plugins, plugin_info
+from garak._selection import resolve_spec
 from garak._spec import parse_spec_string, parse_spec_file
 
 
@@ -18,7 +19,7 @@ def _tier(name):
 
 
 def resolve(spec_str, **kwargs):
-    return parse_spec_string(spec_str).resolve(**kwargs)
+    return resolve_spec(parse_spec_string(spec_str), **kwargs)
 
 
 # --- T1: polarity ---------------------------------------------------------
@@ -163,7 +164,7 @@ def test_none_round_trips_through_file_form():
         "probes.none"
     ], "none must serialise to the 'probes.none' token"
     assert (
-        round_trip.resolve().probes == []
+        resolve_spec(round_trip).probes == []
     ), "none must still resolve to no probes after a file round-trip"
 
 
@@ -279,7 +280,7 @@ def test_tag_tier_do_not_touch_buffs():
 def test_cli_file_semantic_parity(spec_str):
     from_cli = parse_spec_string(spec_str)
     round_trip = parse_spec_file(from_cli.to_file_dict())
-    cli_res, rt_res = from_cli.resolve(), round_trip.resolve()
+    cli_res, rt_res = resolve_spec(from_cli), resolve_spec(round_trip)
     assert cli_res.probes == rt_res.probes, f"probe set differs for {spec_str!r}"
     assert cli_res.buffs == rt_res.buffs, f"buff set differs for {spec_str!r}"
 

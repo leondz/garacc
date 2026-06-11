@@ -550,12 +550,13 @@ def main(arguments=None) -> None:
 
         elif args.list_probes:
             from garak._spec import parse_spec_file
+            from garak import _selection
 
             selected_probes = None
             if _config.run.spec:
-                selected_probes = (
-                    parse_spec_file(_config.run.spec).resolve(skip_unknown=True).probes
-                )
+                selected_probes = _selection.resolve_spec(
+                    parse_spec_file(_config.run.spec), skip_unknown=True
+                ).probes
             command.print_probes(selected_probes, verbose=_config.system.verbose)
 
         elif args.list_detectors:
@@ -569,12 +570,13 @@ def main(arguments=None) -> None:
 
         elif args.list_buffs:
             from garak._spec import parse_spec_file
+            from garak import _selection
 
             selected_buffs = None
             if _config.run.spec:
-                selected_buffs = (
-                    parse_spec_file(_config.run.spec).resolve(skip_unknown=True).buffs
-                )
+                selected_buffs = _selection.resolve_spec(
+                    parse_spec_file(_config.run.spec), skip_unknown=True
+                ).buffs
             command.print_buffs(selected_buffs)
 
         elif args.list_generators:
@@ -675,6 +677,7 @@ def main(arguments=None) -> None:
                 raise ValueError(message)
 
             from garak._spec import parse_spec_file
+            from garak import _selection
 
             def _check_rejected(rejected, namespace):
                 if not rejected:
@@ -691,7 +694,9 @@ def main(arguments=None) -> None:
                     raise ValueError(f"❌Unknown {namespace}❌: {','.join(rejected)}")
 
             # probes + buffs come from the unified run.spec (default: probes.*)
-            resolved = parse_spec_file(_config.run.spec).resolve(skip_unknown=True)
+            resolved = _selection.resolve_spec(
+                parse_spec_file(_config.run.spec), skip_unknown=True
+            )
             _check_rejected(resolved.rejected, "run.spec")
             # --skip_unknown tolerates an empty selection (e.g. every include was an
             # unknown selector that was skipped); only guard when not skipping.

@@ -295,6 +295,7 @@ def test_run_spec_wins_over_legacy_flags():
 
 def test_legacy_probes_none_selects_no_probes():
     from garak._spec import parse_spec_file
+    from garak._selection import resolve_spec
 
     garak.cli.main(["--probes", "none", "--list_config"])
     assert _config.run.spec == {
@@ -302,12 +303,13 @@ def test_legacy_probes_none_selects_no_probes():
         "exclude": [],
     }, "deprecated --probes none must map to an explicit empty selection"
     assert (
-        parse_spec_file(_config.run.spec).resolve(skip_unknown=True).probes == []
+        resolve_spec(parse_spec_file(_config.run.spec), skip_unknown=True).probes == []
     ), "--probes none must resolve to no probes, not the default-all universe"
 
 
 def test_legacy_config_probe_spec_none_selects_no_probes(tmp_path):
     from garak._spec import parse_spec_file
+    from garak._selection import resolve_spec
 
     cfg = tmp_path / "none_spec.yaml"
     cfg.write_text("---\nplugins:\n  probe_spec: none\n", encoding="utf-8")
@@ -317,13 +319,14 @@ def test_legacy_config_probe_spec_none_selects_no_probes(tmp_path):
         "exclude": [],
     }, "config probe_spec none must map to an explicit empty selection (parity with CLI)"
     assert (
-        parse_spec_file(_config.run.spec).resolve(skip_unknown=True).probes == []
+        resolve_spec(parse_spec_file(_config.run.spec), skip_unknown=True).probes == []
     ), "config probe_spec none must resolve to no probes, not the default-all universe"
 
 
 @pytest.mark.parametrize("vacuous", ["auto", ""])
 def test_legacy_config_probe_spec_vacuous_defaults_to_all(tmp_path, vacuous):
     from garak._spec import parse_spec_file
+    from garak._selection import resolve_spec
 
     cfg = tmp_path / "vacuous_spec.yaml"
     cfg.write_text(f"---\nplugins:\n  probe_spec: {vacuous!r}\n", encoding="utf-8")
@@ -331,7 +334,7 @@ def test_legacy_config_probe_spec_vacuous_defaults_to_all(tmp_path, vacuous):
     assert (
         _config.run.spec is None
     ), f"vacuous probe_spec {vacuous!r} must be treated as unspecified (no run.spec)"
-    resolved = parse_spec_file(_config.run.spec).resolve(skip_unknown=True)
+    resolved = resolve_spec(parse_spec_file(_config.run.spec), skip_unknown=True)
     assert (
         resolved.probes
     ), f"unspecified probe_spec {vacuous!r} must default to all active probes"
@@ -346,10 +349,11 @@ def test_bundled_config_run_spec_resolves_without_unknowns(cfg_path):
     from pathlib import Path
     import yaml as _yaml
     from garak._spec import parse_spec_file
+    from garak._selection import resolve_spec
 
     text = Path(cfg_path).read_text(encoding="utf-8")
     data = _json.loads(text) if cfg_path.endswith(".json") else _yaml.safe_load(text)
-    res = parse_spec_file(data["run"]["spec"]).resolve(skip_unknown=True)
+    res = resolve_spec(parse_spec_file(data["run"]["spec"]), skip_unknown=True)
     assert res.rejected == [], f"{cfg_path} has unknown selectors: {res.rejected}"
     assert res.probes, f"{cfg_path} resolved to no probes"
 

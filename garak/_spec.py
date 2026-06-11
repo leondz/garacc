@@ -19,7 +19,7 @@ adapter shares the same resolution core.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 # Plugin categories selectable via run.spec. Detectors are not selectable here
 # yet; they keep their own legacy spec surface (parse_plugin_spec).
@@ -68,14 +68,26 @@ class Spec:
 
 @dataclass
 class Resolution:
-    """Resolved selection. ``probes``/``buffs`` are canonical
-    ``category.module.Class`` names; ``rejected`` lists unknown selectors;
-    ``empty_reason`` is set when the spec resolves to no probes."""
+    """Resolved selection.
 
-    probes: List[str]
-    buffs: List[str]
+    ``selected`` maps each plugin category to its canonical
+    ``category.module.Class`` names (e.g. ``{"probes": [...], "buffs": [...]}``);
+    a further category can be added without changing this type. ``rejected``
+    lists unknown selectors; ``empty_reason`` is set when the spec resolves to
+    no probes. ``probes`` and ``buffs`` are convenience accessors over
+    ``selected``."""
+
+    selected: Dict[str, List[str]]
     rejected: List[str]
     empty_reason: Optional[str] = None
+
+    @property
+    def probes(self) -> List[str]:
+        return self.selected.get("probes", [])
+
+    @property
+    def buffs(self) -> List[str]:
+        return self.selected.get("buffs", [])
 
 
 def parse_spec_string(spec: str) -> Spec:

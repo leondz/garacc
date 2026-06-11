@@ -187,4 +187,8 @@ def resolve_spec(spec: _spec.Spec, skip_unknown: bool = False) -> _spec.Resoluti
         )
     else:
         empty_reason = _empty_reason(spec)
-    return _spec.Resolution(sorted(candidate), sorted(buffs), rejected, empty_reason)
+    return _spec.Resolution(
+        selected={"probes": sorted(candidate), "buffs": sorted(buffs)},
+        rejected=rejected,
+        empty_reason=empty_reason,
+    )

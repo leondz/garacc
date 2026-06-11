@@ -169,11 +169,15 @@ has two transports that parse to the same internal spec: a CLI string
 
 Selectors (a category prefix is mandatory):
 
-* ``probes.*`` - all active probes (the default when no ``run.spec`` is given)
+* ``probes.*`` (or ``probes.all``) - all active probes (the default when no
+  ``run.spec`` is given). ``all`` and ``*`` are interchangeable aliases; ``all``
+  is handy on the CLI since it needs no shell quoting. A bare ``all`` (or ``*``)
+  behaves as ``probes.*``. Both serialise to the canonical ``*`` token
 * ``probes.<module>`` - an active family; ``probes.<module>.<Class>`` - one class
 * ``none`` (or ``probes.none``) - selects no probes; an explicit empty selection,
   distinct from an unspecified spec (which defaults to ``probes.*``)
-* ``buffs.<module>[.<Class>]`` - selects buffs (no buffs are run by default)
+* ``buffs.<module>[.<Class>]`` - selects buffs (no buffs are run by default);
+  ``buffs.*`` / ``buffs.all`` select all active buffs (the ``all`` alias is generic)
 * ``tag:<prefix>`` - filters probes by tag (e.g. ``tag:owasp:llm01``)
 * ``tier:<N|name>`` - filters probes by tier; **inclusive** ("log level"): ``tier:N``
   admits tiers ``1..N`` (``tier:1`` is the most critical). Names work too
@@ -196,6 +200,8 @@ explicitly-named classes, so e.g. ``probes.foo.Bar, tier:1`` yields nothing when
     garak --spec "probes.grandma, tag:owasp:llm06"
     # all active buffs except one, over all active probes
     garak --spec "probes.*, buffs.*, -buffs.paraphrase"
+    # all active probes plus a specific inactive class (all is shell-safe)
+    garak --spec "probes.all, probes.fitd.FITD"
     # tiers {1,3}: tier:3 admits 1..3, then -tier:2 removes exactly tier 2
     garak --spec "+probes.*, +tier:3, -tier:2"
 

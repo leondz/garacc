@@ -14,6 +14,13 @@ def _active(category):
     return {name for name, active in enumerate_plugins(category=category) if active}
 
 
+def _one_inactive(category):
+    for name, active in enumerate_plugins(category=category):
+        if not active:
+            return name
+    return None
+
+
 def _tier(name):
     return int(plugin_info(name).get("tier", 9))
 
@@ -55,6 +62,79 @@ def test_plugin_path_family_and_class():
     ), "family selector must only yield dan.* probes"
     one = resolve("probes.dan.DanInTheWild").probes
     assert one == ["probes.dan.DanInTheWild"], "explicit class must resolve to itself"
+
+
+# --- T2b: 'all' is an alias of '*' ----------------------------------------
+
+
+def test_all_alias_equals_star_probes():
+    assert (
+        set(resolve("probes.all").probes)
+        == set(resolve("probes.*").probes)
+        == _active("probes")
+    ), "probes.all must equal probes.* (all active probes)"
+
+
+def test_all_alias_equals_star_buffs():
+    assert (
+        set(resolve("buffs.all").buffs)
+        == set(resolve("buffs.*").buffs)
+        == _active("buffs")
+    ), "buffs.all must equal buffs.* (alias is generic across categories)"
+
+
+def test_bare_all_and_star_are_probes_star():
+    star = set(resolve("probes.*").probes)
+    assert set(resolve("all").probes) == star, "bare 'all' must behave as probes.*"
+    assert set(resolve("*").probes) == star, "bare '*' must behave as probes.*"
+
+
+def test_all_serialises_to_canonical_star():
+    assert parse_spec_string("probes.all").to_file_dict()["include"] == [
+        "probes.*"
+    ], "all must normalise to the canonical '*' token on serialisation"
+
+
+def test_all_plus_explicit_inactive_class():
+    inactive = _one_inactive("probes")
+    assert inactive, "fixture expects at least one inactive probe to exist"
+    res = set(resolve(f"probes.all, {inactive}").probes)
+    assert _active("probes") <= res, "probes.all must keep every active probe"
+    assert inactive in res, "explicit inactive class must be added alongside all-active"
+
+
+def test_negative_all_removes_all_probes():
+    assert resolve("-probes.all").probes == [], "-probes.all must remove every probe"
+    assert (
+        resolve("-probes.all").probes == resolve("-probes.*").probes
+    ), "-probes.all must behave exactly like -probes.*"
+
+
+def test_negative_buffs_all_equals_star():
+    minus_all = resolve("probes.lmrc.Bullying, buffs.all, -buffs.all")
+    minus_star = resolve("probes.lmrc.Bullying, buffs.*, -buffs.*")
+    assert minus_all.buffs == [] == minus_star.buffs, "-buffs.all must clear all buffs like -buffs.*"
+
+
+def test_all_as_class_segment_is_literal_not_glob():
+    res = resolve("probes.all.Something", skip_unknown=True)
+    assert res.probes == [], "probes.all.Something is a literal unknown class, not a glob"
+    assert (
+        "probes.all.Something" in res.rejected
+    ), "an unknown literal class must be rejected, not silently globbed"
+
+
+def test_all_via_file_transport():
+    spec = parse_spec_file(
+        {"include": ["probes.all", "buffs.all"], "exclude": ["probes.dan.DanInTheWild"]}
+    )
+    res = resolve_spec(spec)
+    assert set(res.probes) == _active("probes") - {
+        "probes.dan.DanInTheWild"
+    }, "file-form 'probes.all' must select all active probes (minus the excluded class)"
+    assert set(res.buffs) == _active(
+        "buffs"
+    ), "file-form 'buffs.all' must select all active buffs"
 
 
 # --- T3: buffs ------------------------------------------------------------
@@ -271,6 +351,8 @@ def test_tag_tier_do_not_touch_buffs():
     "spec_str",
     [
         "probes.*",
+        "probes.all",
+        "probes.all, -probes.dan.DanInTheWild, buffs.all",
         "probes.dan, -probes.dan.DanInTheWild, buffs.encoding.Base64",
         "tier:2, tag:owasp:llm01",
         "buffs.lowercase",

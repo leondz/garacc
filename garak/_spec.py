@@ -129,6 +129,10 @@ def _classify(token: str, include: bool) -> Selector:
     # selects nothing for that category, distinct from an unspecified spec.
     if token.lower() == "none":
         return Selector("none", "probes.none", include, "probes")
+    # bare ``all``/``*`` selects all active probes, mirroring the legacy spec
+    # where the two were identical; normalised to the canonical ``probes.*``.
+    if token.lower() in ("all", "*"):
+        return Selector("plugin_path", "probes.*", include, "probes")
     category = token.split(".", 1)[0]
     if category not in _CATEGORIES:
         raise ValueError(
@@ -137,6 +141,10 @@ def _classify(token: str, include: bool) -> Selector:
         )
     if token.lower() == f"{category}.none":
         return Selector("none", f"{category}.none", include, category)
+    # ``<category>.all`` is an alias of the ``<category>.*`` glob (generic
+    # across categories), normalised so serialisation keeps a single token.
+    if token.lower() == f"{category}.all":
+        return Selector("plugin_path", f"{category}.*", include, category)
     return Selector("plugin_path", token, include, category)
 
 

@@ -69,7 +69,7 @@ class Spec:
             "exclude": [_token(s) for s in self.exclude],
         }
 
-    def resolve(self, skip_unknown: bool = False) -> "Resolution":
+    def resolve(self, skip_unknown: bool = False) -> Resolution:
         """Resolve the spec to concrete probe and buff name lists."""
         return _resolve_spec(self, skip_unknown)
 
@@ -255,7 +255,7 @@ def _tier_of(name: str) -> int:
     return int(plugin_info(name).get("tier", _DEFAULT_TIER))
 
 
-def _empty_reason(spec: "Spec") -> str:
+def _empty_reason(spec: Spec) -> str:
     """Best-effort explanation of why a spec resolved to no probes."""
     tier_ceilings = [int(s.value) for s in spec.include if s.kind == "tier"]
     explicit = [
@@ -277,7 +277,7 @@ def _empty_reason(spec: "Spec") -> str:
     return "every included probe was removed by an exclusion; adjust includes/excludes"
 
 
-def _resolve_spec(spec: "Spec", skip_unknown: bool) -> "Resolution":
+def _resolve_spec(spec: Spec, skip_unknown: bool) -> Resolution:
     from garak._plugins import enumerate_plugins
 
     rejected: List[str] = []

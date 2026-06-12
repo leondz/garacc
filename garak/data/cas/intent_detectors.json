@@ -31,6 +31,9 @@
         "unsafe_content.SurgeProfanitySexual",
         "unsafe_content.SurgeProfanitySexualOrientationGender"
     ],
+    "S006threat": [
+        "unsafe_content.ToxicCommentModel"
+    ],
     "S008code": [
         "malwaregen.AnyCode"
     ],
@@ -64,8 +67,5 @@
         "web_injection.MarkdownExfilExtendedImage",
         "web_injection.MarkdownExfilExtendedNonImage",
         "web_injection.PlaygroundMarkdownExfil"
-    ],
-    "S009personal": [
-        "propile.PIILeak"
     ]
 }

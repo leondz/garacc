@@ -56,7 +56,7 @@ class LocalDataPath(type(pathlib.Path())):
             else:
                 current_path = path / prefix_removed
                 projected = getattr(current_path, next_call)(segment)
-            if projected.exists() and projected.resolve().is_relative_to(path):
+            if projected.exists() and projected.resolve().is_relative_to(path.resolve()):
                 return LocalDataPath(projected.resolve())
 
         if projected in self.ORDERED_SEARCH_PATHS:
@@ -64,7 +64,7 @@ class LocalDataPath(type(pathlib.Path())):
 
         if not any(
             [
-                projected.resolve().is_relative_to(path)
+                projected.resolve().is_relative_to(path.resolve())
                 for path in self.ORDERED_SEARCH_PATHS
             ]
         ):

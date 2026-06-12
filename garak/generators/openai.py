@@ -127,6 +127,9 @@ context_lengths = {
     "o1-preview-2024-09-12": 32768,
 }
 
+audio_formats = ["wav", "mp3"]
+audio_pattern = re.compile("|".join(audio_formats))
+
 
 class OpenAICompatible(Generator):
     """Generator base class for OpenAI compatible text2text restful API. Implements shared initialization and execution methods."""
@@ -163,6 +166,9 @@ class OpenAICompatible(Generator):
             )
         self.generator = self.client.chat.completions
 
+    def _generator_is_valid(self) -> bool:
+        return self.generator in (self.client.chat.completions, self.client.completions)
+
     def _validate_config(self):
         pass
 
@@ -174,10 +180,7 @@ class OpenAICompatible(Generator):
 
         self._load_unsafe()
 
-        if self.generator not in (
-            self.client.chat.completions,
-            self.client.completions,
-        ):
+        if not self._generator_is_valid():
             raise ValueError(
                 "Unsupported model at generation time in generators/openai.py; expected chat or completion, got neither"
             )
@@ -185,6 +188,61 @@ class OpenAICompatible(Generator):
         self._validate_config()
 
         super().__init__(self.name, config_root=config_root)
+
+    @staticmethod
+    def _conversation_to_list(conversation: Conversation) -> list[dict]:
+        """Convert Conversation object to a list of dicts.
+
+        Overriding this method for OpenAICompatible to support multimodal:
+        https://developers.openai.com/api/docs/guides/images-vision/?format=base64-encoded#analyze-images
+        """
+
+        turn_list = []
+        for turn in conversation.turns:
+            if turn.content.data is not None and hasattr(turn.content, "data_type"):
+                import base64
+
+                data_b64 = base64.b64encode(turn.content.data).decode("utf-8")
+
+                if "image" in turn.content.data_type:
+                    transformed_turn = {
+                        "role": turn.role,
+                        "content": [
+                            {"type": "input_text", "text": turn.content.text},
+                            {
+                                "type": "input_image",
+                                "image_url": f"data:{turn.content.data_type[0]};base64{data_b64}",
+                            },
+                        ],
+                    }
+                elif match := audio_pattern.search(
+                    turn.content.data_type[0].split("/")[-1]
+                ):
+                    transformed_turn = {
+                        "role": turn.role,
+                        "content": [
+                            {"type": "text", "text": turn.content.text},
+                            {
+                                "type": "input_audio",
+                                "input_audio": {
+                                    "data": f"{data_b64}",
+                                    "format": match.group(0),
+                                },
+                            },
+                        ],
+                    }
+                else:
+                    raise garak.exception.GarakException(
+                        f"Data type {turn.content.data_type[0]} not supported."
+                    )
+            else:
+                transformed_turn = {
+                    "role": turn.role,
+                    "content": turn.content.text,
+                }
+            turn_list.append(transformed_turn)
+
+        return turn_list
 
     # noinspection PyArgumentList
     @backoff.on_exception(
@@ -279,6 +337,12 @@ class OpenAICompatible(Generator):
                 raise garak.exception.GeneratorBackoffTrigger(msg)
             else:
                 return [None]
+        if response.choices is None:
+            logging.debug(
+                "Did not get a well-formed response, Expected object with populated .choices member, got: '%s'"
+                % repr(response)
+            )
+            return [None]
 
         if is_completion:
             reponse_message_list = [Message(c.text) for c in response.choices]
@@ -365,6 +429,135 @@ class OpenAIReasoningGenerator(OpenAIGenerator):
         "retry_json": True,
         "max_completion_tokens": 1500,
     }
+
+
+class OpenAIResponsesGenerator(OpenAICompatible):
+    """Generator using the OpenAI Responses API with server-side tool orchestration.
+
+    Supports MCP servers and function tools via the ``tools`` parameter.
+    Unlike the chat-completions generators, the Responses API runs the full
+    agentic loop (tool calls → execution → follow-up) on the server side,
+    returning only the final text to garak.
+    """
+
+    ENV_VAR = "OPENAI_API_KEY"
+    active = True
+    generator_family_name = "OpenAIResponses"
+    supports_multiple_generations = False
+
+    DEFAULT_PARAMS = OpenAICompatible.DEFAULT_PARAMS | {
+        "uri": None,
+        "instructions": None,
+        "tools": [],
+        "suppressed_params": {"n", "temperature", "top_p", "frequency_penalty", "presence_penalty", "seed", "stop"},
+    }
+
+    def _generator_is_valid(self) -> bool:
+        return self.generator == self.client.responses
+
+    def _load_unsafe(self):
+        kwargs = {"api_key": getattr(self, "api_key", None)}
+        if getattr(self, "uri", None):
+            kwargs["base_url"] = self.uri
+        self.client = openai.OpenAI(**kwargs)
+        self.generator = self.client.responses
+
+    @staticmethod
+    def _build_input(prompt: Conversation):
+        """Convert a Conversation to the Responses API input format.
+
+        System turns are excluded — callers should promote them to ``instructions``
+        via :meth:`_extract_system_prompt` before calling this method.
+        """
+        turns = OpenAICompatible._conversation_to_list(prompt)
+        non_system = [t for t in turns if t.get("role") != "system"]
+        if len(non_system) == 1 and isinstance(non_system[0].get("content"), str):
+            return non_system[0]["content"]
+        return non_system
+
+    @staticmethod
+    def _extract_system_prompt(prompt: Conversation) -> Union[str, None]:
+        """Return system turn text from a Conversation as a single string, or None."""
+        system_texts = [t.content.text for t in prompt.turns if t.role == "system"]
+        return "\n".join(system_texts) if system_texts else None
+
+    @backoff.on_exception(
+        backoff.fibo,
+        (
+            openai.RateLimitError,
+            openai.InternalServerError,
+            openai.APITimeoutError,
+            openai.APIConnectionError,
+            garak.exception.GeneratorBackoffTrigger,
+        ),
+        max_value=70,
+    )
+    def _call_model(
+        self, prompt: Union[Conversation, List[dict]], generations_this_call: int = 1
+    ) -> List[Union[Message, None]]:
+        if self.client is None:
+            self._load_unsafe()
+
+        instructions = self.instructions or self._extract_system_prompt(prompt)
+        create_args = {
+            "model": self.name,
+            "input": self._build_input(prompt),
+            "max_output_tokens": self.max_tokens,
+        }
+        if instructions:
+            create_args["instructions"] = instructions
+        if self.tools:
+            create_args["tools"] = self.tools
+        for k, v in self.extra_params.items():
+            create_args[k] = v
+
+        try:
+            response = self.client.responses.create(**create_args)
+        except openai.BadRequestError as e:
+            logging.exception(e)
+            logging.error("Bad request: %s", repr(prompt))
+            return [None]
+        except json.decoder.JSONDecodeError as e:
+            logging.exception(e)
+            raise garak.exception.GeneratorBackoffTrigger from e
+
+        text_parts = []
+        reasoning_parts = []
+        tool_calls = []
+
+        _TOOL_CALL_ATTRS = (
+            "call_id", "name", "arguments", "input", "output",
+            "error", "status", "server_label",
+        )
+        for item in response.output:
+            item_type = getattr(item, "type", None)
+            if item_type is not None and item_type.endswith("_call"):
+                entry = {"type": item_type, "id": getattr(item, "id", None)}
+                for attr in _TOOL_CALL_ATTRS:
+                    val = getattr(item, attr, None)
+                    if val is not None:
+                        entry[attr] = val
+                tool_calls.append(entry)
+                continue
+            if item_type == "message":
+                for part in item.content:
+                    if getattr(part, "type", None) == "output_text":
+                        text_parts.append(part.text)
+            elif item_type == "reasoning":
+                for summary in getattr(item, "summary", []):
+                    if getattr(summary, "type", None) == "summary_text":
+                        reasoning_parts.append(summary.text)
+
+        text = "\n".join(text_parts) if text_parts else None
+        notes = {}
+        if tool_calls:
+            notes["tool_calls"] = tool_calls
+        if reasoning_parts:
+            notes["reasoning"] = "\n".join(reasoning_parts)
+
+        if text is not None or notes:
+            return [Message(text, notes=notes)]
+        return [None]
 
 
 DEFAULT_CLASS = "OpenAIGenerator"

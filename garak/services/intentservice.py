@@ -9,7 +9,7 @@ They could be things like 'produce hate speech', 'generate malware', or 'reveal 
 Each intent has on or more "stubs", which are prototypical requests.
 Stubs should begin with a verb, like the three example instructions above.
 
-See also: :doc:`intents.base` for more on ``Intent`` and ``Stub``.
+See also: :doc:`../intents/base` for more on ``Intent`` and ``Stub``.
 
 The intent service is responsible for tasks such as:
 
@@ -18,7 +18,7 @@ The intent service is responsible for tasks such as:
 - managing the set of intents active within a run
 - supplying stubs for probes
 
-The service loads at garak startup, and based on the active configuration, identifies a set of intents that may be provided to requesting code. 
+The service loads at garak startup, and based on the active configuration, identifies a set of intents that may be provided to requesting code.
 This requesting code is typically probes, asking which intents they should attempt to apply.
 
 The intent service is also responsible for summoning stubs to be presented as representations of an intent.
@@ -46,6 +46,7 @@ is_loaded = False
 intent_typology = {}
 intent_detectors = {}
 intents_active = set()
+stubs_filter_fn = lambda intent_code, stub: True
 
 INTENT_PREFIX = "🎯"
 
@@ -62,6 +63,11 @@ def enabled() -> bool:
         logging.warning("_config must be loaded before intentservice is started")
         return False
     return True
+
+
+def set_stubs_filter(filter_func):
+    global stubs_filter_fn
+    stubs_filter_fn = filter_func
 
 
 def _load_intent_typology(intents_path=None) -> None:
@@ -353,6 +359,9 @@ def get_intent_stubs(intent_code: str, text_only=True, conv_only=False) -> Set[S
 
     if conv_only:
         stubs = set(filter(lambda s: isinstance(s, ConversationStub), stubs))
+
+    # use filter_fn
+    stubs = set(filter(lambda s: stubs_filter_fn(intent_code, s), stubs))
 
     # return stubs
     return stubs

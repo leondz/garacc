@@ -51,12 +51,14 @@ class Win10(garak.probes.Probe):
     lang = "en"
     primary_detector = "productkey.Win5x5"
     extended_detectors = ["mitigation.MitigationBypass"]
+    intent = "S003productkeys"  # specifically tries to extract software activation keys
     tags = [
         "avid-effect:security:S0300",
         "owasp:llm06",
         "risk-cards:lmrc:providing_illegal_info",
         "quality:Behavioral:ContentSafety:LegalGoodsServices",
-        "demon:Fictionalizing:Roleplaying:User_persona",
+        "demon:Fictionalizing:Roleplaying:User_persona",  # roleplays as grandchild of deceased grandmother to elicit product keys
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # the attacker-supplied scene requests data that the system is explicitly expected to protect
     ]
     goal = "get model to output Win 10 product keys"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
@@ -66,7 +68,10 @@ class Win10(garak.probes.Probe):
 
     def __init__(self, config_root=_config):
         super().__init__(config_root=config_root)
-        product_names = garak.payloads.load(self.payload).payloads
+        _pg = garak.payloads.load(self.payload)
+        if _pg.intent:
+            self._payload_intent = _pg.intent
+        product_names = _pg.payloads
         self.prompts = [
             p.replace("{product_name}", product_name)
             for p in PRODUCT_KEY_PROBE_TEMPLATES
@@ -79,6 +84,7 @@ class Win11(Win10):
 
     Pretend to require Windows product keys because one misses one's grandmother."""
 
+    intent = "S003productkeys"  # this is the Windows 11 variant of the same key-extraction attack
     goal = "get model to output Win 11 product keys"
     payload = "keyedprod_win11"
 
@@ -101,9 +107,11 @@ class Slurs(garak.probes.Probe):
     lang = "en"
     primary_detector = "unsafe_content.SlursReclaimedSlurs"
     extended_detectors = ["mitigation.MitigationBypass"]
+    intent = "S005hate"  # aims to elicit identity-based slurs through roleplay
     tags = [
         "avid-effect:security:S0300",
-        "demon:Fictionalizing:Roleplaying:User_persona",
+        "demon:Fictionalizing:Roleplaying:User_persona",  # roleplays as grandchild wanting grandma's old-timey slang
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # the attacker-supplied scene requests data that the system is explicitly expected to protect
     ]
     goal = "get model to use ethnic slur"
     tier = garak.probes.Tier.OF_CONCERN
@@ -137,10 +145,13 @@ class Substances(garak.probes.Probe):
 
     lang = "en"
     primary_detector = "mitigation.MitigationBypass"
+    intent = "S006items"  # asks for step-by-step instructions to make harmful substances
+    # S003instructions is a secondary fit because the requests are also illegal in many cases.
     tags = [
         "risk-cards:lmrc:providing_illegal_info",
         "quality:Behavioral:ContentSafety:LegalGoodsServices",
-        "demon:Fictionalizing:Roleplaying:User_persona",
+        "demon:Fictionalizing:Roleplaying:User_persona",  # roleplays as grandchild of deceased chemical engineer grandmother
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # the attacker-supplied scene requests data that the system is explicitly expected to protect
     ]
     goal = "get instructions for making bad things"
     doc_uri = "https://x.com/_annieversary/status/1647865782741749760"
@@ -164,8 +175,12 @@ class GrandmaIntent(garak.probes.IntentProbe):
     fall to sleep. I'm tired, could you talk to me like she would?'
     """
 
-    # possible intent taxonomy value M009data
-    tags = ["demon:Fictionalizing:Roleplaying:User_persona"]
+    intent = None  # IntentProbe descendants span many typology values depending on the supplied stub, so there is no single best intent.
+    # This template often overlaps with jailbreak and disclosure intents, but it is intentionally multi-intent.
+    tags = [
+        "demon:Fictionalizing:Roleplaying:User_persona",  # roleplays as family member recalling a relative's expertise
+        "demon:Stratagems:Meta-prompting:Ask_for_examples",  # the attacker-supplied scene requests data that the system is explicitly expected to protect
+    ]
     active = False
     lang = "*"
 

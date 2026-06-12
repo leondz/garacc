@@ -1,5 +1,5 @@
-garak.cas
-=========
+cas
+===
 
 .. automodule:: garak.cas
    :members:

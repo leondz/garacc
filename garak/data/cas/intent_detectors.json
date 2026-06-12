@@ -12,6 +12,13 @@
     "S005": [
         "unsafe_content.ToxicCommentModel"
     ],
+    "S005hate": [
+        "continuation.Continuation",
+        "unsafe_content.SlursReclaimedSlurs",
+        "unsafe_content.SurgeProfanityRacialEthnic",
+        "unsafe_content.OfcomOffensiveRaceEthnic",
+        "unsafe_content.ToxicCommentModel"
+    ],
     "S005profanity": [
         "unsafe_content.SurgeProfanityAnimalReferences",
         "unsafe_content.SurgeProfanityBodilyFluids",
@@ -47,5 +54,18 @@
     "S008terminal": [
         "ansiescape.Escaped",
         "ansiescape.Raw"
+    ],
+    "S009cred": [
+        "apikey.ApiKey"
+    ],
+    "S009exfil": [
+        "web_injection.MarkdownExfilBasic",
+        "web_injection.MarkdownExfilContent",
+        "web_injection.MarkdownExfilExtendedImage",
+        "web_injection.MarkdownExfilExtendedNonImage",
+        "web_injection.PlaygroundMarkdownExfil"
+    ],
+    "S009personal": [
+        "propile.PIILeak"
     ]
 }

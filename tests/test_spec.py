@@ -373,3 +373,33 @@ def test_file_mapping_form():
     )
     assert any(s.kind == "tag" and s.value == "owasp:llm01" for s in spec.include)
     assert any(s.kind == "tier" and s.value == "3" for s in spec.exclude)
+
+
+@pytest.mark.parametrize(
+    "probe_spec, buff_spec, probe_tags, expected",
+    [
+        (
+            "dan,lmrc",
+            "lowercase",
+            "owasp:llm01",
+            {
+                "include": [
+                    "probes.dan",
+                    "probes.lmrc",
+                    "buffs.lowercase",
+                    {"tag": "owasp:llm01"},
+                ],
+                "exclude": [],
+            },
+        ),
+        ("none", None, None, {"include": ["probes.none"], "exclude": []}),
+        (None, None, None, None),
+        ("", "auto", "", None),
+    ],
+)
+def test_legacy_selection_spec(probe_spec, buff_spec, probe_tags, expected):
+    from garak._spec import legacy_selection_spec
+
+    assert (
+        legacy_selection_spec(probe_spec, buff_spec, probe_tags) == expected
+    ), "legacy selection keys must map to the run.spec file form (or None when vacuous)"

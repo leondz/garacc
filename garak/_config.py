@@ -244,7 +244,7 @@ def _map_legacy_selection(config: dict) -> None:
     user set it explicitly; in that case it wins and the legacy keys are ignored.
     """
     import garak.command
-    from garak._spec import _legacy_path_selectors
+    from garak._spec import legacy_selection_spec
 
     plugins = config.setdefault("plugins", {})
     run = config.setdefault("run", {})
@@ -275,11 +275,9 @@ def _map_legacy_selection(config: dict) -> None:
         )
         return
 
-    include = [s.value for s in _legacy_path_selectors(probe_spec, "probes")]
-    include += [s.value for s in _legacy_path_selectors(buff_spec, "buffs")]
-    if probe_tags not in (None, ""):
-        include.append({"tag": probe_tags})
-    run["spec"] = {"include": include, "exclude": []}
+    spec = legacy_selection_spec(probe_spec, buff_spec, probe_tags)
+    if spec is not None:
+        run["spec"] = spec
 
 
 def _store_config(settings_files) -> None:

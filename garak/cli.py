@@ -415,7 +415,7 @@ def main(arguments=None) -> None:
         _config.plugins.detector_spec = args.detectors
 
     # unified run.spec: --spec wins; deprecated --probes/--probe_tags/--buffs map onto it
-    from garak._spec import parse_spec_string, _legacy_path_selectors
+    from garak._spec import parse_spec_string, legacy_selection_spec
 
     _legacy_selection_flags = [
         f for f in ("probes", "probe_tags", "buffs") if f in args
@@ -434,18 +434,13 @@ def main(arguments=None) -> None:
                 "both --spec and deprecated selection flags given; --spec wins"
             )
     elif _legacy_selection_flags:
-        include = [
-            s.value
-            for s in _legacy_path_selectors(getattr(args, "probes", None), "probes")
-        ]
-        include += [
-            s.value
-            for s in _legacy_path_selectors(getattr(args, "buffs", None), "buffs")
-        ]
-        probe_tags = getattr(args, "probe_tags", None)
-        if probe_tags not in (None, ""):
-            include.append({"tag": probe_tags})
-        _config.run.spec = {"include": include, "exclude": []}
+        spec = legacy_selection_spec(
+            getattr(args, "probes", None),
+            getattr(args, "buffs", None),
+            getattr(args, "probe_tags", None),
+        )
+        if spec is not None:
+            _config.run.spec = spec
 
     # base config complete
 

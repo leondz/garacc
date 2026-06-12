@@ -203,3 +203,28 @@ def _legacy_path_selectors(spec: Optional[str], category: str) -> List[Selector]
             continue
         selectors.append(Selector("plugin_path", f"{category}.{clause}", True, category))
     return selectors
+
+
+def legacy_selection_spec(
+    probe_spec: Optional[str],
+    buff_spec: Optional[str],
+    probe_tags: Optional[str],
+) -> Optional[dict]:
+    """Build the ``run.spec`` file-form dict from the deprecated selection keys.
+
+    Returns ``None`` when none of ``probe_spec``/``buff_spec``/``probe_tags``
+    carry a meaningful value (absent / empty / ``auto``). This is the single
+    mapping shared by the config-load shim
+    (:func:`garak._config._map_legacy_selection`), the CLI flag handling, and
+    the ``run.spec`` fixer migration."""
+
+    def _meaningful(value) -> bool:
+        return value is not None and str(value).strip().lower() not in ("", "auto")
+
+    if not any(_meaningful(v) for v in (probe_spec, buff_spec, probe_tags)):
+        return None
+    include = [s.value for s in _legacy_path_selectors(probe_spec, "probes")]
+    include += [s.value for s in _legacy_path_selectors(buff_spec, "buffs")]
+    if _meaningful(probe_tags):
+        include.append({"tag": probe_tags})
+    return {"include": include, "exclude": []}

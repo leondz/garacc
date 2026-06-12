@@ -27,7 +27,25 @@
     "S008code": [
         "malwaregen.AnyCode"
     ],
+    "S008inject": [
+        "web_injection.XSS",
+        "exploitation.JinjaTemplateInjectionDetector",
+        "exploitation.PythonCodeExecution",
+        "exploitation.SQLiSuccess",
+        "exploitation.SQLiEcho"
+    ],
     "S008mal": [
-        "malwaregen.AnyCode"
+        "malwaregen.AnyCode",
+        "knownbadsignatures.EICAR"
+    ],
+    "S008phish": [
+        "knownbadsignatures.GTphish"
+    ],
+    "S008spam": [
+        "knownbadsignatures.GTUBE"
+    ],
+    "S008terminal": [
+        "ansiescape.Escaped",
+        "ansiescape.Raw"
     ]
 }

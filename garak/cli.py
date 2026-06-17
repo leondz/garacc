@@ -684,25 +684,40 @@ def main(arguments=None) -> None:
             from garak._spec import parse_spec_file
             from garak import _selection
 
-            def _check_rejected(rejected, namespace):
-                if not rejected:
+            def _check_selection(rejected, namespace, inactive=()):
+                # rejected: selectors naming nothing recognised. inactive: bare
+                # modules that exist but whose plugins are all inactive (issue
+                # #830) - known-but-empty, not unknown. Both are skipped under
+                # --skip_unknown, otherwise reported together.
+                if not rejected and not inactive:
                     return
                 if hasattr(args, "skip_unknown"):  # attribute only set when True
-                    header = f"Unknown {namespace}:"
+                    header = f"Unusable {namespace}:"
                     skip_msg = Fore.LIGHTYELLOW_EX + "SKIP" + Style.RESET_ALL
+                    flagged = [*rejected, *inactive]
                     msg = f"{Fore.LIGHTYELLOW_EX}{header}\n" + "\n".join(
-                        [f"{skip_msg} {spec}" for spec in rejected]
+                        [f"{skip_msg} {spec}" for spec in flagged]
                     )
-                    logging.warning(f"{header} " + ",".join(rejected))
+                    logging.warning(f"{header} " + ",".join(flagged))
                     print(msg)
-                else:
-                    raise ValueError(f"❌Unknown {namespace}❌: {','.join(rejected)}")
+                    return
+                parts = []
+                if rejected:
+                    parts.append(f"❌Unknown {namespace}❌: {','.join(rejected)}")
+                if inactive:
+                    module_list = ",".join(inactive)
+                    parts.append(
+                        f"❌ all plugins in '{module_list}' are marked inactive; "
+                        f"select one or more by name "
+                        f"(e.g. {inactive[0]}.<ClassName>) to continue"
+                    )
+                raise ValueError("; ".join(parts))
 
             # probes + buffs come from the unified run.spec (default: probes.*)
             resolved = _selection.resolve_spec(
                 parse_spec_file(_config.run.spec), skip_unknown=True
             )
-            _check_rejected(resolved.rejected, "run.spec")
+            _check_selection(resolved.rejected, "run.spec", resolved.inactive)
             # --skip_unknown tolerates an empty selection (e.g. every include was an
             # unknown selector that was skipped); only guard when not skipping.
             if (
@@ -718,7 +733,7 @@ def main(arguments=None) -> None:
             detector_names, detector_rejected = _config.parse_plugin_spec(
                 _config.plugins.detector_spec, "detectors"
             )
-            _check_rejected(detector_rejected, "detectors")
+            _check_selection(detector_rejected, "detectors")
 
             parsed_specs = {
                 "probe": resolved.probes,

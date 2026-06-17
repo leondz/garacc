@@ -118,10 +118,9 @@ def resolve_spec(spec: _spec.Spec, skip_unknown: bool = False) -> _spec.Resoluti
         s.kind == "none" and s.category == "probes" for s in spec.include
     )
     if probe_includes:
-        candidate, rej, inactive_modules = _resolve_plugin_paths(
-            probe_includes, "probes"
-        )
+        candidate, rej, inact = _resolve_plugin_paths(probe_includes, "probes")
         rejected += rej
+        inactive_modules += inact
     elif probe_none:
         candidate = set()
     else:
@@ -145,8 +144,9 @@ def resolve_spec(spec: _spec.Spec, skip_unknown: bool = False) -> _spec.Resoluti
         s for s in spec.include if s.kind == "plugin_path" and s.category == "buffs"
     ]
     if buff_includes:
-        buffs, rej, _ = _resolve_plugin_paths(buff_includes, "buffs")
+        buffs, rej, inact = _resolve_plugin_paths(buff_includes, "buffs")
         rejected += rej
+        inactive_modules += inact
     else:
         buffs = set()
 
@@ -190,5 +190,6 @@ def resolve_spec(spec: _spec.Spec, skip_unknown: bool = False) -> _spec.Resoluti
     return _spec.Resolution(
         selected={"probes": sorted(candidate), "buffs": sorted(buffs)},
         rejected=rejected,
+        inactive=inactive_modules,
         empty_reason=empty_reason,
     )

@@ -73,12 +73,14 @@ class Resolution:
     ``selected`` maps each plugin category to its canonical
     ``category.module.Class`` names (e.g. ``{"probes": [...], "buffs": [...]}``);
     a further category can be added without changing this type. ``rejected``
-    lists unknown selectors; ``empty_reason`` is set when the spec resolves to
-    no probes. ``probes`` and ``buffs`` are convenience accessors over
-    ``selected``."""
+    lists unknown selectors; ``inactive`` lists bare-module selectors that exist
+    but whose plugins are all inactive (known-but-empty, distinct from unknown -
+    see issue #830); ``empty_reason`` is set when the spec resolves to no probes.
+    ``probes`` and ``buffs`` are convenience accessors over ``selected``."""
 
     selected: Dict[str, List[str]]
     rejected: List[str]
+    inactive: List[str] = field(default_factory=list)
     empty_reason: Optional[str] = None
 
     @property

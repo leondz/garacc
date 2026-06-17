@@ -76,6 +76,36 @@ def test_module_with_only_inactive_probes_gives_clear_message(capsys):
     assert "Unknown probes" not in output
 
 
+def test_inactive_module_flagged_when_active_probe_also_selected(capsys):
+    # issue #830: an all-inactive module must still be flagged even when an
+    # active family is selected too (regression guard for the run.spec refactor)
+    cli.main(["-m", "test", "-p", "dan,test", "-d", "always.Pass", "-g", "1", "--narrow_output"])
+    output = ANSI_ESCAPE.sub("", capsys.readouterr().out)
+    assert "inactive" in output, "all-inactive module must be flagged, not silently dropped"
+
+
+def test_inactive_module_skipped_with_skip_unknown(capsys):
+    cli.main(
+        [
+            "-m",
+            "test",
+            "-p",
+            "dan,test",
+            "-d",
+            "always.Pass",
+            "-g",
+            "1",
+            "--narrow_output",
+            "--skip_unknown",
+        ]
+    )
+    output = ANSI_ESCAPE.sub("", capsys.readouterr().out)
+    last_line = output.strip().split("\n")[-1]
+    assert re.match(
+        "^✔️  garak run complete in [0-9]+\\.[0-9]+s$", last_line
+    ), "--skip_unknown must warn about the inactive module and complete the run"
+
+
 def test_run_all_active_detectors(capsys):
     cli.main(
         [

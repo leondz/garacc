@@ -103,6 +103,15 @@ def test_all_plus_explicit_inactive_class():
     assert inactive in res, "explicit inactive class must be added alongside all-active"
 
 
+def test_inactive_only_module_flagged_alongside_active(capsys):
+    # issue #830: an all-inactive module selected with an active one must be
+    # surfaced via Resolution.inactive, not silently dropped
+    res = resolve("probes.dan, probes.test", skip_unknown=True)
+    assert res.probes, "the active family must still resolve"
+    assert "probes.test" in res.inactive, "all-inactive module must be flagged as inactive"
+    assert "probes.test" not in res.rejected, "inactive module is known, not unknown"
+
+
 def test_negative_all_removes_all_probes():
     assert resolve("-probes.all").probes == [], "-probes.all must remove every probe"
     assert (

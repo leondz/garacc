@@ -258,11 +258,31 @@ def test_fixer_migrate(
 )
 def test_fixer_run_spec_apply(pre, post):
     import copy
+    import importlib
 
-    from garak.resources.fixer.run_spec import MapLegacySelectionToSpec
+    # date-prefixed module names are not valid import identifiers
+    mod = importlib.import_module("garak.resources.fixer.20260612_run_spec")
+    MapLegacySelectionToSpec = mod.MapLegacySelectionToSpec
 
     revised = MapLegacySelectionToSpec.apply(copy.deepcopy(pre))
     assert revised == post, (
         "fixer must fold legacy selection keys into run.spec, drop them, and leave "
         "an explicit run.spec (or a selection-free config) untouched"
+    )
+
+
+def test_fixer_modules_have_date_prefix():
+    import re
+    from pathlib import Path
+
+    fixer_dir = Path(fixer.__file__).parent
+    date_prefix = re.compile(r"^\d{8}_")
+    offenders = [
+        path.name
+        for path in fixer_dir.glob("*.py")
+        if not path.name.startswith("_") and not date_prefix.match(path.name)
+    ]
+    assert not offenders, (
+        "migration modules must be named 'YYYYMMDD_<desc>.py' so they apply in "
+        f"chronological order; offenders: {offenders}"
     )

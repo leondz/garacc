@@ -201,6 +201,12 @@ def _legacy_path_selectors(spec: Optional[str], category: str) -> List[Selector]
         clause = clause.strip()
         if not clause:
             continue
+        if clause.split(".", 1)[0] in _CATEGORIES:
+            raise ValueError(
+                f"legacy {category} selection {clause!r} already carries a category "
+                f"prefix; legacy keys take unprefixed values (e.g. 'encoding.CharCode'), "
+                f"not unified run.spec tokens"
+            )
         selectors.append(Selector("plugin_path", f"{category}.{clause}", True, category))
     return selectors
 

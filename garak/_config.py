@@ -245,6 +245,7 @@ def _map_legacy_selection(config: dict) -> None:
     """
     import garak.command
     from garak._spec import legacy_selection_spec
+    from garak.exception import ConfigFailure
 
     plugins = config.setdefault("plugins", {})
     run = config.setdefault("run", {})
@@ -275,7 +276,10 @@ def _map_legacy_selection(config: dict) -> None:
         )
         return
 
-    spec = legacy_selection_spec(probe_spec, buff_spec, probe_tags)
+    try:
+        spec = legacy_selection_spec(probe_spec, buff_spec, probe_tags)
+    except ValueError as e:
+        raise ConfigFailure(f"invalid legacy selection in config: {e}") from e
     if spec is not None:
         run["spec"] = spec
 

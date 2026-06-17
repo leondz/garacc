@@ -192,7 +192,7 @@ def test_fixer_migrate(
         if k not in ("probe_spec", "buff_spec")
     }
     assert (
-        revised_config["plugins"] == expected_plugins
+        revised_config.get("plugins", {}) == expected_plugins
     ), "non-selection plugin keys keep their renamed values; probe_spec/buff_spec move to run.spec"
 
     probe_spec_val = post_migration_dict.get("probe_spec")
@@ -203,8 +203,7 @@ def test_fixer_migrate(
     ]
     assert revised_config.get("run", {}).get("spec") == {
         "include": expected_include,
-        "exclude": [],
-    }, "the (renamed) selection must be converted into run.spec"
+    }, "the (renamed) selection must be converted into run.spec (empty exclude suppressed)"
 
     if migration_name is not None:
         # expect `migration_name` in a log call via mock of logging.info()
@@ -227,7 +226,6 @@ def test_fixer_migrate(
                 "run": {"probe_tags": "owasp:llm01"},
             },
             {
-                "plugins": {},
                 "run": {
                     "spec": {
                         "include": [
@@ -235,7 +233,6 @@ def test_fixer_migrate(
                             "buffs.lowercase",
                             {"tag": "owasp:llm01"},
                         ],
-                        "exclude": [],
                     }
                 },
             },
@@ -246,7 +243,6 @@ def test_fixer_migrate(
                 "run": {"spec": {"include": ["probes.lmrc"], "exclude": []}},
             },
             {
-                "plugins": {},
                 "run": {"spec": {"include": ["probes.lmrc"], "exclude": []}},
             },
         ),
@@ -266,9 +262,40 @@ def test_fixer_run_spec_apply(pre, post):
 
     revised = MapLegacySelectionToSpec.apply(copy.deepcopy(pre))
     assert revised == post, (
-        "fixer must fold legacy selection keys into run.spec, drop them, and leave "
-        "an explicit run.spec (or a selection-free config) untouched"
+        "fixer must fold legacy selection keys into run.spec, drop emptied "
+        "containers/keys, and leave an explicit run.spec (or selection-free config) untouched"
     )
+
+
+def test_fixer_run_spec_rejects_prefixed_legacy_value():
+    import copy
+    import importlib
+
+    mod = importlib.import_module("garak.resources.fixer.20260612_run_spec")
+    with pytest.raises(ValueError, match="cannot be migrated"):
+        mod.MapLegacySelectionToSpec.apply(
+            copy.deepcopy({"plugins": {"buff_spec": "buffs.encoding.CharCode"}})
+        )
+
+
+def test_fixer_run_spec_drops_ignored_invalid_legacy_value():
+    # an explicit run.spec wins; deprecated keys are dropped without validation,
+    # matching runtime config-load (an ignored bad value must not block migration)
+    import copy
+    import importlib
+
+    mod = importlib.import_module("garak.resources.fixer.20260612_run_spec")
+    revised = mod.MapLegacySelectionToSpec.apply(
+        copy.deepcopy(
+            {
+                "plugins": {"buff_spec": "buffs.encoding.CharCode"},
+                "run": {"spec": {"include": ["probes.dan"]}},
+            }
+        )
+    )
+    assert revised == {
+        "run": {"spec": {"include": ["probes.dan"]}}
+    }, "ignored deprecated key must be dropped, explicit run.spec untouched, no error"
 
 
 def test_fixer_modules_have_date_prefix():

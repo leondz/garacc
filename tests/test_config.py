@@ -364,6 +364,38 @@ def test_invalid_run_spec_exits_cleanly():
         garak.cli.main(["--spec", "detectors.foo", "--list_config"])
 
 
+def test_invalid_legacy_cli_flag_exits_cleanly(capsys):
+    # a category-prefixed value in a deprecated flag is invalid; report + exit
+    with pytest.raises(SystemExit):
+        garak.cli.main(["--probes", "probes.dan", "--list_config"])
+    assert "❌" in capsys.readouterr().out, "invalid legacy flag must report, not traceback"
+
+
+def test_invalid_legacy_config_exits_cleanly(tmp_path, capsys):
+    cfg = tmp_path / "bad.yaml"
+    cfg.write_text(
+        "---\nplugins:\n  buff_spec: buffs.encoding.CharCode\n", encoding="utf-8"
+    )
+    with pytest.raises(SystemExit):
+        garak.cli.main(["--config", str(cfg), "--list_config"])
+    assert "❌" in capsys.readouterr().out, "invalid legacy config must report, not traceback"
+
+
+def test_explicit_run_spec_ignores_invalid_legacy_value(tmp_path):
+    # explicit run.spec wins, so an ignored (invalid) legacy key must not raise;
+    # the fixer mirrors this (see test_fixer_run_spec_drops_ignored_invalid_legacy_value)
+    cfg = tmp_path / "mix.yaml"
+    cfg.write_text(
+        "---\nplugins:\n  buff_spec: buffs.encoding.CharCode\n"
+        "run:\n  spec:\n    include:\n      - probes.dan\n",
+        encoding="utf-8",
+    )
+    garak.cli.main(["--config", str(cfg), "--list_config"])
+    assert _config.run.spec == {
+        "include": ["probes.dan"]
+    }, "explicit run.spec must win and the ignored legacy key must not be validated"
+
+
 # test a short-form CLI assertion
 def test_cli_shortform():
     garak.cli.main(["-s", "444", "--list_config"])

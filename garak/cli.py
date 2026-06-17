@@ -42,7 +42,7 @@ def main(arguments=None) -> None:
 
     from garak import __description__
     from garak import _config, _plugins
-    from garak.exception import GarakException
+    from garak.exception import ConfigFailure, GarakException
 
     _config.transient.starttime = datetime.datetime.now()
     _config.transient.starttime_iso = _config.transient.starttime.isoformat()
@@ -345,6 +345,10 @@ def main(arguments=None) -> None:
         logging.exception(e)
         print(f"❌{e}")
         exit(1)
+    except ConfigFailure as e:
+        logging.error(e)
+        print(f"❌ {e}")
+        exit(1)
 
     # extract what was actually passed on CLI; use a masking argparser
     aux_parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
@@ -435,11 +439,16 @@ def main(arguments=None) -> None:
                 "both --spec and deprecated selection flags given; --spec wins"
             )
     elif _legacy_selection_flags:
-        spec = legacy_selection_spec(
-            getattr(args, "probes", None),
-            getattr(args, "buffs", None),
-            getattr(args, "probe_tags", None),
-        )
+        try:
+            spec = legacy_selection_spec(
+                getattr(args, "probes", None),
+                getattr(args, "buffs", None),
+                getattr(args, "probe_tags", None),
+            )
+        except ValueError as e:
+            logging.error(e)
+            print(f"❌ invalid selection: {e}")
+            exit(1)
         if spec is not None:
             _config.run.spec = spec
 

@@ -15,18 +15,32 @@ class MapLegacySelectionToSpec(Migration):
         cfg = copy.deepcopy(config_dict)
         plugins = cfg.get("plugins", {})
         run = cfg.get("run", {})
-        spec = legacy_selection_spec(
-            plugins.get("probe_spec"),
-            plugins.get("buff_spec"),
-            run.get("probe_tags"),
-        )
-        if spec is None:
-            return cfg
+
+        # an explicitly-set run.spec wins; the deprecated keys are then merely
+        # dropped, mirroring garak._config._map_legacy_selection (ignored values
+        # are not validated). Only convert - and validate - when run.spec is unset.
+        if not run.get("spec"):
+            try:
+                spec = legacy_selection_spec(
+                    plugins.get("probe_spec"),
+                    plugins.get("buff_spec"),
+                    run.get("probe_tags"),
+                )
+            except ValueError as exc:
+                raise ValueError(f"config cannot be migrated to run.spec: {exc}") from exc
+            if spec is None:  # nothing meaningful to migrate
+                return cfg
+            # drop empty include/exclude lists to keep the rewrite minimal
+            run["spec"] = {key: value for key, value in spec.items() if value}
+
         plugins.pop("probe_spec", None)
         plugins.pop("buff_spec", None)
         run.pop("probe_tags", None)
-        # an explicitly-set run.spec wins; otherwise adopt the converted spec
-        if not run.get("spec"):
-            run["spec"] = spec
+
         cfg["run"] = run
+        # drop the plugins container if migration emptied it
+        if plugins:
+            cfg["plugins"] = plugins
+        else:
+            cfg.pop("plugins", None)
         return cfg

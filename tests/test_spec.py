@@ -403,3 +403,14 @@ def test_legacy_selection_spec(probe_spec, buff_spec, probe_tags, expected):
     assert (
         legacy_selection_spec(probe_spec, buff_spec, probe_tags) == expected
     ), "legacy selection keys must map to the run.spec file form (or None when vacuous)"
+
+
+@pytest.mark.parametrize(
+    "probe_spec, buff_spec",
+    [("probes.dan", None), (None, "buffs.encoding.CharCode")],
+)
+def test_legacy_selection_spec_rejects_category_prefixed_value(probe_spec, buff_spec):
+    from garak._spec import legacy_selection_spec
+
+    with pytest.raises(ValueError, match="already carries a category prefix"):
+        legacy_selection_spec(probe_spec, buff_spec, None)

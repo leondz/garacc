@@ -148,3 +148,17 @@ def test_legacy_probes_and_run_spec_select_same_run(capsys):
     assert (
         legacy_detector == new_detector == "always.Pass"
     ), f"both formats must select the same detector; got {legacy_detector!r} vs {new_detector!r}"
+
+
+def test_spec_short_flag_matches_long(capsys):
+    """`-S` must be an alias of `--spec`, resolving to the same run.spec."""
+    cli.main(["--spec", "probes.test.Blank", "--list_config"])
+    long_spec = dict(_config.run.spec)
+
+    cli.main(["-S", "probes.test.Blank", "--list_config"])
+    short_spec = dict(_config.run.spec)
+
+    assert short_spec == long_spec == {
+        "include": ["probes.test.Blank"],
+        "exclude": [],
+    }, f"-S must alias --spec; got {short_spec!r} vs {long_spec!r}"

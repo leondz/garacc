@@ -159,6 +159,7 @@ def main(arguments=None) -> None:
     # unified selection spec (replaces --probes/--probe_tags/--buffs)
     parser.add_argument(
         "--spec",
+        "-S",
         type=str,
         default=_config.run.spec,
         help="unified selection spec, e.g. 'probes.dan, -dan.DanInTheWild, tag:owasp:llm01'. "

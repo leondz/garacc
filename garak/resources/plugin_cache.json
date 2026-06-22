@@ -1,5 +1,34 @@
 {
   "probes": {
+    "probes.adaptive_attacks.AdaptiveAttacks": {
+      "description": "Simple adaptive attacks probe (template + cached suffix)",
+      "DEFAULT_PARAMS": {
+        "follow_prompt_cap": true
+      },
+      "active": true,
+      "doc_uri": "https://arxiv.org/abs/2404.02151",
+      "extended_detectors": [],
+      "extra_dependency_names": [],
+      "goal": "cause the model to disregard the system prompt and produce a forbidden response",
+      "intent": null,
+      "lang": "en",
+      "modality": {
+        "in": [
+          "text"
+        ]
+      },
+      "parallelisable_attempts": true,
+      "primary_detector": "mitigation.MitigationBypass",
+      "tags": [
+        "avid-effect:security:S0403",
+        "avid-effect:performance:P0204",
+        "owasp:llm01",
+        "quality:Security:PromptStability",
+        "payload:jailbreak"
+      ],
+      "tier": 2,
+      "mod_time": "2026-06-18 20:31:23 +0000"
+    },
     "probes.agent_breaker.AgentBreaker": {
       "description": "Agent Breaker - Agentic Application Exploitation Probe",
       "DEFAULT_PARAMS": {
@@ -1148,7 +1177,7 @@
         "demon:Language:Code_and_encode:Token"
       ],
       "tier": 2,
-      "mod_time": "2026-05-27 20:51:42 +0000"
+      "mod_time": "2026-06-05 17:47:21 +0000"
     },
     "probes.divergence.RepeatExtended": {
       "description": "See if a model starts giving other data when asked to repeat a string indefinitely",
@@ -1180,7 +1209,7 @@
         "demon:Language:Code_and_encode:Token"
       ],
       "tier": 2,
-      "mod_time": "2026-05-27 20:51:42 +0000"
+      "mod_time": "2026-06-05 17:47:21 +0000"
     },
     "probes.divergence.RepeatedToken": {
       "description": "Repeated token destabilization attack from Dropbox LLM security research.",
@@ -1218,7 +1247,7 @@
         "demon:Language:Code_and_encode:Token"
       ],
       "tier": 1,
-      "mod_time": "2026-05-27 20:51:42 +0000"
+      "mod_time": "2026-06-05 17:47:21 +0000"
     },
     "probes.doctor.Bypass": {
       "description": "Implement Policy Puppetry Bypass",
@@ -8875,6 +8904,35 @@
     }
   },
   "generators": {
+    "generators.anthropic.AnthropicGenerator": {
+      "description": "Interface for Claude models served via the Anthropic API (api.anthropic.com).",
+      "DEFAULT_PARAMS": {
+        "max_tokens": 150,
+        "temperature": null,
+        "top_k": null,
+        "context_len": null,
+        "skip_seq_start": null,
+        "skip_seq_end": null,
+        "uri": null,
+        "suppressed_params": []
+      },
+      "active": true,
+      "extra_dependency_names": [
+        "anthropic"
+      ],
+      "generator_family_name": "anthropic",
+      "modality": {
+        "in": [
+          "text"
+        ],
+        "out": [
+          "text"
+        ]
+      },
+      "parallel_capable": true,
+      "supports_multiple_generations": false,
+      "mod_time": "2026-06-18 20:31:23 +0000"
+    },
     "generators.azure.AzureOpenAIGenerator": {
       "description": "Wrapper for Azure Open AI. Expects AZURE_API_KEY, AZURE_ENDPOINT and AZURE_MODEL_NAME environment variables.",
       "DEFAULT_PARAMS": {
@@ -9541,7 +9599,7 @@
       },
       "parallel_capable": true,
       "supports_multiple_generations": false,
-      "mod_time": "2026-02-24 19:51:44 +0000"
+      "mod_time": "2026-06-04 18:32:23 +0000"
     },
     "generators.nim.NVOpenAIChat": {
       "description": "Wrapper for NVIDIA NIM microservices hosted on build.nvidia.com and self-hosted.",
@@ -9585,7 +9643,7 @@
       },
       "parallel_capable": true,
       "supports_multiple_generations": false,
-      "mod_time": "2026-02-24 19:51:44 +0000"
+      "mod_time": "2026-06-04 18:32:23 +0000"
     },
     "generators.nim.NVOpenAICompletion": {
       "description": "Wrapper for NVIDIA NIM microservices hosted on build.nvidia.com and self-hosted.",
@@ -9629,7 +9687,7 @@
       },
       "parallel_capable": true,
       "supports_multiple_generations": false,
-      "mod_time": "2026-02-24 19:51:44 +0000"
+      "mod_time": "2026-06-04 18:32:23 +0000"
     },
     "generators.nim.Vision": {
       "description": "Wrapper for text and image to text NVIDIA NIM microservices hosted on build.nvidia.com and self-hosted.",
@@ -9676,7 +9734,7 @@
       },
       "parallel_capable": true,
       "supports_multiple_generations": false,
-      "mod_time": "2026-02-24 19:51:44 +0000"
+      "mod_time": "2026-06-04 18:32:23 +0000"
     },
     "generators.nvcf.NvcfChat": {
       "description": "Wrapper for NVIDIA Cloud Functions Chat models via NGC. Expects NVCF_API_KEY environment variable.",

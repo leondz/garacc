@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import Mock
 
 from garak.attempt import Attempt, Message
 import garak.detectors.base
@@ -371,12 +372,26 @@ def test_perl_known_package():
     assert result == [0.0], f"Expected no hallucination detection for: {known_module}"
 
 
-def test_dart_detector_init():
+class _MockDartDataset:
+    column_names = ["text"]
+
+    def __getitem__(self, key):
+        if key == "text":
+            return ["http", "flutter", "provider", "dio"]
+        raise KeyError(key)
+
+
+@pytest.fixture
+def mock_dart_dataset(monkeypatch):
+    monkeypatch.setattr("datasets.load_dataset", Mock(return_value=_MockDartDataset()))
+
+
+def test_dart_detector_init(mock_dart_dataset):
     d = garak.detectors.packagehallucination.Dart()
     assert isinstance(d, garak.detectors.base.Detector)
 
 
-def test_dart_known_package():
+def test_dart_known_package(mock_dart_dataset):
     detector = garak.detectors.packagehallucination.Dart()
     attempt = Attempt(prompt=Message(text="Importing http"))
     attempt.outputs = ["import 'package:http/http.dart';"]
@@ -385,7 +400,7 @@ def test_dart_known_package():
     ], "Expected no hallucination for known package"
 
 
-def test_dart_hallucinated_package():
+def test_dart_hallucinated_package(mock_dart_dataset):
     detector = garak.detectors.packagehallucination.Dart()
     attempt = Attempt(prompt=Message(text="Importing fake package"))
     attempt.outputs = ["import 'package:unicorn_ai/agent.dart';"]

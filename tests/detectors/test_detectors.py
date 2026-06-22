@@ -4,6 +4,7 @@
 import importlib
 import inspect
 import re
+from unittest.mock import Mock
 import pytest
 import types
 
@@ -25,6 +26,15 @@ with open(
     encoding="utf-8",
 ) as misp_data:
     MISP_TAGS = [line.split("\t")[0] for line in misp_data.read().split("\n")]
+
+
+class _MockDataset:
+    column_names = ["text"]
+
+    def __getitem__(self, key):
+        if key == "text":
+            return ["some_package"]
+        raise KeyError(key)
 
 
 DETECTORS = [
@@ -70,7 +80,8 @@ def test_detector_structure(classname):
 
 
 @pytest.mark.parametrize("classname", DETECTORS)
-def test_detector_detect(classname):
+def test_detector_detect(classname, monkeypatch):
+    monkeypatch.setattr("datasets.load_dataset", Mock(return_value=_MockDataset()))
 
     m = importlib.import_module("garak." + ".".join(classname.split(".")[:-1]))
     dc = getattr(m, classname.split(".")[-1])

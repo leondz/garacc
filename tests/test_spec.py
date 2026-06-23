@@ -41,7 +41,7 @@ def test_polarity_bare_plus_equivalent():
 
 def test_polarity_minus_excludes():
     family = set(resolve("probes.dan").probes)
-    minus = set(resolve("probes.dan, -probes.dan.DanInTheWild").probes)
+    minus = set(resolve("probes.dan,-probes.dan.DanInTheWild").probes)
     assert minus < family, "'-' must remove DanInTheWild from the dan family"
     assert "probes.dan.DanInTheWild" not in minus, "excluded class must be absent"
 
@@ -98,7 +98,7 @@ def test_all_serialises_to_canonical_star():
 def test_all_plus_explicit_inactive_class():
     inactive = _one_inactive("probes")
     assert inactive, "fixture expects at least one inactive probe to exist"
-    res = set(resolve(f"probes.all, {inactive}").probes)
+    res = set(resolve(f"probes.all,{inactive}").probes)
     assert _active("probes") <= res, "probes.all must keep every active probe"
     assert inactive in res, "explicit inactive class must be added alongside all-active"
 
@@ -106,7 +106,7 @@ def test_all_plus_explicit_inactive_class():
 def test_inactive_only_module_flagged_alongside_active(capsys):
     # issue #830: an all-inactive module selected with an active one must be
     # surfaced via Resolution.inactive, not silently dropped
-    res = resolve("probes.dan, probes.test", skip_unknown=True)
+    res = resolve("probes.dan,probes.test", skip_unknown=True)
     assert res.probes, "the active family must still resolve"
     assert "probes.test" in res.inactive, "all-inactive module must be flagged as inactive"
     assert "probes.test" not in res.rejected, "inactive module is known, not unknown"
@@ -120,8 +120,8 @@ def test_negative_all_removes_all_probes():
 
 
 def test_negative_buffs_all_equals_star():
-    minus_all = resolve("probes.lmrc.Bullying, buffs.all, -buffs.all")
-    minus_star = resolve("probes.lmrc.Bullying, buffs.*, -buffs.*")
+    minus_all = resolve("probes.lmrc.Bullying,buffs.all,-buffs.all")
+    minus_star = resolve("probes.lmrc.Bullying,buffs.*,-buffs.*")
     assert minus_all.buffs == [] == minus_star.buffs, "-buffs.all must clear all buffs like -buffs.*"
 
 
@@ -150,7 +150,7 @@ def test_all_via_file_transport():
 
 
 def test_buffs_selected_and_no_default():
-    res = resolve("probes.dan, buffs.lowercase")
+    res = resolve("probes.dan,buffs.lowercase")
     assert "buffs.lowercase.Lowercase" in res.buffs, "buffs.lowercase must select the buff"
     assert resolve("probes.dan").buffs == [], "no buffs by default"
 
@@ -159,7 +159,7 @@ def test_buffs_selected_and_no_default():
 
 
 def test_tag_is_filter_intersection():
-    res = set(resolve("probes.grandma, tag:owasp:llm06").probes)
+    res = set(resolve("probes.grandma,tag:owasp:llm06").probes)
     family = set(resolve("probes.grandma").probes)
     assert res <= family, "tag: must narrow, not expand the family"
     assert res, "grandma should have probes tagged owasp:llm06"
@@ -170,9 +170,9 @@ def test_tag_is_filter_intersection():
 
 
 def test_tag_multiple_is_or():
-    a = set(resolve("probes.grandma, tag:owasp:llm06").probes)
-    b = set(resolve("probes.grandma, tag:risk-cards").probes)
-    both = set(resolve("probes.grandma, tag:owasp:llm06, tag:risk-cards").probes)
+    a = set(resolve("probes.grandma,tag:owasp:llm06").probes)
+    b = set(resolve("probes.grandma,tag:risk-cards").probes)
+    both = set(resolve("probes.grandma,tag:owasp:llm06,tag:risk-cards").probes)
     assert both == (a | b), "multiple tags must combine as OR"
 
 
@@ -188,14 +188,14 @@ def test_tier_log_level_is_cumulative():
 
 
 def test_tier_multiple_takes_widest():
-    assert set(resolve("tier:1, tier:3").probes) == set(
+    assert set(resolve("tier:1,tier:3").probes) == set(
         resolve("tier:3").probes
     ), "multiple tier: selectors take the widest (max)"
 
 
 def test_tier_negative_removes_exact_tier():
     base = set(resolve("tier:3").probes)
-    minus = set(resolve("tier:3, -tier:2").probes)
+    minus = set(resolve("tier:3,-tier:2").probes)
     assert minus == {p for p in base if _tier(p) != 2}, "-tier:2 removes exactly tier 2"
 
 
@@ -208,7 +208,7 @@ def test_tier_name_equals_int():
 @pytest.mark.parametrize("bad", ["tier:99", "tier:notatier"])
 def test_tier_invalid_raises(bad):
     with pytest.raises(ValueError):
-        parse_spec_string(f"probes.*, {bad}")
+        parse_spec_string(f"probes.*,{bad}")
 
 
 # --- empty-result detection -----------------------------------------------
@@ -216,13 +216,13 @@ def test_tier_invalid_raises(bad):
 
 def test_tier_contradiction_empty_with_reason():
     # ansiescape.AnsiEscaped is an active tier-3 probe; tier:1 admits only tier 1
-    res = resolve("probes.ansiescape.AnsiEscaped, tier:1")
+    res = resolve("probes.ansiescape.AnsiEscaped,tier:1")
     assert res.probes == [], "tier:1 must drop a tier-3 explicit class"
     assert res.empty_reason and "tier" in res.empty_reason, "reason must name the tier conflict"
 
 
 def test_fully_excluded_include_empty_with_reason():
-    res = resolve("probes.dan, -probes.dan")
+    res = resolve("probes.dan,-probes.dan")
     assert res.probes == [], "excluding the included family yields empty"
     assert res.empty_reason, "empty result must carry a reason"
 
@@ -289,7 +289,7 @@ def test_out_of_scope_kinds_raise(token):
 def test_unknown_rejected_raises_unless_skipped():
     with pytest.raises(ValueError, match="unknown run.spec"):
         resolve("probes.doesnotexist")
-    res = resolve("probes.dan, probes.doesnotexist", skip_unknown=True)
+    res = resolve("probes.dan,probes.doesnotexist", skip_unknown=True)
     assert "probes.doesnotexist" in res.rejected, "unknown selector recorded in rejected"
     assert res.probes, "known selectors still resolve under skip_unknown"
 
@@ -298,7 +298,7 @@ def test_unknown_rejected_raises_unless_skipped():
 
 
 def test_exclude_wins_over_explicit_include():
-    res = resolve("probes.dan.AutoDANCached, -probes.dan")
+    res = resolve("probes.dan.AutoDANCached,-probes.dan")
     assert "probes.dan.AutoDANCached" not in res.probes, "exclude of family wins over explicit class"
 
 
@@ -325,7 +325,7 @@ def test_tag_only_filters_default_active():
 
 
 def test_buff_subtractive_all_minus_one():
-    res = resolve("probes.lmrc.Bullying, buffs.*, -buffs.paraphrase")
+    res = resolve("probes.lmrc.Bullying,buffs.*,-buffs.paraphrase")
     assert res.buffs, "buffs.* selects active buffs"
     assert not any(b.startswith("buffs.paraphrase.") for b in res.buffs), "-buffs.paraphrase removed"
     assert len(res.probes) == 1, "single probe keeps attempts low"
@@ -339,17 +339,31 @@ def test_negative_buff_alone_is_noop():
 # --- T22: dedup / parsing robustness --------------------------------------
 
 
-def test_dedup_and_whitespace():
-    a = set(resolve("probes.dan, probes.dan,  , probes.dan").probes)
+def test_dedup_and_blank_clauses():
+    a = set(resolve("probes.dan,probes.dan,,probes.dan").probes)
     b = set(resolve("probes.dan").probes)
     assert a == b, "duplicate selectors and blank clauses are tolerated/deduplicated"
+
+
+@pytest.mark.parametrize(
+    "spec",
+    [
+        "probes.dan, probes.test",
+        "probes.dan ,probes.test",
+        "probes.dan,  ,probes.test",
+        "tier:1, tier:2",
+    ],
+)
+def test_whitespace_between_selectors_rejected(spec):
+    with pytest.raises(ValueError, match="whitespace"):
+        parse_spec_string(spec)
 
 
 # --- T23: tag/tier do not affect buffs ------------------------------------
 
 
 def test_tag_tier_do_not_touch_buffs():
-    res = resolve("buffs.*, tag:owasp:llm01, tier:1")
+    res = resolve("buffs.*,tag:owasp:llm01,tier:1")
     assert set(res.buffs) == _active("buffs"), "tag/tier filters must not remove buffs"
 
 
@@ -361,11 +375,11 @@ def test_tag_tier_do_not_touch_buffs():
     [
         "probes.*",
         "probes.all",
-        "probes.all, -probes.dan.DanInTheWild, buffs.all",
-        "probes.dan, -probes.dan.DanInTheWild, buffs.encoding.Base64",
-        "tier:2, tag:owasp:llm01",
+        "probes.all,-probes.dan.DanInTheWild,buffs.all",
+        "probes.dan,-probes.dan.DanInTheWild,buffs.encoding.Base64",
+        "tier:2,tag:owasp:llm01",
         "buffs.lowercase",
-        "+probes.*, +tier:3, -tier:2",
+        "+probes.*,+tier:3,-tier:2",
     ],
 )
 def test_cli_file_semantic_parity(spec_str):

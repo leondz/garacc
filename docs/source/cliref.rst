@@ -60,11 +60,12 @@ CLI reference for garak
     --target_name TARGET_NAME, --model_name TARGET_NAME, -n TARGET_NAME
                           name of the target, e.g.
                           'timdettmers/guanaco-33b-merged'
-    --spec SPEC           unified selection spec, e.g. 'probes.dan,
-                          -dan.DanInTheWild, tag:owasp:llm01'. Selectors:
-                          probes.<module>[.<Class>], buffs.<module>[.<Class>],
-                          tag:<prefix>, tier:<N|name>; '-' excludes, tier:N is
-                          inclusive (tiers 1..N).
+    --spec SPEC           unified selection spec, e.g.
+                          'probes.dan,-probes.dan.DanInTheWild,tag:owasp:llm01'.
+                          Selectors: probes.<module>[.<Class>],
+                          buffs.<module>[.<Class>], tag:<prefix>,
+                          tier:<N|name>; '-' excludes, tier:N is inclusive
+                          (tiers 1..N).
     --probes PROBES, -p PROBES
                           DEPRECATED, use --spec. list of probe names to use, or
                           'all'.

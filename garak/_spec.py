@@ -95,16 +95,24 @@ class Resolution:
 def parse_spec_string(spec: str) -> Spec:
     """Parse the CLI string transport into a :class:`Spec`.
 
-    Selectors are comma separated; a leading ``-`` excludes, a leading ``+``
-    (or no prefix) includes. Blank clauses and surrounding whitespace are
-    tolerated. Deduplication is implicit at resolve time (set based).
+    Selectors are comma separated; a leading ``-`` excludes, ``+`` (or no
+    prefix) includes. Inter-selector whitespace is rejected (outer whitespace is
+    stripped, blank clauses tolerated) so the comma list needs no shell quoting;
+    a ``*`` glob still does. Dedup is implicit at resolve time.
     """
     out = Spec()
-    for raw in (clause.strip() for clause in (spec or "").split(",")):
+    text = (spec or "").strip()
+    if any(ch.isspace() for ch in text):
+        raise ValueError(
+            "run.spec must not contain whitespace between selectors; separate "
+            "them with commas only, e.g. "
+            "'probes.dan,-probes.dan.DanInTheWild,tag:owasp:llm01'"
+        )
+    for raw in text.split(","):
         if not raw:
             continue
         include = not raw.startswith("-")
-        token = raw.lstrip("+-").strip()
+        token = raw.lstrip("+-")
         if not token:
             continue
         (out.include if include else out.exclude).append(_classify(token, include))

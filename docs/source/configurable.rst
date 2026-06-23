@@ -189,21 +189,25 @@ removes *exactly* tier ``N``. Resolution applies excludes last (exclude wins).
 If a spec resolves to no probes garak aborts with an actionable message, unless
 ``none`` was requested explicitly, in which case the run is a deliberate no-op.
 ``tier:`` and ``tag:`` filters apply to the whole candidate set, including
-explicitly-named classes, so e.g. ``probes.foo.Bar, tier:1`` yields nothing when
+explicitly-named classes, so e.g. ``probes.foo.Bar,tier:1`` yields nothing when
 ``foo.Bar`` is tier 3.
+
+The spec is a single comma-separated token: whitespace between selectors is
+rejected, so commas alone need no shell quoting. A ``*`` glob is still a shell
+wildcard, so quote those specs (or use the ``all`` alias instead).
 
 .. code-block:: bash
 
     # whole family minus one class
-    garak --spec "probes.dan, -probes.dan.DanInTheWild"
+    garak --spec probes.dan,-probes.dan.DanInTheWild
     # family filtered by tag
-    garak --spec "probes.grandma, tag:owasp:llm06"
-    # all active buffs except one, over all active probes
-    garak --spec "probes.*, buffs.*, -buffs.paraphrase"
-    # all active probes plus a specific inactive class (all is shell-safe)
-    garak --spec "probes.all, probes.fitd.FITD"
+    garak --spec probes.grandma,tag:owasp:llm06
+    # all active buffs except one, over all active probes (quote the * glob)
+    garak --spec "probes.*,buffs.*,-buffs.paraphrase"
+    # all active probes plus a specific inactive class (all is the quote-free *)
+    garak --spec probes.all,probes.fitd.FITD
     # tiers {1,3}: tier:3 admits 1..3, then -tier:2 removes exactly tier 2
-    garak --spec "+probes.*, +tier:3, -tier:2"
+    garak --spec "+probes.*,+tier:3,-tier:2"
 
 .. code-block:: yaml
 

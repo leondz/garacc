@@ -248,7 +248,7 @@ def test_cli_spec_settings(param):
 
 def test_run_spec_cli_sets_config():
     garak.cli.main(
-        ["--spec", "probes.dan, -probes.dan.DanInTheWild", "--list_config"]
+        ["--spec", "probes.dan,-probes.dan.DanInTheWild", "--list_config"]
     )
     assert _config.run.spec == {
         "include": ["probes.dan"],

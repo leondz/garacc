@@ -162,7 +162,7 @@ def main(arguments=None) -> None:
         "-S",
         type=str,
         default=_config.run.spec,
-        help="unified selection spec, e.g. 'probes.dan, -dan.DanInTheWild, tag:owasp:llm01'. "
+        help="unified selection spec, e.g. 'probes.dan,-probes.dan.DanInTheWild,tag:owasp:llm01'. "
         "Selectors: probes.<module>[.<Class>], buffs.<module>[.<Class>], tag:<prefix>, "
         "tier:<N|name>; '-' excludes, tier:N is inclusive (tiers 1..N).",
     )

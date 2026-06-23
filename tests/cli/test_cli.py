@@ -192,3 +192,20 @@ def test_spec_short_flag_matches_long(capsys):
         "include": ["probes.test.Blank"],
         "exclude": [],
     }, f"-S must alias --spec; got {short_spec!r} vs {long_spec!r}"
+
+
+def test_spec_unquoted_multiple_selectors(capsys):
+    """A comma-separated --spec needs no shell quoting: a single unquoted
+    token (no spaces) must parse into multiple selectors."""
+    cli.main(["--spec", "probes.test.Blank,probes.test.Test", "--list_config"])
+    assert dict(_config.run.spec) == {
+        "include": ["probes.test.Blank", "probes.test.Test"],
+        "exclude": [],
+    }, "unquoted comma-separated --spec must yield both selectors"
+
+
+def test_spec_whitespace_rejected(capsys):
+    """Whitespace between selectors is rejected so quotes stay optional."""
+    with pytest.raises(SystemExit):
+        cli.main(["--spec", "probes.test.Blank, probes.test.Test", "--list_config"])
+    assert "invalid --spec" in capsys.readouterr().out, "spaced --spec must be rejected"

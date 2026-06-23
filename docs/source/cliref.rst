@@ -3,7 +3,7 @@ CLI reference for garak
 
 ::
 
-  garak LLM vulnerability scanner v0.15.2.pre1 ( https://github.com/NVIDIA/garak ) at 2026-06-11T08:56:05.589564
+  garak LLM vulnerability scanner v0.15.2.pre1 ( https://github.com/NVIDIA/garak ) at 2026-06-23T12:33:42.901472
   usage: python -m garak [-h] [--verbose] [--report_prefix REPORT_PREFIX]
                          [--narrow_output]
                          [--parallel_requests PARALLEL_REQUESTS]
@@ -60,12 +60,11 @@ CLI reference for garak
     --target_name TARGET_NAME, --model_name TARGET_NAME, -n TARGET_NAME
                           name of the target, e.g.
                           'timdettmers/guanaco-33b-merged'
-    --spec SPEC           unified selection spec, e.g.
+    --spec SPEC, -S SPEC  unified selection spec, e.g.
                           'probes.dan,-probes.dan.DanInTheWild,tag:owasp:llm01'.
                           Selectors: probes.<module>[.<Class>],
-                          buffs.<module>[.<Class>], tag:<prefix>,
-                          tier:<N|name>; '-' excludes, tier:N is inclusive
-                          (tiers 1..N).
+                          buffs.<module>[.<Class>], tag:<prefix>, tier:<N|name>;
+                          '-' excludes, tier:N is inclusive (tiers 1..N).
     --probes PROBES, -p PROBES
                           DEPRECATED, use --spec. list of probe names to use, or
                           'all'.

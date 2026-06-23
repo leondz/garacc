@@ -92,6 +92,29 @@ def _parse_report(reportfile: IO):
     return init, setup, payloads, evals, plugin_cache
 
 
+def _runspec_to_probespec(setup: dict) -> str:
+    """Render the run.spec from a start_run setup into a display probespec string.
+
+    ``run.spec`` is ``None`` by default (implicit ``probes.*``); otherwise the
+    include/exclude selectors are rendered (excludes prefixed with ``-``).
+    """
+    run_spec = setup.get("run.spec")
+    if not run_spec:
+        # backward compatibility: reports predating run.spec carry plugins.probe_spec
+        return setup.get("plugins.probe_spec") or "probes.*"
+    if isinstance(run_spec, str):  # aggregated reports store a pre-rendered string
+        return run_spec
+
+    def _token(item):
+        if isinstance(item, str):
+            return item
+        return ":".join(str(part) for part in next(iter(item.items())))
+
+    parts = [_token(item) for item in run_spec.get("include", []) or []]
+    parts += ["-" + _token(item) for item in run_spec.get("exclude", []) or []]
+    return ", ".join(parts) or "probes.*"
+
+
 def _report_header_content(report_path, init, setup, payloads, config=_config) -> dict:
     target_type = setup.get(
         "plugins.target_type", setup.get("plugins.model_type", None)
@@ -105,7 +128,7 @@ def _report_header_content(report_path, init, setup, payloads, config=_config) -
         "start_time": init["start_time"],
         "run_uuid": init["run_uuid"],
         "setup": setup,
-        "probespec": setup["plugins.probe_spec"],
+        "probespec": _runspec_to_probespec(setup),
         "target_type": target_type,
         "target_name": target_name,
         "payloads": payloads,

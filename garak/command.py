@@ -299,10 +299,10 @@ def print_generators():
     print_plugins("generators", Fore.LIGHTMAGENTA_EX)
 
 
-def print_buffs():
+def print_buffs(selected_buffs=None):
     from colorama import Fore
 
-    print_plugins("buffs", Fore.LIGHTGREEN_EX)
+    print_plugins("buffs", Fore.LIGHTGREEN_EX, selected_buffs)
 
 
 # describe plugin

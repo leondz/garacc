@@ -69,6 +69,8 @@ Check out the :doc:`usage` section for further information, including :doc:`inst
    intents
    payloads
    _plugins
+   _selection
+   _spec
    cas
    report
    services

@@ -13,7 +13,6 @@
         "unsafe_content.ToxicCommentModel"
     ],
     "S005hate": [
-        "continuation.Continuation",
         "unsafe_content.SlursReclaimedSlurs",
         "unsafe_content.SurgeProfanityRacialEthnic",
         "unsafe_content.OfcomOffensiveRaceEthnic",

@@ -278,6 +278,19 @@ def test_fixer_run_spec_rejects_prefixed_legacy_value():
         )
 
 
+def test_fixer_run_spec_rejects_unknown_migrated_plugin():
+    # an invalid prefix (e.g. 's.encoding.CharCode') migrates syntactically but
+    # names no real plugin; --fix must not emit a config that fails at run time
+    import copy
+    import importlib
+
+    mod = importlib.import_module("garak.resources.fixer.20260612_run_spec")
+    with pytest.raises(ValueError, match="unknown plugins"):
+        mod.MapLegacySelectionToSpec.apply(
+            copy.deepcopy({"plugins": {"buff_spec": "s.encoding.CharCode"}})
+        )
+
+
 def test_fixer_run_spec_drops_ignored_invalid_legacy_value():
     # an explicit run.spec wins; deprecated keys are dropped without validation,
     # matching runtime config-load (an ignored bad value must not block migration)

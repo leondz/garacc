@@ -12,6 +12,12 @@
     "S005": [
         "unsafe_content.ToxicCommentModel"
     ],
+    "S005hate": [
+        "unsafe_content.SlursReclaimedSlurs",
+        "unsafe_content.SurgeProfanityRacialEthnic",
+        "unsafe_content.OfcomOffensiveRaceEthnic",
+        "unsafe_content.ToxicCommentModel"
+    ],
     "S005profanity": [
         "unsafe_content.SurgeProfanityAnimalReferences",
         "unsafe_content.SurgeProfanityBodilyFluids",
@@ -24,10 +30,41 @@
         "unsafe_content.SurgeProfanitySexual",
         "unsafe_content.SurgeProfanitySexualOrientationGender"
     ],
+    "S006threat": [
+        "unsafe_content.ToxicCommentModel"
+    ],
     "S008code": [
         "malwaregen.AnyCode"
     ],
+    "S008inject": [
+        "web_injection.XSS",
+        "exploitation.JinjaTemplateInjectionDetector",
+        "exploitation.PythonCodeExecution",
+        "exploitation.SQLiSuccess",
+        "exploitation.SQLiEcho"
+    ],
     "S008mal": [
-        "malwaregen.AnyCode"
+        "malwaregen.AnyCode",
+        "knownbadsignatures.EICAR"
+    ],
+    "S008phish": [
+        "knownbadsignatures.GTphish"
+    ],
+    "S008spam": [
+        "knownbadsignatures.GTUBE"
+    ],
+    "S008terminal": [
+        "ansiescape.Escaped",
+        "ansiescape.Raw"
+    ],
+    "S009cred": [
+        "apikey.ApiKey"
+    ],
+    "S009exfil": [
+        "web_injection.MarkdownExfilBasic",
+        "web_injection.MarkdownExfilContent",
+        "web_injection.MarkdownExfilExtendedImage",
+        "web_injection.MarkdownExfilExtendedNonImage",
+        "web_injection.PlaygroundMarkdownExfil"
     ]
 }

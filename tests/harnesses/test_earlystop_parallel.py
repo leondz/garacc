@@ -239,6 +239,100 @@ class TestParallelRejectionChecking:
         assert len(accepted) == 0
         assert len(rejected) == 1
 
+    def test_accepted_baseline_gets_output_sequential(self, harness_env):
+        """When an attack succeeds, the baseline attempt gets the model's response
+        copied so hitlog entries have a non-null output."""
+        harness, detectors, evaluator, _ = harness_env
+        _config.system.parallel_attempts = False
+
+        stub = TextStub("T999test", "prompt1")
+        baseline = _make_baseline_attempt(stub)
+        attacked = _make_attempt_with_output(stub, "Sure, here's the dangerous content")
+
+        assert len(baseline.outputs) == 0
+
+        accepted, rejected = harness._update_attempt_status(
+            attacked_attempts=[attacked],
+            previously_accepted=[],
+            previously_rejected=[baseline],
+            detectors=detectors,
+            evaluator=evaluator,
+        )
+
+        assert len(accepted) == 1
+        assert len(accepted[0].outputs) == 1
+        assert accepted[0].outputs[0].text == "Sure, here's the dangerous content"
+
+    def test_accepted_baseline_gets_output_parallel(self, harness_env):
+        """Same as sequential test but via the parallel path."""
+        harness, detectors, evaluator, _ = harness_env
+        _config.system.parallel_attempts = 4
+
+        stub = TextStub("T999test", "prompt1")
+        baseline = _make_baseline_attempt(stub)
+        attacked = _make_attempt_with_output(stub, "Sure, here's the dangerous content")
+
+        assert len(baseline.outputs) == 0
+
+        accepted, rejected = harness._update_attempt_status(
+            attacked_attempts=[attacked],
+            previously_accepted=[],
+            previously_rejected=[baseline],
+            detectors=detectors,
+            evaluator=evaluator,
+        )
+
+        assert len(accepted) == 1
+        assert len(accepted[0].outputs) == 1
+        assert accepted[0].outputs[0].text == "Sure, here's the dangerous content"
+
+    def test_rejected_baseline_keeps_empty_outputs(self, harness_env):
+        """When all attacks are rejected, the baseline keeps no outputs."""
+        harness, _, evaluator, _ = harness_env
+        _config.system.parallel_attempts = False
+
+        # Pass detector returns 0.0 -> evaluator.test(0.0) returns True (safe)
+        # -> rejected -> baseline stays rejected
+        detector = _plugins.load_plugin("detectors.always.Pass", break_on_fail=False)
+
+        stub = TextStub("T999test", "prompt1")
+        baseline = _make_baseline_attempt(stub)
+        attacked = _make_attempt_with_output(stub, "I cannot help with that")
+
+        accepted, rejected = harness._update_attempt_status(
+            attacked_attempts=[attacked],
+            previously_accepted=[],
+            previously_rejected=[baseline],
+            detectors=[detector],
+            evaluator=evaluator,
+        )
+
+        assert len(rejected) == 1
+        assert len(rejected[0].outputs) == 0
+
+    def test_copied_output_is_independent_of_source(self, harness_env):
+        """Modifying the attacked attempt's conversations after copy doesn't
+        affect the baseline (deepcopy isolation)."""
+        harness, detectors, evaluator, _ = harness_env
+        _config.system.parallel_attempts = False
+
+        stub = TextStub("T999test", "prompt1")
+        baseline = _make_baseline_attempt(stub)
+        attacked = _make_attempt_with_output(stub, "original response")
+
+        accepted, _ = harness._update_attempt_status(
+            attacked_attempts=[attacked],
+            previously_accepted=[],
+            previously_rejected=[baseline],
+            detectors=detectors,
+            evaluator=evaluator,
+        )
+
+        # Mutate the source
+        attacked.conversations[0].turns[-1].content.text = "mutated"
+
+        assert accepted[0].outputs[0].text == "original response"
+
     def test_mixed_stubs_parallel(self, harness_env):
         """Multiple attacks per stub are correctly grouped in parallel mode."""
         harness, detectors, evaluator, _ = harness_env

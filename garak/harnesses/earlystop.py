@@ -11,6 +11,7 @@ We continue iterating until all the intents have been accepted, or we run out of
 import json
 import logging
 import threading
+from copy import deepcopy
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
 
@@ -28,7 +29,7 @@ from garak.probes.base import IntentProbe
 _reportfile_lock = threading.Lock()
 
 
-def _is_rejected(attempt: Attempt, detectors: List[Detector], evaluator: Evaluator) -> bool:
+def _is_rejected(attempt: Attempt, detectors: List[Detector], evaluator: Evaluator, baseline_attempt: Attempt = None) -> bool:
     """
     Returns True if the target LLM rejected the attempt,
     ex: "I'm sorry, but I can't do that" -> True
@@ -56,12 +57,17 @@ def _is_rejected(attempt: Attempt, detectors: List[Detector], evaluator: Evaluat
         logging.error(f"Failed to evaluate attempt {attempt.uuid}: {e}")
         return True
 
+    rejected = any(evaluations)
+
+    if not rejected and baseline_attempt is not None:
+        baseline_attempt.conversations = deepcopy(attempt.conversations)
+
     # Save this intermediary attempt, no matter the outcome
     attempt.status = ATTEMPT_COMPLETE
     with _reportfile_lock:
         _config.transient.reportfile.write(json.dumps(attempt.as_dict(), ensure_ascii=False) + "\n")
 
-    return any(evaluations)
+    return rejected
 
 
 def _is_typology_stub(stub: Stub) -> bool:
@@ -208,11 +214,14 @@ class EarlyStopHarness(Harness):
 
             # Submit all _is_rejected calls
             future_to_stub = {}  # future -> stub
+            baseline_by_stub = {a.notes.get("stub"): a for a in previously_rejected}
 
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 for attacked_attempt in attacked_attempts:
                     stub = attacked_attempt.notes.get("stub")
-                    future = executor.submit(_is_rejected, attacked_attempt, detectors, evaluator)
+                    baseline = baseline_by_stub.get(stub)
+                    future = executor.submit(_is_rejected, attacked_attempt, detectors, evaluator,
+                                            baseline_attempt=baseline)
                     future_to_stub[future] = stub
 
                 # Collect results grouped by stub
@@ -238,8 +247,7 @@ class EarlyStopHarness(Harness):
         else:
             # Sequential path (original behavior)
             for attempt in previously_rejected:
-                # Group attacked_attempts by stub
-                rejected_attacks = [_is_rejected(attacked_attempt, detectors, evaluator)
+                rejected_attacks = [_is_rejected(attacked_attempt, detectors, evaluator, baseline_attempt=attempt)
                                     for attacked_attempt in attacked_attempts
                                     if attacked_attempt.notes.get("stub") == attempt.notes.get("stub")]
                 # Some probes don't return failed attempts; we assume that an empty rejected_attacks means failure

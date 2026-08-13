@@ -117,6 +117,70 @@ def random_file_tree(request) -> None:
     return (temp_dirname, files, override_files)
 
 
+@pytest.fixture
+def symlinked_payload_tree(request) -> None:
+    """Simulate a symlinked install (e.g. UV_LINK_MODE=symlink) where files
+    under the package data dir are symlinks whose targets live outside any
+    ORDERED_SEARCH_PATHS (the package installer's cache)."""
+    # external target dir, outside every search path (mimics the UV cache)
+    cache_dir = Path(tempfile.mkdtemp())
+
+    # directory under the package data search path holding the symlinks
+    pkg_data_dir = Path(tempfile.mkdtemp(dir=LocalDataPath.ORDERED_SEARCH_PATHS[-1]))
+    dirname = pkg_data_dir.name
+
+    filenames = []
+    for i in range(5):
+        target = cache_dir / f"payload_{i}.json"
+        with open(target, mode="w", encoding="utf-8") as f:
+            f.write(f'{{"payloads": ["p{i}"]}}')
+        link = pkg_data_dir / f"payload_{i}.json"
+        os.symlink(target, link)
+        filenames.append(link.name)
+
+    def remove_files():
+        for link in pkg_data_dir.glob("*.json"):
+            link.unlink()
+        pkg_data_dir.rmdir()
+        for target in cache_dir.glob("*.json"):
+            target.unlink()
+        cache_dir.rmdir()
+
+    request.addfinalizer(remove_files)
+
+    return dirname, filenames
+
+
+def test_determine_suffix_symlinked_install(symlinked_payload_tree):
+    """A symlinked file (target outside search paths) must still resolve to its
+    correct suffix under the package data dir, not None."""
+    dirname, filenames = symlinked_payload_tree
+    link = LocalDataPath.ORDERED_SEARCH_PATHS[-1] / dirname / filenames[0]
+    suffix = LocalDataPath(link)._determine_suffix()
+    assert suffix == Path(dirname) / filenames[0]
+
+
+def test_direct_access_symlinked_install(symlinked_payload_tree):
+    """Direct '/'-operator access to a symlinked file (target outside search
+    paths) must resolve to the file under the package data dir, not raise. The
+    pre-fix bug used .resolve() in _eval_paths, following the symlink outside
+    ORDERED_SEARCH_PATHS and raising GarakException."""
+    dirname, filenames = symlinked_payload_tree
+    source = data_path / dirname / filenames[0]
+    assert source.name == filenames[0]
+    assert LocalDataPath.ORDERED_SEARCH_PATHS[-1] in source.parents
+
+
+def test_glob_symlinked_install_returns_all(symlinked_payload_tree):
+    """Globbing a dir of symlinked files must return every file. The pre-fix
+    bug resolved all symlinks outside the search paths, yielding suffix=None
+    for each, so the _glob dedup collapsed them to a single file."""
+    dirname, filenames = symlinked_payload_tree
+    glob_files = (data_path / dirname).glob("*.json")
+    assert len(glob_files) == len(filenames)
+    assert {f.name for f in glob_files} == set(filenames)
+
+
 def test_consolidated_glob(random_file_tree):
     dirname, files, override_files = random_file_tree
     glob_files = (data_path / dirname / "testing").glob("*.test")

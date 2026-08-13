@@ -20,6 +20,7 @@ except GarakException as e:
 ```
 """
 
+import os
 import pathlib
 
 from garak import _config
@@ -35,7 +36,18 @@ class LocalDataPath(type(pathlib.Path())):
     ]
 
     def _determine_suffix(self):
-        resolved_self = pathlib.Path(self).resolve()
+        self_path = pathlib.Path(self)
+        # Try unresolved paths first: this handles symlinked installs
+        # (e.g. UV_LINK_MODE=symlink) where .resolve() would follow the
+        # symlink to a cache directory outside ORDERED_SEARCH_PATHS. Since
+        # ORDERED_SEARCH_PATHS are built from the unresolved package_dir, the
+        # unresolved (symlink) path is the one that lives under them.
+        for path in self.ORDERED_SEARCH_PATHS:
+            if self_path == path or self_path.is_relative_to(path):
+                return self_path.relative_to(path)
+        # Fall back to resolved paths for container environments where the
+        # unresolved paths may differ (bind mounts, overlayfs, relative cwd).
+        resolved_self = self_path.resolve()
         for path in self.ORDERED_SEARCH_PATHS:
             resolved_path = path.resolve()
             if resolved_path == resolved_self or resolved_path in resolved_self.parents:
@@ -58,17 +70,22 @@ class LocalDataPath(type(pathlib.Path())):
             else:
                 current_path = path / prefix_removed
                 projected = getattr(current_path, next_call)(segment)
-            if projected.exists() and projected.resolve().is_relative_to(path.resolve()):
-                return LocalDataPath(projected.resolve())
+            # Collapse '..' segments lexically (os.path.normpath does not follow
+            # symlinks) so that traversal outside the search path is rejected
+            # while symlinked files installed *inside* it are still resolved.
+            # Using .resolve() here would follow symlinked payloads to a cache
+            # dir outside ORDERED_SEARCH_PATHS (e.g. UV_LINK_MODE=symlink) and
+            # wrongly reject them.
+            normalized = pathlib.Path(os.path.normpath(projected))
+            if projected.exists() and normalized.is_relative_to(path):
+                return LocalDataPath(normalized)
 
         if projected in self.ORDERED_SEARCH_PATHS:
             return LocalDataPath(projected)
 
         if not any(
-            [
-                projected.resolve().is_relative_to(path.resolve())
-                for path in self.ORDERED_SEARCH_PATHS
-            ]
+            pathlib.Path(os.path.normpath(projected)).is_relative_to(path)
+            for path in self.ORDERED_SEARCH_PATHS
         ):
             raise GarakException(msg)
 

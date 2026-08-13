@@ -91,7 +91,12 @@ class HFCompatible:
         from transformers import GenerationConfig
 
         generation_params = {}
-        for generation_param in GenerationConfig._get_default_generation_params():
+        try:
+            valid_params = GenerationConfig._get_default_generation_params()
+        except AttributeError:
+            valid_params = GenerationConfig().to_dict().keys()
+
+        for generation_param in valid_params:
             if generation_param in self.hf_args.keys():
                 generation_params[generation_param] = self.hf_args[generation_param]
         return generation_params

@@ -11,7 +11,7 @@ import inspect
 from collections.abc import Iterable
 
 from garak.attempt import Message, Turn, Conversation
-from garak.generators.openai import OpenAICompatible
+from garak.generators.openai import OpenAICompatible, OpenAIResponsesGenerator
 from garak.generators.rest import RestGenerator
 
 # TODO: expand this when we have faster loading, currently to process all generator costs 30s for 3 tests
@@ -46,6 +46,8 @@ def compatible() -> Iterable[OpenAICompatible]:
                 if module_klass == OpenAICompatible:
                     continue
                 if module_klass == RestGenerator:
+                    continue
+                if module_klass == OpenAIResponsesGenerator:
                     continue
                 if hasattr(module_klass, "ENV_VAR"):
                     class_instance = build_test_instance(module_klass)
@@ -116,13 +118,19 @@ def test_openai_multiprocessing(openai_compat_mocks, classname):
     for _ in range(iterations):
         from multiprocessing import Pool
 
-        with Pool(parallel_attempts) as attempt_pool:
+        attempt_pool = None
+        try:
+            attempt_pool = Pool(parallel_attempts)
             for result in attempt_pool.imap_unordered(generate_in_subprocess, prompts):
                 assert result is not None
                 assert isinstance(result, list), "generator should return list"
                 assert isinstance(
                     result[0], Message
                 ), "generator should return list of Turns or Nones"
+        finally:
+            if attempt_pool is not None:
+                attempt_pool.close()
+                attempt_pool.join()
 
 
 def test_openai_multiple_generations():

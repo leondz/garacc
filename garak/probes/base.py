@@ -41,6 +41,12 @@ class Probe(Configurable):
     tags: Iterable[str] = []
     # what the probe is trying to do, phrased as an imperative
     goal: str = ""
+    # the target behaviour / failure mode this probe is designed to elicit,
+    # as a code from the trait typology (garak/data/cas/trait_typology.json).
+    # Concrete probes must set this; base scaffolding and IntentProbe leave it None.
+    # The value is propagated to every Attempt minted by this probe via _mint_attempt.
+    # If a loaded payload also declares an intent, the payload intent takes priority.
+    intent: Union[str, None] = None
     # Deprecated -- the detectors that should be run for this probe. always.Fail is chosen as default to send a signal if this isn't overridden.
     recommended_detector: Iterable[str] = ["always.Fail"]
     # default detector to run, if the primary/extended way of doing it is to be used (should be a string formatted like recommended_detector)
@@ -254,6 +260,8 @@ class Probe(Configurable):
                 ),  # keep and existing notes
             )
 
+        effective_intent = getattr(self, "_payload_intent", None) or self.intent
+
         new_attempt = garak.attempt.Attempt(
             probe_classname=(
                 str(self.__class__.__module__).replace("garak.probes.", "")
@@ -265,6 +273,7 @@ class Probe(Configurable):
             seq=seq,
             prompt=prompt,
             notes=notes,
+            intent=effective_intent,
         )
 
         new_attempt = self._attempt_prestore_hook(new_attempt, seq)
@@ -331,21 +340,22 @@ class Probe(Configurable):
                 self.max_workers,
             )
 
+            attempt_pool = None
             try:
-                with Pool(pool_size) as attempt_pool:
-                    for result in attempt_pool.imap_unordered(
-                        self._execute_attempt, attempts
-                    ):
-                        processed_attempt = self._postprocess_attempt(result)
+                attempt_pool = Pool(pool_size)
+                for result in attempt_pool.imap_unordered(
+                    self._execute_attempt, attempts
+                ):
+                    processed_attempt = self._postprocess_attempt(result)
 
-                        _config.transient.reportfile.write(
-                            json.dumps(processed_attempt.as_dict(), ensure_ascii=False)
-                            + "\n"
-                        )
-                        attempts_completed.append(
-                            processed_attempt
-                        )  # these can be out of original order
-                        attempt_bar.update(1)
+                    _config.transient.reportfile.write(
+                        json.dumps(processed_attempt.as_dict(), ensure_ascii=False)
+                        + "\n"
+                    )
+                    attempts_completed.append(
+                        processed_attempt
+                    )  # these can be out of original order
+                    attempt_bar.update(1)
             except OSError as o:
                 if o.errno == 24:
                     msg = "Parallelisation limit hit. Try reducing parallel_attempts or raising limit (e.g. ulimit -n 4096)"
@@ -353,6 +363,10 @@ class Probe(Configurable):
                     raise GarakException(msg) from o
                 else:
                     raise (o)
+            finally:
+                if attempt_pool is not None:
+                    attempt_pool.close()
+                    attempt_pool.join()
 
         else:
             attempt_iterator = tqdm.tqdm(attempts, leave=False)
@@ -362,7 +376,7 @@ class Probe(Configurable):
                 processed_attempt = self._postprocess_attempt(result)
 
                 _config.transient.reportfile.write(
-                    json.dumps(processed_attempt.as_dict()) + "\n"
+                    json.dumps(processed_attempt.as_dict(), ensure_ascii=False) + "\n"
                 )
                 attempts_completed.append(processed_attempt)
 
@@ -467,6 +481,9 @@ class Probe(Configurable):
 
 
 class TreeSearchProbe(Probe):
+    intent = (
+        None  # This is reusable search machinery rather than a probe for one intent.
+    )
 
     DEFAULT_PARAMS = Probe.DEFAULT_PARAMS | {
         "queue_children_at_start": True,
@@ -589,10 +606,6 @@ class TreeSearchProbe(Probe):
                     attempt
                 )
                 node_results += attempt.detector_results[self.primary_detector]
-                attempt.status = garak.attempt.ATTEMPT_COMPLETE
-                _config.transient.reportfile.write(
-                    json.dumps(attempt.as_dict(), ensure_ascii=False) + "\n"
-                )
 
             tree_bar.update()
             tree_bar.refresh()
@@ -694,6 +707,8 @@ class IterativeProbe(Probe):
     4. If num_generations > 1 , for every attempt at every turn, we obtain num_generations responses from the target, reduce to the unique ones and generate next turns based on each of them. This means that as the turn number increases, the number of attempts has the potential to grow exponentially. Currently, when we have processed (# init turns * self.soft_prompt_probe_cap) attempts, the probe will exit.
     5. Currently the expansion of attempts happens in a BFS fashion.
     """
+
+    intent = None  # This is reusable multi-turn scaffolding rather than a probe for one intent.
 
     DEFAULT_PARAMS = Probe.DEFAULT_PARAMS | {
         "max_calls_per_conv": 10,
@@ -833,6 +848,7 @@ class IntentProbe(Probe):
 
     import garak.services.intentservice
 
+    intent = None  # IntentProbe subclasses span many typology entries by design, so there is no single best fit.
     skip_root_intents = True
     blocked_intent_spec = ""
 
@@ -846,7 +862,10 @@ class IntentProbe(Probe):
     def _attempt_prestore_hook(
         self, attempt: garak.attempt.Attempt, seq: int
     ) -> garak.attempt.Attempt:
-        attempt.intent = self.prompt_intents[seq]
+        original_stub: Stub = self.prompt_stubs[seq]
+        attempt.goal = original_stub.content.content
+        attempt.intent = original_stub.intent
+        attempt.notes["stub"] = original_stub.content
         return attempt
 
     def _populate_intents(self) -> None:
@@ -884,10 +903,14 @@ class IntentProbe(Probe):
     def build_prompts(self):
         """In the most basic case, consume self.stubs and populate self.prompts"""
         self.prompts = []
+        self.prompt_stubs = []
         self.prompt_intents = []
         for i, stub in enumerate(self.stubs):
             prompts = self._prompts_from_stub(stub)
             self.prompts.extend(prompts)
+            original_stub = Stub(intent=self.stub_intents[i])
+            original_stub.content = stub
+            self.prompt_stubs.extend([original_stub] * len(prompts))
             self.prompt_intents.extend([self.stub_intents[i]] * len(prompts))
 
     def probe(self, generator) -> Iterable[garak.attempt.Attempt]:

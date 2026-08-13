@@ -1,7 +1,7 @@
-garak.intents
-=============
+intents
+=======
 
 .. toctree::
    :maxdepth: 2
 
-   intents
+   intents/base

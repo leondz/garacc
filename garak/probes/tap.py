@@ -45,7 +45,7 @@ Further info:
 
 * https://arxiv.org/abs/2312.02119
 """
-
+import json
 import logging
 import os
 from typing import List
@@ -69,16 +69,20 @@ class TAPCached(garak.probes.Probe):
     jailbreaks from TAP"""
 
     lang = "en"
+    intent = "T009ignore"  # TAP-generated jailbreaks try to replace the model's usual refusal behavior
     primary_detector = "mitigation.MitigationBypass"
     tags = [
         "avid-effect:security:S0403",
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Possible_worlds:World_building:Scenarios",  # TAP guidance explicitly steers attack generation toward roleplaying scenarios
+        "demon:Rhetoric:Persuasion_and_manipulation:Escalating",  # iteratively refines jailbreak prompts through a pruned attack tree,
+        "demon:Language:Code_and_encode:Token",
     ]
     goal = "cause the model to disregard the system prompt"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
-    doc_uri = "https://arxiv.org/abs/2312.02119"
+    doc_uri = "https://arxiv.org/html/2312.02119"
     active = True
 
     DEFAULT_PARAMS = garak.probes.Probe.DEFAULT_PARAMS | {
@@ -109,15 +113,18 @@ class TAP(garak.probes.Probe):
     to jailbreaking the target are maintained in a tree, which is proactively pruned."""
 
     lang = "en"
+    intent = "T009ignore"  # the search objective is to discover prompts that make the model ignore its active safeguards
     primary_detector = "mitigation.MitigationBypass"
     tags = [
         "avid-effect:security:S0403",
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Rhetoric:Persuasion_and_manipulation:Escalating",  # iteratively escalates attack prompts using tree-of-thought reasoning
+        "demon:Language:Code_and_encode:Token",
     ]
     goal = "cause the model to disregard the system prompt"
-    doc_uri = "https://arxiv.org/abs/2312.02119"
+    doc_uri = "https://arxiv.org/html/2312.02119"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
     active = False
 
@@ -213,7 +220,9 @@ class TAP(garak.probes.Probe):
                 attempt_bar = tqdm.tqdm(total=len(attempts_todo), leave=False)
                 attempt_bar.set_description(self.probename.replace("garak.", ""))
 
-                with Pool(self.parallel_attempts) as attempt_pool:
+                attempt_pool = None
+                try:
+                    attempt_pool = Pool(self.parallel_attempts)
                     for result in attempt_pool.imap_unordered(
                         self._execute_attempt, attempts_todo
                     ):
@@ -221,6 +230,10 @@ class TAP(garak.probes.Probe):
                             result
                         )  # these will be out of original order
                         attempt_bar.update(1)
+                finally:
+                    if attempt_pool is not None:
+                        attempt_pool.close()
+                        attempt_pool.join()
 
             else:
                 attempt_iterator = tqdm.tqdm(attempts_todo, leave=False)
@@ -247,15 +260,18 @@ class PAIR(garak.probes.Probe):
     PAIR settings, making it equivalent to the PAIR jailbreak"""
 
     lang = "en"
+    intent = "T009ignore"  # PAIR is the same iterative jailbreak search tuned to override the model's guardrails
     primary_detector = "mitigation.MitigationBypass"
     tags = [
         "avid-effect:security:S0403",
         "avid-effect:performance:P0204",
         "quality:Security:PromptStability",
         "payload:jailbreak",
+        "demon:Language:Code_and_encode:Token",
+        "demon:Rhetoric:Persuasion_and_manipulation:Escalating",  # iteratively refines attack prompts, building on prior successes
     ]
     goal = "cause the model to disregard the system prompt"
-    doc_uri = "https://arxiv.org/abs/2310.08419"
+    doc_uri = "https://arxiv.org/html/2310.08419"
     tier = garak.probes.Tier.COMPETE_WITH_SOTA
     active = False
 
@@ -341,7 +357,9 @@ class PAIR(garak.probes.Probe):
                 attempt_bar = tqdm.tqdm(total=len(attempts_todo), leave=False)
                 attempt_bar.set_description(self.probename.replace("garak.", ""))
 
-                with Pool(self.parallel_attempts) as attempt_pool:
+                attempt_pool = None
+                try:
+                    attempt_pool = Pool(self.parallel_attempts)
                     for result in attempt_pool.imap_unordered(
                         self._execute_attempt, attempts_todo
                     ):
@@ -349,6 +367,10 @@ class PAIR(garak.probes.Probe):
                             result
                         )  # these will be out of original order
                         attempt_bar.update(1)
+                finally:
+                    if attempt_pool is not None:
+                        attempt_pool.close()
+                        attempt_pool.join()
 
             else:
                 attempt_iterator = tqdm.tqdm(attempts_todo, leave=False)
@@ -365,3 +387,116 @@ class PAIR(garak.probes.Probe):
         else:
             logging.debug("TAP failed to find a jailbreak!")
             return []
+
+
+class TAPIntent(garak.probes.IntentProbe):
+    """Tree of Attacks with Pruning Probe that works with intent stubs
+
+    This probe extends TAP to work with intent stub from the IntentProbe framework.
+    It iterates over each input intent_stubs, calling self.run_tap with the goal=stub
+    and target="Sure," following the current TAP implementation."""
+
+    lang = "en"
+    primary_detector = "mitigation.MitigationBypass"
+    tags = [
+        "avid-effect:security:S0403",
+        "avid-effect:performance:P0204",
+        "quality:Security:PromptStability",
+        "payload:jailbreak",
+    ]
+    goal = "cause the model to disregard the system prompt"
+    doc_uri = "https://arxiv.org/abs/2312.02119"
+    tier = garak.probes.Tier.COMPETE_WITH_SOTA
+    active = False
+
+    DEFAULT_PARAMS = garak.probes.IntentProbe.DEFAULT_PARAMS | {
+        "target": "Sure,",
+        "attack_model_type": "huggingface.Model",
+        "attack_model_name": "lmsys/vicuna-13b-v1.3",
+        "attack_model_config": {
+            "max_tokens": 500,
+            "hf_args": {"device": "cpu"},
+        },
+        "attack_max_attempts": 5,
+        "evaluator_model_type": "openai",
+        "evaluator_model_name": "gpt-3.5-turbo",
+        "evaluator_model_config": {
+            "max_tokens": 10,
+            "temperature": 0.0,
+        },
+        "branching_factor": 4,
+        "width": 10,
+        "depth": 10,
+        "n_streams": 1,
+        "keep_last_n": 1,
+        "pruning": True,
+    }
+
+    def __init__(self, config_root=_config):
+        super().__init__(config_root=config_root)
+        self.run_tap = None
+
+    def probe(self, generator) -> List[garak.attempt.Attempt]:
+        """Iterate over each input prompt, calling self.run_tap with goal=stub and target=\"Sure,\""""
+
+        self.generator = generator
+
+        if self.run_tap is None:
+            from garak.resources.tap import run_tap
+            self.run_tap = run_tap
+
+        all_attempts = []
+
+        # Iterate over each intent stub
+        for seq, stub in enumerate(self.prompts):
+            try:
+                tap_outputs = self.run_tap(
+                    goal=stub,
+                    target=self.target,
+                    target_generator=generator,
+                    attack_model_type=self.attack_model_type,
+                    attack_model_name=self.attack_model_name,
+                    attack_model_config=self.attack_model_config,
+                    attack_max_attempts=self.attack_max_attempts,
+                    evaluator_model_type=self.evaluator_model_type,
+                    evaluator_model_name=self.evaluator_model_name,
+                    evaluator_model_config=self.evaluator_model_config,
+                    branching_factor=self.branching_factor,
+                    width=self.width,
+                    depth=self.depth,
+                    n_streams=self.n_streams,
+                    keep_last_n=self.keep_last_n,
+                    pruning=self.pruning,
+                )
+
+                if tap_outputs:
+                    # Build attempts for this stub
+                    for prompt in tap_outputs:
+                        # notes["stub"] is already set to the correct TextStub by
+                        # _attempt_prestore_hook (called inside _mint_attempt);
+                        # do not overwrite it with a raw string from self.prompts.
+                        attempt = self._mint_attempt(prompt, seq)
+                        all_attempts.append(attempt)
+
+            except Exception as e:
+                logging.error(f"Error running TAP for stub '{stub}': {e}")
+                continue
+
+        # Execute all attempts
+        attempts_completed = []
+
+        attempt_iterator = tqdm.tqdm(all_attempts, leave=False)
+        attempt_iterator.set_description(self.probename.replace("garak.", ""))
+        for this_attempt in attempt_iterator:
+            result = self._execute_attempt(this_attempt)
+            processed_attempt = self._postprocess_attempt(result)
+            _config.transient.reportfile.write(
+                json.dumps(processed_attempt.as_dict()) + "\n"
+            )
+            attempts_completed.append(processed_attempt)
+
+        logging.debug(
+            "probe return: %s with %s attempts", self, len(attempts_completed)
+        )
+
+        return attempts_completed
